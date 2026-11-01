@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Página no encontrada')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <h1>Página no encontrada</h1>
+    <p th:text="${message} ?: 'El recurso solicitado no existe.'">El recurso solicitado no existe.</p>
+    <a th:href="@{/}">Volver al inicio</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

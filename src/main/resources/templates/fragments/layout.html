@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Alimentación Hospitalaria'">Alimentación Hospitalaria</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+
+<header th:fragment="header" class="app-header">
+    <a class="app-brand" th:href="@{/}">Alimentación Hospitalaria</a>
+    <div class="app-user" sec:authorize="isAuthenticated()">
+        <span sec:authentication="name">usuario</span>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-link">Cerrar sesión</button>
+        </form>
+    </div>
+</header>
+
+<footer th:fragment="footer" class="app-footer">
+    <small>Sistema de Alimentación Hospitalaria</small>
+</footer>
+
+</body>
+</html>
