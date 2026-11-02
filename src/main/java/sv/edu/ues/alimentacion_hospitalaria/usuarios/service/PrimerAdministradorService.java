@@ -23,6 +23,7 @@ public class PrimerAdministradorService {
 
 	@Transactional
 	public void crearSiNoExiste(String nombreUsuario, String contrasena, String nombreCompleto) {
+		usuarios.bloquearAdministracion();
 		if (usuarios.existsByRol(Rol.ROLE_ADMIN)) {
 			return;
 		}

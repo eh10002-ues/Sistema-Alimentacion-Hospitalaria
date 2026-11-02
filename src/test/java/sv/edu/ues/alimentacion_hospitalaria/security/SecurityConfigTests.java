@@ -79,11 +79,10 @@ class SecurityConfigTests {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(roles = "MEDICO")
 	void authenticatedUserCanSeeHome() throws Exception {
 		mvc.perform(get("/"))
-			.andExpect(status().isOk())
-			.andExpect(view().name("index"));
+			.andExpect(redirectedUrl("/dashboard"));
 	}
 
 	@Test
@@ -99,7 +98,7 @@ class SecurityConfigTests {
 	@Test
 	void loginWithValidCredentialsRedirectsToHome() throws Exception {
 		mvc.perform(formLogin("/login").user("MEDICO.DEMO").password(password))
-			.andExpect(redirectedUrl("/"))
+			.andExpect(redirectedUrl("/dashboard"))
 			.andExpect(authenticated().withUsername("medico.demo"));
 	}
 

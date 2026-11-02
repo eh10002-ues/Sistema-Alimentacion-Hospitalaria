@@ -12,6 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableMethodSecurity
@@ -24,11 +27,22 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SessionRegistry sessionRegistry() {
+		return new SessionRegistryImpl();
+	}
+
+	@Bean
+	HttpSessionEventPublisher httpSessionEventPublisher() {
+		return new HttpSessionEventPublisher();
+	}
+
+	@Bean
+	SecurityFilterChain securityFilterChain(HttpSecurity http, SessionRegistry sesiones, ReglasAcceso reglas) throws Exception {
+		reglas.configurar(http);
 		http
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/css/**", "/js/**", "/img/**", "/favicon.ico", "/error").permitAll()
-				.anyRequest().authenticated())
+			.exceptionHandling(errors -> errors.accessDeniedPage("/acceso-denegado"))
+			.sessionManagement(session -> session.maximumSessions(-1)
+				.sessionRegistry(sesiones).expiredUrl("/login?expired"))
 			.formLogin(form -> form
 				.loginPage("/login")
 				.authenticationDetailsSource(request -> {
@@ -40,7 +54,7 @@ public class SecurityConfig {
 					}
 					return new WebAuthenticationDetails(request);
 				})
-				.defaultSuccessUrl("/", true)
+				.defaultSuccessUrl("/dashboard", true)
 				.permitAll())
 			.logout(logout -> logout
 				.logoutSuccessUrl("/login?logout")

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Datos del usuario')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container">
+    <h1 th:text="${creacion ? 'Crear usuario' : 'Editar usuario'}"></h1>
+    <form class="formulario" th:action="@{${accion}}" th:object="${formulario}" method="post">
+        <div class="alert alert-error" th:if="${#fields.hasErrors('*')}">
+            <p>Revise los datos del formulario.</p>
+            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+        </div>
+        <label for="nombreUsuario">Nombre de usuario</label>
+        <input id="nombreUsuario" type="text" th:field="*{nombreUsuario}" required maxlength="100" autocomplete="off">
+        <small th:if="${#fields.hasErrors('nombreUsuario')}">Ingrese un nombre único, sin espacios y de hasta 100 caracteres.</small>
+        <label for="nombreCompleto">Nombre completo</label>
+        <input id="nombreCompleto" type="text" th:field="*{nombreCompleto}" required maxlength="150">
+        <small th:if="${#fields.hasErrors('nombreCompleto')}">Ingrese el nombre completo, de hasta 150 caracteres.</small>
+        <label for="rol">Rol</label>
+        <select id="rol" th:field="*{rol}" required>
+            <option value="">Seleccione un rol</option>
+            <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol.etiqueta}"></option>
+        </select>
+        <small th:if="${#fields.hasErrors('rol')}">Seleccione uno de los roles disponibles.</small>
+        <div th:if="${creacion}" class="formulario">
+            <label><input type="checkbox" th:field="*{activo}"> Cuenta activa</label>
+            <label for="contrasena">Contraseña inicial</label>
+            <input id="contrasena" name="contrasena" type="password" autocomplete="new-password" required>
+            <label for="confirmacion">Confirmar contraseña</label>
+            <input id="confirmacion" name="confirmacion" type="password" autocomplete="new-password" required>
+            <p th:text="${politicaContrasena}"></p>
+        </div>
+        <button class="btn" type="submit">Guardar usuario</button>
+        <a th:href="@{/admin/usuarios}">Volver a usuarios</a>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

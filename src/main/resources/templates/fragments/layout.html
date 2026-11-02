@@ -12,8 +12,10 @@
 <body>
 
 <header th:fragment="header" class="app-header">
-    <a class="app-brand" th:href="@{/}">Alimentación Hospitalaria</a>
+    <a class="app-brand" th:href="@{/dashboard}">Alimentación Hospitalaria</a>
     <div class="app-user" sec:authorize="isAuthenticated()">
+        <a th:href="@{/dashboard}">Inicio</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/usuarios}">Usuarios</a>
         <span sec:authentication="name">usuario</span>
         <form th:action="@{/logout}" method="post">
             <button type="submit" class="btn btn-link">Cerrar sesión</button>

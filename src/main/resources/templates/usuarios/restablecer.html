@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Restablecer contraseña')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container">
+    <h1>Restablecer contraseña</h1>
+    <p>Usuario: <strong th:text="${usuario.nombreUsuario}"></strong></p>
+    <p>Al guardar, todas las sesiones de esta cuenta finalizarán. No se puede consultar la contraseña anterior.</p>
+    <p th:text="${politicaContrasena}"></p>
+    <p class="alert alert-error" th:if="${error}" th:text="${error}"></p>
+    <form class="formulario" th:action="@{/admin/usuarios/{id}/restablecer-password(id=${usuario.id})}" method="post">
+        <label for="contrasena">Nueva contraseña temporal</label>
+        <input id="contrasena" name="contrasena" type="password" autocomplete="new-password" required>
+        <label for="confirmacion">Confirmar contraseña temporal</label>
+        <input id="confirmacion" name="confirmacion" type="password" autocomplete="new-password" required>
+        <button class="btn" type="submit">Restablecer contraseña</button>
+        <a th:href="@{/admin/usuarios}">Volver a usuarios</a>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -75,3 +75,23 @@ input {
 .alert { padding: 0.5rem 0.75rem; border-radius: 4px; }
 .alert-error { background: #fdecea; color: var(--color-error); }
 .alert-info { background: #e8f4f8; color: var(--color-info); }
+
+.formulario { display: flex; flex-direction: column; gap: 0.6rem; max-width: 560px; }
+select { padding: 0.5rem; font: inherit; }
+.table-scroll { overflow-x: auto; margin-top: 1.5rem; }
+table { border-collapse: collapse; width: 100%; background: #fff; }
+th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+th { background: #e8f4f8; }
+.acciones { display: flex; flex-direction: column; gap: 0.5rem; }
+.acciones form { margin: 0; }
+.paginacion { display: flex; gap: 1rem; margin-top: 1rem; }
+a.btn { display: inline-block; text-decoration: none; }
+.rol-panel { color: var(--color-primary); font-weight: 600; }
+.panel-cuenta { background: #fff; border: 1px solid #ddd; padding: 1rem 1.5rem; border-radius: 6px; }
+.panel-cuenta dt { font-weight: 600; }
+.panel-cuenta dd { margin: 0.25rem 0 1rem; overflow-wrap: anywhere; }
+.accesos-panel { display: flex; flex-wrap: wrap; gap: 1rem; }
+input:focus-visible, select:focus-visible, a:focus-visible, button:focus-visible { outline: 3px solid #b56b00; outline-offset: 3px; }
+@media (max-width: 600px) {
+    .app-header, .app-user { flex-wrap: wrap; gap: 0.75rem; }
+}

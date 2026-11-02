@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Administración de usuarios')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container">
+    <h1>Administración de usuarios</h1>
+    <p>Gestione las cuentas, sus roles y el acceso al sistema.</p>
+    <p class="alert alert-info" th:if="${mensaje}" th:text="${mensaje}"></p>
+    <p class="alert alert-error" th:if="${error}" th:text="${error}"></p>
+    <a class="btn" th:href="@{/admin/usuarios/nuevo}">Crear usuario</a>
+    <div class="table-scroll">
+        <table>
+            <thead><tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>
+            <tr th:if="${pagina.empty}"><td colspan="5">No hay usuarios para mostrar.</td></tr>
+            <tr th:each="usuario : ${pagina.content}">
+                <td th:text="${usuario.nombreUsuario}"></td>
+                <td th:text="${usuario.nombreCompleto}"></td>
+                <td th:text="${usuario.rol.etiqueta}"></td>
+                <td th:text="${usuario.activo ? 'Activo' : 'Inactivo'}"></td>
+                <td class="acciones">
+                    <a th:href="@{/admin/usuarios/{id}/editar(id=${usuario.id})}">Editar</a>
+                    <a th:href="@{/admin/usuarios/{id}/restablecer-password(id=${usuario.id})}">Restablecer contraseña</a>
+                    <form th:if="${usuario.activo}" th:action="@{/admin/usuarios/{id}/desactivar(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn">Desactivar</button>
+                    </form>
+                    <form th:unless="${usuario.activo}" th:action="@{/admin/usuarios/{id}/activar(id=${usuario.id})}" method="post">
+                        <button type="submit" class="btn">Activar</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <nav class="paginacion" aria-label="Páginas de usuarios">
+        <a th:if="${pagina.hasPrevious()}" th:href="@{/admin/usuarios(pagina=${pagina.number - 1})}">Anterior</a>
+        <span th:text="|Página ${pagina.number + 1} · ${pagina.totalElements} usuarios|"></span>
+        <a th:if="${pagina.hasNext()}" th:href="@{/admin/usuarios(pagina=${pagina.number + 1})}">Siguiente</a>
+    </nav>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

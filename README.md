@@ -58,7 +58,7 @@ listado paginado, sin operaciones de eliminación física.
 
 El código que cree usuarios deberá entregar a la entidad un hash generado por
 el servicio centralizado de contraseñas descrito en el paso 2. La administración
-y la revocación de sesiones corresponden a pasos posteriores.
+y la revocación de sesiones se describen en el paso 4.
 
 Prueba específica con MySQL 8.4 descartable mediante Testcontainers, sin utilizar
 la base del servicio Compose:
@@ -74,7 +74,7 @@ el hash, el rol y el estado activo. Spring Security verifica la contraseña
 (sensible a mayúsculas) y rechaza cuentas inexistentes o inactivas.
 El formulario conserva el mensaje genérico de error y la protección CSRF.
 El usuario autenticado recibe exactamente la autoridad almacenada en su cuenta.
-La autorización por módulos y la navegación por rol se incorporarán en su etapa.
+La autorización por módulos y la navegación por rol se describen en el paso 5.
 
 `PoliticaContrasena` centraliza la longitud de 12 a 72 caracteres Unicode,
 mayúscula, minúscula, número, confirmación y rechazo de espacios exteriores.
@@ -126,8 +126,8 @@ Para inicializar el servicio local de Compose:
    ```
 
 4. Iniciar sesión con la cuenta configurada, usando el puerto `APP_PORT`.
-   La administración de usuarios y la navegación por rol se implementarán en
-   los siguientes pasos; este incremento permite autenticar la cuenta creada.
+   Desde el enlace «Usuarios» del encabezado se accede a la administración.
+   El acceso correcto abre `/dashboard`, con el panel correspondiente al rol.
 5. Después de confirmar el acceso, vaciar `SPRING_PROFILES_ACTIVE` y retirar los
    tres valores `APP_ADMIN_*` del archivo `.env`. Recrear la aplicación para
    retirar también esas variables del contenedor:
@@ -146,6 +146,105 @@ inicialización en la suite general):
 ```bash
 ./mvnw -Dtest=PrimerAdministradorTests,InicializacionAdministradorConfigTests test
 ```
+
+## HU-01 — Paso 4: administración de usuarios
+
+Solo el Administrador puede acceder a `/admin/usuarios`. El enlace «Usuarios»
+se muestra en el encabezado después de iniciar sesión con ese rol. Desde allí
+puede crear cuentas, editar nombre completo, identificador y rol, activar o
+desactivar cuentas y restablecer contraseñas. No hay registro público ni
+eliminación de usuarios. El listado utiliza páginas de 20 registros, ordenadas
+por nombre de usuario e identificador.
+
+Las operaciones de modificación utilizan POST con CSRF. Las rutas `/admin/**`
+requieren `ROLE_ADMIN` y el servicio comprueba también ese permiso. Cada
+modificación confirma en MySQL que quien la solicita sigue siendo un
+administrador activo. Los formularios usan DTO con campos permitidos y las
+vistas reciben datos sin hashes. Las contraseñas y confirmaciones se vacían
+antes de devolver formularios; la política de contraseñas permanece centralizada.
+
+No se permite desactivar la cuenta propia ni retirar el acceso del último
+administrador activo. La migración `V2__HU01_serializar_administracion_usuarios.sql`
+crea una fila de bloqueo. Las operaciones administrativas y la inicialización
+la bloquean dentro de su transacción para que las comprobaciones y cambios
+no se solapen. Una cuenta con un identificador ya ocupado se rechaza.
+
+La desactivación, el cambio de rol, el cambio de identificador y el
+restablecimiento de contraseña expiran todas las sesiones de la cuenta afectada
+mediante `SessionRegistry`, después de confirmar la transacción. Un rollback no
+expira sesiones. La siguiente solicitud de una sesión expirada se redirige a
+`/login?expired`, antes de ejecutar la operación. Reactivar una cuenta no
+restaura sesiones; se debe iniciar sesión nuevamente. El registro de sesiones
+es local a la única instancia `app` de este Compose.
+
+Para ejecutar la versión actualizada, una vez creada la cuenta administrativa:
+
+```bash
+docker compose up -d --build app
+```
+
+Después de autenticarte, abrir `/admin/usuarios` en el puerto de la aplicación
+(por ejemplo, `http://localhost:8081/admin/usuarios` si `APP_PORT=8081`). Flyway
+aplica la nueva migración al arrancar, conservando las cuentas existentes.
+
+Pruebas con MySQL descartable, incluyendo accesos por rol, formularios,
+concurrencia sobre el último administrador y revocación de múltiples sesiones:
+
+```bash
+./mvnw -Dtest=AdministracionUsuariosTests test
+```
+
+Este incremento cubre la administración y sus protecciones necesarias. El
+dashboard y las reglas por módulo se describen en el paso 5.
+
+## HU-01 — Paso 5: dashboard y autorización por módulos
+
+Todos los inicios de sesión correctos redirigen a `/dashboard`. La raíz `/`
+redirige al mismo panel. Un único controlador y una vista compartida muestran
+el usuario, el rol, las responsabilidades autorizadas y los accesos funcionales
+existentes. El Administrador dispone del acceso a usuarios; los demás roles
+tienen un panel informativo propio. No se muestran enlaces a módulos todavía
+inexistentes ni datos operativos simulados. La cabecera permite regresar al
+panel y cerrar sesión.
+
+`ReglasAcceso` centraliza las reglas de la cadena HTTP. Las consultas admiten
+GET y HEAD; las modificaciones requieren los roles indicados por la matriz y
+conservan CSRF. Las pantallas de creación y edición también requieren el rol
+que puede modificar el módulo. Aprobar y rechazar asignaciones se reserva a
+Administrador y Nutricionista, con reglas anteriores a la regla general del
+módulo. No se habilita eliminación de pacientes ni asignaciones porque esas
+operaciones no están definidas en el contrato. Las rutas sin regla explícita
+se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
+
+| Recurso | Consulta | Modificación |
+| --- | --- | --- |
+| Usuarios | Administrador | Administrador |
+| Pacientes | Administrador, Médico, Nutricionista y Encargado de piso | Administrador y Médico |
+| Ubicaciones | Administrador, Médico, Nutricionista y Encargado de piso | Administrador y Encargado de piso |
+| Dietas y menús | Los cinco roles | Administrador y Nutricionista |
+| Asignaciones | Administrador, Médico y Nutricionista | Administrador, Médico y Nutricionista; aprobación/rechazo solo Administrador y Nutricionista |
+| Reportes de pacientes y ocupación | Administrador, Médico, Nutricionista y Encargado de piso | Sin modificación |
+| Reportes de asignaciones y menús | Los cinco roles | Sin modificación |
+
+Un acceso no autorizado responde con HTTP 403 y presenta la vista de acceso
+denegado, con un enlace para regresar al dashboard. El servicio de dashboard
+rechaza cuentas sin un rol reconocido o con más de un rol del contrato.
+
+Las pruebas `DashboardPermisosTests` verifican login y renderizado para los
+cinco roles, navegación, respuestas 403 y permisos por método HTTP. Los
+endpoints de módulos pendientes se representan mediante un controlador
+exclusivo de pruebas: las solicitudes denegadas no llegan a ejecutarlo.
+Este controlador no se incorpora al artefacto de producción.
+
+```bash
+./mvnw -Dtest=DashboardPermisosTests,SecurityConfigTests,AdministracionUsuariosTests test
+```
+
+Las reglas HTTP no implementan los módulos operativos ni los cuatro reportes.
+Cuando se integren, deberán aplicar sus filtros de estado y los DTO específicos
+por rol para impedir la exposición de datos clínicos o campos no autorizados.
+En particular, CA-01.26 requiere la futura implementación del reporte de
+asignaciones: no se considera cumplido por estas pruebas de rutas.
 
 ## Detención y persistencia
 
