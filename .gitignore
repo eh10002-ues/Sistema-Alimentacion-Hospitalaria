@@ -36,3 +36,8 @@ build/
 .env
 application-local.properties
 .DS_Store
+
+AGENTS.md
+historias.md
+
+.agents/

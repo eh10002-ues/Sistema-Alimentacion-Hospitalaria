@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/layout :: head('Error del servidor')}"></head>
-<body>
-<header th:replace="~{fragments/layout :: header}"></header>
-
-<main class="container">
-    <h1>Error del servidor</h1>
-    <p>Ocurrió un error inesperado. Intente nuevamente más tarde.</p>
-    <a th:href="@{/}">Volver al inicio</a>
-</main>
-
-<footer th:replace="~{fragments/layout :: footer}"></footer>
+<body th:class="${#authorization.expression('isAuthenticated()')} ? 'app-layout' : 'public-layout'">
+<th:block th:replace="~{fragments/layout :: header('')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main error-shell">
+        <section class="card">
+            <div class="card-body p-lg-5">
+                <p class="page-eyebrow mb-3">ERROR 500</p>
+                <h1 class="mb-3">Error del servidor</h1>
+                <p class="text-body-secondary mb-4" >Ocurrió un error inesperado. Intente nuevamente más tarde.</p>
+                <a class="btn btn-primary" th:href="@{/dashboard}">Volver al inicio</a>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>
