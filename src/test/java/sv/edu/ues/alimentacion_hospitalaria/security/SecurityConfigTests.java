@@ -105,9 +105,10 @@ class SecurityConfigTests {
 			.andExpect(view().name("login"));
 	}
 
-	@Test
-	void staticResourcesArePublic() throws Exception {
-		mvc.perform(get("/css/styles.css"))
+	@ParameterizedTest
+	@ValueSource(strings = {"/css/styles.css", "/vendor/bootstrap/bootstrap.min.css", "/vendor/bootstrap/bootstrap.bundle.min.js"})
+	void staticResourcesArePublic(String ruta) throws Exception {
+		mvc.perform(get(ruta))
 			.andExpect(status().isOk());
 	}
 

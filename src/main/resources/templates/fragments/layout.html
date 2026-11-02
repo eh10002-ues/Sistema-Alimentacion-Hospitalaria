@@ -6,26 +6,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${title} + ' | Alimentación Hospitalaria'">Alimentación Hospitalaria</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 
 <body>
 
-<header th:fragment="header" class="app-header">
-    <a class="app-brand" th:href="@{/dashboard}">Alimentación Hospitalaria</a>
-    <div class="app-user" sec:authorize="isAuthenticated()">
-        <a th:href="@{/dashboard}">Inicio</a>
-        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/usuarios}">Usuarios</a>
-        <span sec:authentication="name">usuario</span>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn btn-link">Cerrar sesión</button>
-        </form>
-    </div>
-</header>
+<th:block th:fragment="header(active)" sec:authorize="isAuthenticated()">
+    <a href="#contenido-principal" class="visually-hidden-focusable skip-link">Ir al contenido</a>
+    <header class="mobile-header d-lg-none">
+        <a class="text-decoration-none fw-semibold text-dark" th:href="@{/dashboard}">Alimentación Hospitalaria</a>
+        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#appSidebar" aria-controls="appSidebar" aria-label="Abrir menú">Menú</button>
+    </header>
+    <aside class="offcanvas-lg offcanvas-start app-sidebar" tabindex="-1" id="appSidebar" aria-labelledby="sidebar-title">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h2 class="offcanvas-title fs-6" id="sidebar-title">Navegación</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Cerrar menú"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-0">
+            <a class="app-brand" th:href="@{/dashboard}">
+                <span class="brand-mark" aria-hidden="true">AH</span>
+                <span><strong>Alimentación</strong><span class="d-block small text-body-secondary">Hospitalaria</span></span>
+            </a>
+            <nav class="app-navigation nav nav-pills flex-column gap-1" aria-label="Menú principal">
+                <span class="navigation-label">PRINCIPAL</span>
+                <a class="nav-link" th:classappend="${active == 'inicio'} ? 'active'" th:attr="aria-current=${active == 'inicio' ? 'page' : null}"
+                   th:href="@{/dashboard}">Inicio</a>
+                <th:block sec:authorize="hasRole('ADMIN')">
+                    <span class="navigation-label mt-4">ADMINISTRACIÓN</span>
+                    <a class="nav-link" th:classappend="${active == 'usuarios'} ? 'active'" th:attr="aria-current=${active == 'usuarios' ? 'page' : null}"
+                       th:href="@{/admin/usuarios}">Administrar usuarios</a>
+                </th:block>
+            </nav>
+            <div class="sidebar-account mt-auto">
+                <p class="small text-body-secondary mb-1">Sesión iniciada como</p>
+                <p class="fw-semibold mb-3 account-name" sec:authentication="name">usuario</p>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-secondary w-100">Cerrar sesión</button>
+                </form>
+            </div>
+        </div>
+    </aside>
+</th:block>
 
-<footer th:fragment="footer" class="app-footer">
+<footer th:fragment="footer" class="app-footer text-body-secondary">
     <small>Sistema de Alimentación Hospitalaria</small>
 </footer>
+
+<th:block th:fragment="scripts">
+    <script defer th:src="@{/vendor/bootstrap/bootstrap.bundle.min.js}"></script>
+</th:block>
 
 </body>
 </html>

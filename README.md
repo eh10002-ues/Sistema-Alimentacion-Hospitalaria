@@ -126,7 +126,7 @@ Para inicializar el servicio local de Compose:
    ```
 
 4. Iniciar sesión con la cuenta configurada, usando el puerto `APP_PORT`.
-   Desde el enlace «Usuarios» del encabezado se accede a la administración.
+   Desde la opción «Administrar usuarios» del menú lateral se accede a la administración.
    El acceso correcto abre `/dashboard`, con el panel correspondiente al rol.
 5. Después de confirmar el acceso, vaciar `SPRING_PROFILES_ACTIVE` y retirar los
    tres valores `APP_ADMIN_*` del archivo `.env`. Recrear la aplicación para
@@ -149,8 +149,8 @@ inicialización en la suite general):
 
 ## HU-01 — Paso 4: administración de usuarios
 
-Solo el Administrador puede acceder a `/admin/usuarios`. El enlace «Usuarios»
-se muestra en el encabezado después de iniciar sesión con ese rol. Desde allí
+Solo el Administrador puede acceder a `/admin/usuarios`. La opción «Administrar usuarios»
+se muestra en el menú lateral después de iniciar sesión con ese rol. Desde allí
 puede crear cuentas, editar nombre completo, identificador y rol, activar o
 desactivar cuentas y restablecer contraseñas. No hay registro público ni
 eliminación de usuarios. El listado utiliza páginas de 20 registros, ordenadas
@@ -204,7 +204,7 @@ redirige al mismo panel. Un único controlador y una vista compartida muestran
 el usuario, el rol, las responsabilidades autorizadas y los accesos funcionales
 existentes. El Administrador dispone del acceso a usuarios; los demás roles
 tienen un panel informativo propio. No se muestran enlaces a módulos todavía
-inexistentes ni datos operativos simulados. La cabecera permite regresar al
+inexistentes ni datos operativos simulados. El menú lateral permite regresar al
 panel y cerrar sesión.
 
 `ReglasAcceso` centraliza las reglas de la cadena HTTP. Las consultas admiten
@@ -268,6 +268,28 @@ imágenes, vídeo ni trazas. Requiere Node, Chrome y Playwright ya instalado;
 se habilita definiendo `HU01_PLAYWRIGHT_MODULE` con la ruta del paquete
 Playwright. Sin esa variable se omite. Su ejecución está pendiente y no se
 considera evidencia de un comportamiento ya verificado en navegador.
+
+## Interfaz provisional con Bootstrap
+
+Las vistas utilizan Bootstrap 5.3.8 y ajustes propios en `static/css/styles.css`.
+Los archivos compilados CSS y JavaScript se sirven desde
+`static/vendor/bootstrap/`; no se requiere conexión con un CDN al abrir la
+aplicación. La descarga se verificó con los hashes SHA-384 publicados en la
+[documentación oficial de Bootstrap](https://getbootstrap.com/docs/5.3/getting-started/download/).
+Se conservan las licencias MIT de Bootstrap y de Popper, incluido en el bundle.
+
+El fragmento `templates/fragments/layout.html` define el menú lateral compartido.
+En escritorio permanece a la izquierda; por debajo de 992 px se abre con el
+botón «Menú», mediante el componente offcanvas de Bootstrap. La navegación
+incluye Inicio, administración de usuarios exclusivamente para Administrador,
+la cuenta actual y el cierre de sesión. La opción actual se resalta. Los
+accesos de navegación del dashboard se concentran en este menú lateral.
+
+Login, dashboard, formularios, listado de usuarios y páginas de error comparten
+una presentación sencilla: fondo claro, tarjetas, formularios adaptables,
+alertas, tabla con desplazamiento horizontal y botones consistentes. Es una
+base visual provisional. Las reglas de autorización y las validaciones siguen
+aplicándose en el servidor; las pruebas por capturas continúan fuera de alcance.
 
 ## Detención y persistencia
 

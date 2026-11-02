@@ -1,39 +1,76 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/layout :: head('Datos del usuario')}"></head>
-<body>
-<header th:replace="~{fragments/layout :: header}"></header>
-<main class="container">
-    <h1 th:text="${creacion ? 'Crear usuario' : 'Editar usuario'}"></h1>
-    <form class="formulario" th:action="@{${accion}}" th:object="${formulario}" method="post">
-        <div class="alert alert-error" th:if="${#fields.hasErrors('*')}">
-            <p>Revise los datos del formulario.</p>
-            <p th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('usuarios')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">ADMINISTRACIÓN / USUARIOS</p>
+            <h1 class="mb-2" th:text="${creacion ? 'Crear usuario' : 'Editar usuario'}"></h1>
+            <p class="text-body-secondary mb-0">Complete los datos de la cuenta y seleccione su rol.</p>
         </div>
-        <label for="nombreUsuario">Nombre de usuario</label>
-        <input id="nombreUsuario" type="text" th:field="*{nombreUsuario}" required maxlength="100" autocomplete="off">
-        <small th:if="${#fields.hasErrors('nombreUsuario')}">Ingrese un nombre único, sin espacios y de hasta 100 caracteres.</small>
-        <label for="nombreCompleto">Nombre completo</label>
-        <input id="nombreCompleto" type="text" th:field="*{nombreCompleto}" required maxlength="150">
-        <small th:if="${#fields.hasErrors('nombreCompleto')}">Ingrese el nombre completo, de hasta 150 caracteres.</small>
-        <label for="rol">Rol</label>
-        <select id="rol" th:field="*{rol}" required>
-            <option value="">Seleccione un rol</option>
-            <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol.etiqueta}"></option>
-        </select>
-        <small th:if="${#fields.hasErrors('rol')}">Seleccione uno de los roles disponibles.</small>
-        <div th:if="${creacion}" class="formulario">
-            <label><input type="checkbox" th:field="*{activo}"> Cuenta activa</label>
-            <label for="contrasena">Contraseña inicial</label>
-            <input id="contrasena" name="contrasena" type="password" autocomplete="new-password" required>
-            <label for="confirmacion">Confirmar contraseña</label>
-            <input id="confirmacion" name="confirmacion" type="password" autocomplete="new-password" required>
-            <p th:text="${politicaContrasena}"></p>
+        <div class="card form-card">
+            <div class="card-body">
+                <form th:action="@{${accion}}" th:object="${formulario}" method="post">
+                    <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
+                        <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
+                        <p class="mb-0" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label for="nombreCompleto" class="form-label">Nombre completo</label>
+                            <input id="nombreCompleto" type="text" class="form-control" th:field="*{nombreCompleto}" th:errorclass="is-invalid" required maxlength="150"
+                                   th:attr="aria-invalid=${#fields.hasErrors('nombreCompleto')}" aria-describedby="nombreCompleto-error">
+                            <div id="nombreCompleto-error" class="invalid-feedback" th:if="${#fields.hasErrors('nombreCompleto')}">Ingrese el nombre completo, de hasta 150 caracteres.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nombreUsuario" class="form-label">Nombre de usuario</label>
+                            <input id="nombreUsuario" type="text" class="form-control" th:field="*{nombreUsuario}" th:errorclass="is-invalid" required maxlength="100" autocomplete="off"
+                                   th:attr="aria-invalid=${#fields.hasErrors('nombreUsuario')}" aria-describedby="nombreUsuario-ayuda nombreUsuario-error">
+                            <div id="nombreUsuario-ayuda" class="form-text">Identificador único, sin espacios.</div>
+                            <div id="nombreUsuario-error" class="invalid-feedback" th:if="${#fields.hasErrors('nombreUsuario')}">Ingrese un nombre único, sin espacios y de hasta 100 caracteres.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="rol" class="form-label">Rol</label>
+                            <select id="rol" class="form-select" th:field="*{rol}" th:errorclass="is-invalid" required
+                                    th:attr="aria-invalid=${#fields.hasErrors('rol')}" aria-describedby="rol-error">
+                                <option value="">Seleccione un rol</option>
+                                <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol.etiqueta}"></option>
+                            </select>
+                            <div id="rol-error" class="invalid-feedback" th:if="${#fields.hasErrors('rol')}">Seleccione uno de los roles disponibles.</div>
+                        </div>
+                    </div>
+                    <div th:if="${creacion}" class="mt-4">
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input" th:field="*{activo}">
+                            <label for="activo" class="form-check-label">Cuenta activa</label>
+                        </div>
+                        <fieldset class="border-top pt-4">
+                            <legend class="float-none w-auto fs-6 fw-semibold mb-3">Seguridad de la cuenta</legend>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="contrasena" class="form-label">Contraseña inicial</label>
+                                    <input id="contrasena" name="contrasena" type="password" class="form-control" autocomplete="new-password" aria-describedby="politica-contrasena" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="confirmacion" class="form-label">Confirmar contraseña</label>
+                                    <input id="confirmacion" name="confirmacion" type="password" class="form-control" autocomplete="new-password" required>
+                                </div>
+                            </div>
+                            <p id="politica-contrasena" class="form-text mb-0 mt-3" th:text="${politicaContrasena}"></p>
+                        </fieldset>
+                    </div>
+                    <div class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" type="submit">Guardar usuario</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/admin/usuarios}">Volver a usuarios</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <button class="btn" type="submit">Guardar usuario</button>
-        <a th:href="@{/admin/usuarios}">Volver a usuarios</a>
-    </form>
-</main>
-<footer th:replace="~{fragments/layout :: footer}"></footer>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

@@ -22,7 +22,7 @@ public class ReglasAcceso {
 
 	public void configurar(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(auth -> auth
-			.requestMatchers("/css/**", "/js/**", "/img/**", "/favicon.ico", "/error", "/login").permitAll()
+			.requestMatchers("/css/**", "/js/**", "/img/**", "/vendor/bootstrap/**", "/favicon.ico", "/error", "/login").permitAll()
 			.requestMatchers("/acceso-denegado").authenticated()
 			.requestMatchers(lectura("/", "/dashboard")).hasAnyRole(TODOS)
 			.requestMatchers("/admin/**").hasRole("ADMIN")
