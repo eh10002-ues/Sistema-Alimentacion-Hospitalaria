@@ -58,6 +58,39 @@ class SecurityConfigTests {
 	@Autowired
 	private MockMvc mvc;
 
+	@ParameterizedTest
+	@EnumSource(Rol.class)
+	void logoutRealInvalidaLaSesionYEliminaLaCookieParaCadaRol(Rol rol) throws Exception {
+		var usuario = usuarios.findByNombreUsuarioIgnoreCase("medico.demo").orElseThrow();
+		usuario.setRol(rol);
+		usuarios.save(usuario);
+		var login = mvc.perform(formLogin().user("medico.demo").password(password))
+			.andExpect(authenticated()).andReturn();
+		var sesion = (org.springframework.mock.web.MockHttpSession) login.getRequest().getSession(false);
+		String identificadorAnterior = sesion.getId();
+		mvc.perform(get("/dashboard").session(sesion))
+			.andExpect(status().isOk())
+			.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+				.string("Cache-Control", org.hamcrest.Matchers.containsString("no-store")));
+		mvc.perform(post("/logout").session(sesion).with(csrf()))
+			.andExpect(redirectedUrl("/login?logout"))
+			.andExpect(unauthenticated())
+			.andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie().maxAge("JSESSIONID", 0));
+		org.assertj.core.api.Assertions.assertThat(sesion.isInvalid()).isTrue();
+		mvc.perform(get("/dashboard").cookie(new jakarta.servlet.http.Cookie("JSESSIONID", identificadorAnterior)))
+			.andExpect(redirectedUrl("/login")).andExpect(unauthenticated());
+	}
+
+	@Test
+	void logoutSinCsrfValidoNoCierraUnaSesionReal() throws Exception {
+		var login = mvc.perform(formLogin().user("medico.demo").password(password)).andReturn();
+		var sesion = (org.springframework.mock.web.MockHttpSession) login.getRequest().getSession(false);
+		mvc.perform(post("/logout").session(sesion)).andExpect(status().isForbidden());
+		mvc.perform(post("/logout").session(sesion).with(csrf().useInvalidToken())).andExpect(status().isForbidden());
+		mvc.perform(get("/dashboard").session(sesion)).andExpect(status().isOk()).andExpect(authenticated());
+		org.assertj.core.api.Assertions.assertThat(sesion.isInvalid()).isFalse();
+	}
+
 	@Test
 	void anonymousUserIsRedirectedToLogin() throws Exception {
 		mvc.perform(get("/"))

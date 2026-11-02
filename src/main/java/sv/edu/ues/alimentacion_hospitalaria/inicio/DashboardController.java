@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class DashboardController {
@@ -21,7 +22,8 @@ public class DashboardController {
 		return "index";
 	}
 
-	@GetMapping("/acceso-denegado")
+	// Un reenvío de seguridad conserva el método original, incluido POST, PUT o DELETE.
+	@RequestMapping("/acceso-denegado")
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	String accesoDenegado() {
 		return "error/403";

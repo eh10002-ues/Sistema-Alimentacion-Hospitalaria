@@ -246,6 +246,29 @@ por rol para impedir la exposición de datos clínicos o campos no autorizados.
 En particular, CA-01.26 requiere la futura implementación del reporte de
 asignaciones: no se considera cumplido por estas pruebas de rutas.
 
+## HU-01 — Paso 6: cierre de sesión y respuestas HTTP
+
+El logout invalida la sesión, limpia la autenticación y expira la cookie
+`JSESSIONID`. Las páginas protegidas conservan las cabeceras `no-store` de
+Spring Security. Las pruebas HTTP con Tomcat real verifican los cinco roles,
+rechazo de CSRF ausente o inválido, retirada del registro de sesiones,
+rechazo del identificador anterior y posibilidad de iniciar una nueva sesión.
+
+La vista de acceso denegado acepta los reenvíos del método original para
+conservar HTTP 403 también en POST. Un CSRF inválido antes del login devuelve
+403 sin redirigir a una página que requiera autenticación.
+
+```bash
+./mvnw -Dtest=SecurityConfigTests,LogoutHttpTests test
+```
+
+Las pruebas por capturas quedan fuera del alcance actual. Existe una prueba
+opcional `LogoutBrowserTests` que comprueba el historial en Chrome sin guardar
+imágenes, vídeo ni trazas. Requiere Node, Chrome y Playwright ya instalado;
+se habilita definiendo `HU01_PLAYWRIGHT_MODULE` con la ruta del paquete
+Playwright. Sin esa variable se omite. Su ejecución está pendiente y no se
+considera evidencia de un comportamiento ya verificado en navegador.
+
 ## Detención y persistencia
 
 ```bash
