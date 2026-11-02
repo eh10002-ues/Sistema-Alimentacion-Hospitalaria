@@ -1,0 +1,7 @@
+# Copiar como config/application-local.properties (no se versiona)
+# y activar con SPRING_PROFILES_ACTIVE=local
+spring.datasource.url=jdbc:mysql://localhost:3307/<nombre_bd>
+spring.datasource.username=<usuario>
+spring.datasource.password=${MYSQL_PASSWORD}
+
+spring.jpa.show-sql=true
