@@ -1,0 +1,16 @@
+.git
+.idea
+.vscode
+.agents
+.codex
+AGENTS.md
+historias.md
+HELP.md
+target
+.env
+.env.*
+config
+**/application-local.properties
+*.sql
+*.sql.gz
+.DS_Store
