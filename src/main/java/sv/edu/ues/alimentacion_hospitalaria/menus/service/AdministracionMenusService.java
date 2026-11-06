@@ -20,5 +20,5 @@ public class AdministracionMenusService {
         this.menuDetalleInsumoRepository = menuDetalleInsumoRepository;
     }
 
-    // TODO: creación de menús generales/personalizados, comidas e insumos por ración.
+
 }
