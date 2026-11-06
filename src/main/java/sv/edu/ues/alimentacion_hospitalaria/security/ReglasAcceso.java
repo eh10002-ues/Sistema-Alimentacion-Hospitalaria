@@ -17,6 +17,8 @@ public class ReglasAcceso {
 	private static final String[] CLINICOS_Y_PISO = {"ADMIN", "MEDICO", "NUTRICIONISTA", "ENCARGADO_PISO"};
 	private static final String[] ASIGNACIONES = {"ADMIN", "MEDICO", "NUTRICIONISTA"};
 	private static final String[] NUTRICION = {"ADMIN", "NUTRICIONISTA"};
+	// SAH-2: solo médicos y nutricionistas evalúan y autorizan dietas; el administrador no participa.
+	private static final String[] PRESCRIPCION = {"MEDICO", "NUTRICIONISTA"};
 	private static final String[] APROBACIONES = {"/asignaciones/*/aprobar", "/asignaciones/*/aprobar/**",
 		"/asignaciones/*/rechazar", "/asignaciones/*/rechazar/**"};
 
@@ -47,6 +49,10 @@ public class ReglasAcceso {
 			.requestMatchers(HttpMethod.POST, "/asignaciones/**").hasAnyRole(ASIGNACIONES)
 			.requestMatchers(HttpMethod.PUT, "/asignaciones/**").hasAnyRole(ASIGNACIONES)
 			.requestMatchers(HttpMethod.PATCH, "/asignaciones/**").hasAnyRole(ASIGNACIONES)
+			// SAH-2: evaluación y autorización de la dieta (solo consulta y POST; no se define edición ni eliminación).
+			.requestMatchers(porMetodos(Set.of("GET", "HEAD", "POST"), "/prescripciones/**")).hasAnyRole(PRESCRIPCION)
+			// SAH-2: recepción en tiempo real de las órdenes aprobadas.
+			.requestMatchers(lectura("/cocina/ordenes", "/cocina/ordenes/**")).hasRole("COCINA")
 			.anyRequest().denyAll());
 	}
 
