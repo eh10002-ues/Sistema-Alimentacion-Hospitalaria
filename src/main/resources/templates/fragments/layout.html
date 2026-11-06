@@ -38,6 +38,16 @@
                     <a class="nav-link" th:classappend="${active == 'usuarios'} ? 'active'" th:attr="aria-current=${active == 'usuarios' ? 'page' : null}"
                        th:href="@{/admin/usuarios}">Administrar usuarios</a>
                 </th:block>
+                <th:block sec:authorize="hasAnyRole('MEDICO', 'NUTRICIONISTA')">
+                    <span class="navigation-label mt-4">ALIMENTACIÓN</span>
+                    <a class="nav-link" th:classappend="${active == 'prescripciones'} ? 'active'" th:attr="aria-current=${active == 'prescripciones' ? 'page' : null}"
+                       th:href="@{/prescripciones}">Prescripción de dieta</a>
+                </th:block>
+                <th:block sec:authorize="hasRole('COCINA')">
+                    <span class="navigation-label mt-4">COCINA</span>
+                    <a class="nav-link" th:classappend="${active == 'cocina'} ? 'active'" th:attr="aria-current=${active == 'cocina' ? 'page' : null}"
+                       th:href="@{/cocina/ordenes}">Órdenes en tiempo real</a>
+                </th:block>
             </nav>
             <div class="sidebar-account mt-auto">
                 <p class="small text-body-secondary mb-1">Sesión iniciada como</p>
