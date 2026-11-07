@@ -43,7 +43,7 @@ public class ReglasAcceso {
 				.hasAnyRole(CLINICOS_Y_PISO)
 			.requestMatchers(lectura("/reportes/asignaciones", "/reportes/asignaciones/**", "/reportes/menus", "/reportes/menus/**"))
 				.hasAnyRole(TODOS)
-			.requestMatchers(lectura("/pacientes/**")).hasAnyRole(CLINICOS_Y_PISO)
+			.requestMatchers(lectura("/pacientes/**")).hasAnyRole(TODOS)
 			.requestMatchers(lectura("/ubicaciones/**")).hasAnyRole("ADMIN", "ENCARGADO_PISO")
 			.requestMatchers(lectura("/insumos/**")).hasAnyRole(PROYECCION_INSUMOS)
 			.requestMatchers(lectura("/menus/**", "/dietas/**")).hasAnyRole(TODOS)
