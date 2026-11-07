@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Proyección de insumos')}"></head>
+<body class="app-layout projection-page">
+<th:block th:replace="~{fragments/layout :: header('insumos')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main projection-main">
+        <div class="page-heading">
+            <p class="page-eyebrow projection-eyebrow mb-2">ABASTECIMIENTO</p>
+            <h1 class="mb-2">Proyección de insumos</h1>
+            <p class="projection-description mb-0">
+                Estimación para pacientes ingresados con menú activo y asignación aprobada.
+                Se cuenta una ración por paciente y día vigente.
+            </p>
+        </div>
+
+        <section class="card projection-filter-card mb-4" aria-labelledby="filtros-titulo" th:object="${formulario}">
+            <div class="card-body projection-filter-body">
+                <form id="formulario-proyeccion" th:action="@{/insumos/proyeccion}"
+                      th:object="${formulario}" method="get" class="projection-form">
+                    <fieldset class="projection-field period-field border-0 m-0 p-0">
+                        <legend id="filtros-titulo" class="form-label projection-field-label">
+                            <span class="projection-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                                    <path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"></path>
+                                </svg>
+                            </span>
+                            <span>Período</span>
+                        </legend>
+                        <div class="btn-group period-segmented w-100" role="group" aria-label="Período de proyección">
+                            <input class="btn-check" type="radio" id="periodo-semanal"
+                                   th:field="*{periodo}" value="SEMANAL">
+                            <label class="btn btn-outline-secondary" for="periodo-semanal">7 días</label>
+                            <input class="btn-check" type="radio" id="periodo-mensual"
+                                   th:field="*{periodo}" value="MENSUAL">
+                            <label class="btn btn-outline-secondary" for="periodo-mensual">30 días</label>
+                        </div>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('periodo')}"
+                             th:errors="*{periodo}"></div>
+                    </fieldset>
+                    <div class="projection-field margin-field">
+                        <label for="margenPorcentaje" class="form-label projection-field-label">
+                            <span class="projection-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 5 5 19M7 7h.01M17 17h.01"></path>
+                                    <circle cx="7" cy="7" r="3"></circle>
+                                    <circle cx="17" cy="17" r="3"></circle>
+                                </svg>
+                            </span>
+                            <span>Margen de abastecimiento (%)</span>
+                        </label>
+                        <input id="margenPorcentaje" class="form-control" type="number" min="0" max="100"
+                               step="0.01" inputmode="decimal"
+                               th:value="${formulario.margenPorcentaje}">
+                        <input id="margenFraccion" type="hidden" th:field="*{margenFraccion}">
+                        <div class="form-text">De 0 a 100 %. Se envía como fracción al cálculo.</div>
+                        <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('margenFraccion')}"
+                             th:errors="*{margenFraccion}"></div>
+                    </div>
+                    <div class="projection-submit">
+                        <button id="boton-calcular" class="btn btn-primary projection-submit-button w-100" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 aria-hidden="true">
+                                <rect x="5" y="3" width="14" height="18" rx="2"></rect>
+                                <path d="M8 7h8M8 11h2m4 0h2m-8 4h2m4 0h2m-8 3h2"></path>
+                            </svg>
+                            <span>Calcular</span>
+                            <svg class="projection-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" aria-hidden="true">
+                                <path d="M5 12h14m-6-6 6 6-6 6"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="estado-carga" class="visually-hidden" role="status" aria-live="polite"></p>
+                </form>
+                <div class="alert alert-danger mt-3 mb-0" th:if="${errorProyeccion != null}"
+                     role="alert" th:text="${errorProyeccion}"></div>
+                <div class="alert alert-danger mt-3 mb-0"
+                     th:if="${#fields.hasErrors('margenFraccion') or #fields.hasErrors('periodo')}"
+                     role="alert">
+                    <strong>No se pudo calcular la proyección.</strong>
+                    <ul class="mb-0 mt-2">
+                        <li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="resultado-proyeccion" th:if="${proyeccion != null}" aria-labelledby="resultado-titulo"
+                 th:attr="data-periodo=${proyeccion.periodo.etiqueta},data-fecha-inicio=${proyeccion.fechaInicio},data-fecha-fin=${proyeccion.fechaFin},data-margen=${proyeccion.margenPorcentaje},data-costo-total=${proyeccion.costoTotal},data-pacientes=${proyeccion.pacientesIncluidos},data-raciones-dia=${proyeccion.racionesPorDia}">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+                <div class="projection-result-heading">
+                    <h2 id="resultado-titulo" class="mb-1">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                             aria-hidden="true">
+                            <path d="M4 19V12m5 7V5m5 14v-9m5 9V8"></path>
+                        </svg>
+                        Resultado
+                    </h2>
+                    <p class="text-body-secondary mb-0 projection-result-period">
+                        Del <time th:text="${#temporals.format(proyeccion.fechaInicio, 'dd/MM/yyyy')}"></time>
+                        al <time th:text="${#temporals.format(proyeccion.fechaFin, 'dd/MM/yyyy')}"></time>
+                        · Margen <span th:text="${#numbers.formatDecimal(proyeccion.margenPorcentaje, 1, 2)}"></span>%
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-2" th:if="${!#lists.isEmpty(proyeccion.insumos)}">
+                    <button id="exportar-pdf" class="btn btn-outline-secondary" type="button">Exportar PDF</button>
+                    <button id="exportar-excel" class="btn btn-outline-secondary" type="button">Exportar Excel</button>
+                </div>
+            </div>
+            <div id="error-exportacion" class="alert alert-danger" role="alert" tabindex="-1" hidden></div>
+
+            <details class="projection-note mb-3">
+                <summary>Cómo se calcula la proyección</summary>
+                <p class="mb-0 mt-2">
+                    Se incluye el día inicial y los días calendario siguientes. La cantidad a comprar se redondea
+                    hacia arriba al número entero de presentaciones.
+                </p>
+            </details>
+
+            <div class="alert alert-warning" role="alert"
+                 th:if="${!#lists.isEmpty(proyeccion.advertencias)}">
+                <strong>Advertencias de la proyección</strong>
+                <ul class="mb-0 mt-2">
+                    <li th:each="advertencia : ${proyeccion.advertencias}" th:text="${advertencia}"></li>
+                </ul>
+            </div>
+
+            <div class="row g-3 mb-4" aria-label="Resumen de la proyección">
+                <div class="col-sm-6 col-xl-3">
+                    <article class="card h-100 summary-card summary-card--cost">
+                        <div class="card-body">
+                            <span class="summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <ellipse cx="12" cy="5" rx="8" ry="3"></ellipse>
+                                    <path d="M4 5v5c0 1.66 3.58 3 8 3 1.45 0 2.82-.16 4-.44M4 10v5c0 1.66 3.58 3 8 3 1.2 0 2.33-.11 3.33-.31M20 5v4m-16 6v3c0 1.66 3.58 3 8 3 1.2 0 2.33-.11 3.33-.31"></path>
+                                    <circle cx="18" cy="16" r="4"></circle>
+                                    <path d="M18 14v4m-1.2-3h2.4"></path>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="summary-label">Costo total</h3>
+                                <p class="summary-value mb-0" th:if="${proyeccion.costoTotal != null}"
+                                   data-currency
+                                   th:attr="data-raw=${proyeccion.costoTotal}"></p>
+                                <p class="summary-value mb-0" th:if="${proyeccion.costoTotal == null}">No disponible</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <article class="card h-100 summary-card summary-card--supplies">
+                        <div class="card-body">
+                            <span class="summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m12 3 9 5-9 5-9-5 9-5Z"></path>
+                                    <path d="M3 8v9l9 5 9-5V8M12 13v9"></path>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="summary-label">Insumos</h3>
+                                <p class="summary-value mb-0" th:text="${#lists.size(proyeccion.insumos)}"></p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <article class="card h-100 summary-card summary-card--patients">
+                        <div class="card-body">
+                            <span class="summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="9" cy="8" r="3"></circle>
+                                    <path d="M3 20v-1a6 6 0 0 1 12 0v1M17 5.5a3 3 0 0 1 0 5.8M18 14a5 5 0 0 1 3 4.6V20"></path>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="summary-label">Pacientes incluidos</h3>
+                                <p class="summary-value mb-0" th:text="${proyeccion.pacientesIncluidos}"></p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <article class="card h-100 summary-card summary-card--portions">
+                        <div class="card-body">
+                            <span class="summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                                    <path d="M16 3v4M8 3v4M3 10h18m4 4h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="summary-label">Raciones por día (promedio)</h3>
+                                <p class="summary-value mb-0" data-number
+                                   th:attr="data-raw=${proyeccion.racionesPorDia}"></p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="alert alert-secondary" th:if="${#lists.isEmpty(proyeccion.insumos)}" role="status">
+                <h3 class="h6">Sin insumos proyectados</h3>
+                <p class="mb-0">
+                    No se encontraron ingredientes asociados a las asignaciones aprobadas y vigentes de este período.
+                </p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(proyeccion.insumos)}">
+                <p class="small text-body-secondary d-md-none" aria-hidden="true">
+                    Desliza la tabla horizontalmente para consultar todas las columnas.
+                </p>
+                <div class="card">
+                    <div class="table-responsive projection-table-scroll" tabindex="0"
+                         aria-label="Tabla de proyección de insumos; desplazable horizontalmente">
+                        <table id="tabla-proyeccion" class="table table-hover align-middle mb-0 projection-table">
+                            <caption class="visually-hidden">Desglose proyectado de insumos y costos</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">Insumo</th>
+                                <th scope="col" class="text-end">
+                                        <span tabindex="0" data-bs-toggle="tooltip" data-bs-placement="top"
+                                              aria-label="Neto: lo que llega al plato"
+                                              title="Neto: lo que llega al plato">Neto</span>
+                                    </th>
+                                    <th scope="col" class="text-end">
+                                        <span tabindex="0" data-bs-toggle="tooltip" data-bs-placement="top"
+                                              aria-label="Bruto: neto más la merma"
+                                              title="Bruto: neto más la merma">Bruto</span>
+                                    </th>
+                                    <th scope="col" class="text-end">
+                                        <span tabindex="0" data-bs-toggle="tooltip" data-bs-placement="top"
+                                              aria-label="Total con margen: bruto más el margen de contingencia"
+                                              title="Total con margen: bruto más el margen de contingencia">
+                                            Total con margen
+                                    </span>
+                                </th>
+                                <th scope="col">Presentación</th>
+                                <th scope="col" class="text-end">A comprar</th>
+                                <th scope="col" class="text-end">Costo</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="insumo : ${proyeccion.insumos}"
+                                th:attr="data-insumo=${insumo.nombre}">
+                                <th scope="row">
+                                    <span th:text="${insumo.nombre}"></span>
+                                    <button th:if="${!#lists.isEmpty(insumo.advertencias)}"
+                                            class="warning-indicator" type="button"
+                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                            th:title="${#strings.listJoin(insumo.advertencias, ' ')}"
+                                            th:attr="aria-label=${#strings.listJoin(insumo.advertencias, ' ')}">
+                                        <span aria-hidden="true">!</span>
+                                    </button>
+                                </th>
+                                <td class="text-end">
+                                    <span data-number th:attr="data-raw=${insumo.neto},data-unidad=${insumo.unidad}"></span>
+                                </td>
+                                <td class="text-end">
+                                    <span data-number th:attr="data-raw=${insumo.bruto},data-unidad=${insumo.unidad}"></span>
+                                </td>
+                                <td class="text-end">
+                                    <span data-number
+                                          th:attr="data-raw=${insumo.totalConMargen},data-unidad=${insumo.unidad}"></span>
+                                </td>
+                                <td>
+                                    <span th:text="${insumo.presentacion != null ? insumo.presentacion : 'Sin definir'}"></span>
+                                    <span th:if="${insumo.cantidadPresentacion != null}">
+                                        · contenido:
+                                        <span data-number
+                                              th:attr="data-raw=${insumo.cantidadPresentacion},data-unidad=${insumo.unidad}"></span>
+                                    </span>
+                                </td>
+                                <td class="text-end purchase-quantity">
+                                    <span th:if="${insumo.cantidadComprar != null}"
+                                          data-export-value
+                                          th:attr="data-raw=${insumo.cantidadComprar}"
+                                          th:text="${#numbers.formatDecimal(insumo.cantidadComprar, 1, 0)}"></span>
+                                    <span th:if="${insumo.cantidadComprar != null && insumo.presentacion != null}"
+                                          th:text="${insumo.presentacion}"></span>
+                                    <span th:if="${insumo.cantidadComprar == null}" class="text-body-secondary">
+                                        No calculable
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span th:if="${insumo.costo != null}" data-currency
+                                          th:attr="data-raw=${insumo.costo}"></span>
+                                    <span th:if="${insumo.costo == null}" aria-label="Costo no disponible">—</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script defer th:src="@{/vendor/exportacion/exceljs.min.js}"></script>
+<script defer th:src="@{/vendor/exportacion/jspdf.umd.min.js}"></script>
+<script defer th:src="@{/vendor/exportacion/jspdf.plugin.autotable.min.js}"></script>
+<script defer th:src="@{/js/proyeccion-insumos.js}"></script>
+</body>
+</html>

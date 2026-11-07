@@ -19,7 +19,8 @@
         <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas"
                 data-bs-target="#appSidebar" aria-controls="appSidebar" aria-label="Abrir menú">Menú</button>
     </header>
-    <aside class="offcanvas-lg offcanvas-start app-sidebar" tabindex="-1" id="appSidebar" aria-labelledby="sidebar-title">
+    <aside class="offcanvas-lg offcanvas-start app-sidebar"
+           tabindex="-1" id="appSidebar" aria-labelledby="sidebar-title">
         <div class="offcanvas-header d-lg-none border-bottom">
             <h2 class="offcanvas-title fs-6" id="sidebar-title">Navegación</h2>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Cerrar menú"></button>
@@ -33,6 +34,11 @@
                 <span class="navigation-label">PRINCIPAL</span>
                 <a class="nav-link" th:classappend="${active == 'inicio'} ? 'active'" th:attr="aria-current=${active == 'inicio' ? 'page' : null}"
                    th:href="@{/dashboard}">Inicio</a>
+                <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA','COCINA')">
+                    <span class="navigation-label mt-4">ABASTECIMIENTO</span>
+                    <a class="nav-link" th:classappend="${active == 'insumos'} ? 'active'" th:attr="aria-current=${active == 'insumos' ? 'page' : null}"
+                       th:href="@{/insumos/proyeccion}">Proyección de insumos</a>
+                </th:block>
                 <th:block sec:authorize="hasRole('ADMIN')">
                     <span class="navigation-label mt-4">ADMINISTRACIÓN</span>
                     <a class="nav-link" th:classappend="${active == 'usuarios'} ? 'active'" th:attr="aria-current=${active == 'usuarios' ? 'page' : null}"
