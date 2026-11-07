@@ -297,7 +297,7 @@ resumen también muestra pacientes incluidos y el promedio de raciones diarias,
 calculado como raciones-día dividido entre los días del período.
 
 La merma se almacena como fracción entre 0 y 1 (por ejemplo, `0.10` equivale a
-10 %). La migración V9 convierte los porcentajes ya almacenados. Los insumos
+10 %). La migración V10 convierte los porcentajes ya almacenados. Los insumos
 con merma histórica de 100 % deben corregirse antes de migrar porque no existe
 un bruto finito para esa merma. Esta proyección se basa en asignaciones; no es
 un pronóstico aprendido del consumo histórico real.
