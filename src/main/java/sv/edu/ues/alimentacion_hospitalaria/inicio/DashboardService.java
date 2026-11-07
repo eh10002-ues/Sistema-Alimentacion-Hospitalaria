@@ -32,7 +32,8 @@ public class DashboardService {
 				List.of("Administrar dietas, menús y tiempos de comida", "Aprobar o rechazar asignaciones", "Consultar los cuatro reportes generales"), List.of());
 			case ROLE_ENCARGADO_PISO -> new PanelRol(authentication.getName(), rol, "Ocupación y ubicación hospitalaria",
 				"Organización de pisos, habitaciones, camas y ubicación de los pacientes.",
-				List.of("Gestionar ubicaciones hospitalarias", "Consultar asignaciones activas mediante su reporte", "Consultar los cuatro reportes generales"), List.of());
+				List.of("Gestionar pisos y camas", "Consultar asignaciones activas mediante su reporte", "Consultar los cuatro reportes generales"),
+				List.of(new PanelRol.Acceso("Pisos y camas", "/ubicaciones")));
 			case ROLE_COCINA -> new PanelRol(authentication.getName(), rol, "Menús y dietas del día",
 				"Información operativa para preparar y distribuir alimentos.",
 				List.of("Consultar menús aprobados y tiempos de comida", "Consultar el reporte de asignaciones activas", "Consultar el reporte de menús programados"), List.of());

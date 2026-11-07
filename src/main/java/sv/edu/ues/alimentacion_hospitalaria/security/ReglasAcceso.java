@@ -29,6 +29,7 @@ public class ReglasAcceso {
 				"/favicon.ico", "/error", "/login").permitAll()
 			.requestMatchers("/acceso-denegado").authenticated()
 			.requestMatchers(lectura("/", "/dashboard")).hasAnyRole(TODOS)
+			//.requestMatchers("/admin/ubicaciones", "/admin/ubicaciones/**").hasAnyRole("ADMIN", "ENCARGADO_PISO")
 			.requestMatchers("/admin/**").hasRole("ADMIN")
 			// Las pantallas de modificación también se protegen, aunque se soliciten por GET.
 			.requestMatchers(lectura("/menus/nuevo", "/menus/nuevo/**", "/menus/*/editar", "/menus/*/editar/**",
@@ -42,7 +43,8 @@ public class ReglasAcceso {
 				.hasAnyRole(CLINICOS_Y_PISO)
 			.requestMatchers(lectura("/reportes/asignaciones", "/reportes/asignaciones/**", "/reportes/menus", "/reportes/menus/**"))
 				.hasAnyRole(TODOS)
-			.requestMatchers(lectura("/pacientes/**", "/ubicaciones/**")).hasAnyRole(CLINICOS_Y_PISO)
+			.requestMatchers(lectura("/pacientes/**")).hasAnyRole(CLINICOS_Y_PISO)
+			.requestMatchers(lectura("/ubicaciones/**")).hasAnyRole("ADMIN", "ENCARGADO_PISO")
 			.requestMatchers(lectura("/insumos/**")).hasAnyRole(PROYECCION_INSUMOS)
 			.requestMatchers(lectura("/menus/**", "/dietas/**")).hasAnyRole(TODOS)
 			.requestMatchers(lectura("/asignaciones/**")).hasAnyRole(ASIGNACIONES)

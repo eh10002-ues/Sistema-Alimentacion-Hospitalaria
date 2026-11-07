@@ -73,8 +73,11 @@
                         </svg>
                         <span>Administrar usuarios</span>
                     </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO_PISO')">
+                    <span class="navigation-label mt-4">UBICACIONES</span>
                     <a class="nav-link" th:classappend="${active == 'ubicaciones'} ? 'active'" th:attr="aria-current=${active == 'ubicaciones' ? 'page' : null}"
-                       th:href="@{/admin/ubicaciones}">
+                       th:href="@{/ubicaciones}">
                         <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 21V8l9-5 9 5v13"></path>
