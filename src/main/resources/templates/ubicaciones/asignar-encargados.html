@@ -13,8 +13,10 @@
         <div class="card form-card">
             <div class="card-body">
                 <form th:action="@{/admin/ubicaciones/{id}/encargados(id=${piso.id})}" th:object="${formulario}" method="post">
-                    <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}"
-                         th:each="error : ${#fields.allErrors()}" th:text="${error.defaultMessage}"></div>
+                    <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
+                        <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
+                        <p class="mb-0" th:each="error : ${#fields.errors('*')}" th:text="${error}"></p>
+                    </div>
                     <div class="alert alert-info">Solo se muestran usuarios activos con rol Encargado de piso.</div>
                     <div id="asignaciones" class="vstack gap-3">
                         <div class="row g-3 align-items-end asignacion-fila" th:each="asignacion, item : *{asignaciones}">

@@ -24,5 +24,6 @@ public class CamaForm {
         @jakarta.validation.constraints.NotBlank(message = "Ingrese el código o número de la cama.")
         @jakarta.validation.constraints.Size(max = 10, message = "El código de cama admite hasta 10 caracteres.")
         private String numero;
+        private Long id;
     }
 }

@@ -84,6 +84,7 @@ public class AdministracionUbicacionesService {
     public void crear(PisoForm formulario) {
         normalizar(formulario);
         comprobarCodigoDisponible(formulario.getCodigo(), null);
+        comprobarNombreDisponible(formulario.getNombre(), null);
         pisos.save(new Piso(formulario.getCodigo(), formulario.getNombre().trim()));
     }
 
@@ -91,6 +92,7 @@ public class AdministracionUbicacionesService {
     public void editar(Long id, PisoForm formulario) {
         normalizar(formulario);
         comprobarCodigoDisponible(formulario.getCodigo(), id);
+        comprobarNombreDisponible(formulario.getNombre(), id);
         Piso piso = buscarPiso(id);
         piso.setCodigo(formulario.getCodigo());
         piso.setNombre(formulario.getNombre().trim());
@@ -111,13 +113,42 @@ public class AdministracionUbicacionesService {
             if (!numeros.add(numero.toUpperCase(Locale.ROOT))) {
                 throw new IllegalArgumentException("No repita el código de una cama dentro del formulario.");
             }
-            if (camas.existsByPisoIdAndNumero(pisoId, numero)) {
+            if (cama.getId() == null && camas.existsByPisoIdAndNumeroIgnoreCase(pisoId, numero)) {
+                throw new IllegalArgumentException("Ya existe una cama con el código " + numero + " en el piso seleccionado.");
+            }
+            if (cama.getId() != null && camas.existsByPisoIdAndNumeroIgnoreCaseAndIdNot(pisoId, numero, cama.getId())) {
                 throw new IllegalArgumentException("Ya existe una cama con el código " + numero + " en el piso seleccionado.");
             }
         }
         for (CamaForm.CodigoCama cama : formulario.getCamas()) {
-            camas.save(new Cama(piso, cama.getNumero().trim()));
+            if (cama.getId() == null) {
+                camas.save(new Cama(piso, cama.getNumero().trim()));
+            } else {
+                Cama existente = camas.findById(cama.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("La cama seleccionada ya no existe."));
+                if (!existente.getPiso().getId().equals(pisoId)) {
+                    throw new IllegalArgumentException("La cama no pertenece al piso seleccionado.");
+                }
+                existente.setNumero(cama.getNumero().trim());
+            }
         }
+    }
+
+    public CamaForm consultarCamas(Long pisoId) {
+        buscarPiso(pisoId);
+        CamaForm formulario = new CamaForm();
+        formulario.setCamas(camas.findByPisoIdOrderByNumeroAsc(pisoId).stream()
+            .map(cama -> {
+                CamaForm.CodigoCama codigo = new CamaForm.CodigoCama();
+                codigo.setId(cama.getId());
+                codigo.setNumero(cama.getNumero());
+                return codigo;
+            })
+            .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new)));
+        if (formulario.getCamas().isEmpty()) {
+            formulario.getCamas().add(new CamaForm.CodigoCama());
+        }
+        return formulario;
     }
 
     @Transactional
@@ -127,6 +158,7 @@ public class AdministracionUbicacionesService {
         }
         Piso piso = buscarPiso(pisoId);
         Set<String> claves = new HashSet<>();
+        Set<String> pisosPorTurno = new HashSet<>();
         for (AsignacionPisoItemForm item : formulario.getAsignaciones()) {
             if (item.getUsuarioId() == null || item.getTurno() == null) {
                 throw new IllegalArgumentException("Complete el encargado y el turno de cada asignación.");
@@ -134,6 +166,9 @@ public class AdministracionUbicacionesService {
             String clave = item.getUsuarioId() + ":" + item.getTurno();
             if (!claves.add(clave)) {
                 throw new IllegalArgumentException("No repita el mismo encargado en el mismo turno.");
+            }
+            if (!pisosPorTurno.add(item.getTurno().name())) {
+                throw new IllegalArgumentException("El piso solo puede tener un encargado por turno.");
             }
             Usuario usuario = usuarios.findById(item.getUsuarioId())
                 .orElseThrow(() -> new IllegalArgumentException("El usuario seleccionado no existe."));
@@ -164,6 +199,15 @@ public class AdministracionUbicacionesService {
         }
         if (id != null && pisos.existsByCodigoIgnoreCaseAndIdNot(codigo, id)) {
             throw new IllegalArgumentException("Ya existe un piso con ese código.");
+        }
+    }
+
+    private void comprobarNombreDisponible(String nombre, Long id) {
+        if (id == null && pisos.existsByNombreIgnoreCase(nombre)) {
+            throw new IllegalArgumentException("Ya existe un piso con ese nombre.");
+        }
+        if (id != null && pisos.existsByNombreIgnoreCaseAndIdNot(nombre, id)) {
+            throw new IllegalArgumentException("Ya existe un piso con ese nombre.");
         }
     }
 }

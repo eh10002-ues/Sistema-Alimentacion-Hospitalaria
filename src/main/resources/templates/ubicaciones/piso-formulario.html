@@ -15,7 +15,7 @@
                 <form th:action="@{${accion}}" th:object="${formulario}" method="post">
                     <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
                         <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
-                        <p class="mb-0" th:each="error : ${#fields.allErrors()}" th:text="${error.defaultMessage}"></p>
+                        <p class="mb-0" th:each="error : ${#fields.errors('*')}" th:text="${error}"></p>
                     </div>
                     <div class="row g-4">
                         <div class="col-md-4">

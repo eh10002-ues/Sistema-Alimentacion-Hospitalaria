@@ -16,6 +16,7 @@ import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.dto.AsignacionPisoForm;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.dto.CamaForm;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.dto.PisoForm;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.service.AdministracionUbicacionesService;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Controller
 @RequestMapping("/admin/ubicaciones")
@@ -54,8 +55,8 @@ public class UbicacionesController {
             try {
                 ubicaciones.crear(formulario);
                 return exito(redirect, "Piso creado correctamente.");
-            } catch (IllegalArgumentException ex) {
-                errores.reject("regla", ex.getMessage());
+            } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
+                errores.reject("regla", mensajeError(ex));
             }
         }
         return prepararPiso(model, null);
@@ -74,8 +75,8 @@ public class UbicacionesController {
             try {
                 ubicaciones.editar(id, formulario);
                 return exito(redirect, "Piso actualizado correctamente.");
-            } catch (IllegalArgumentException ex) {
-                errores.reject("regla", ex.getMessage());
+            } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
+                errores.reject("regla", mensajeError(ex));
             }
         }
         return prepararPiso(model, id);
@@ -92,13 +93,15 @@ public class UbicacionesController {
     }
 
     @PostMapping("/{id}/encargados")
-    String guardarEncargados(@PathVariable Long id, @ModelAttribute("formulario") AsignacionPisoForm formulario,
+    String guardarEncargados(@PathVariable Long id, @Valid @ModelAttribute("formulario") AsignacionPisoForm formulario,
         BindingResult errores, Model model, RedirectAttributes redirect) {
-        try {
-            ubicaciones.asignarEncargados(id, formulario);
-            return exito(redirect, "Encargados asignados correctamente.");
-        } catch (IllegalArgumentException ex) {
-            errores.reject("regla", ex.getMessage());
+        if (!errores.hasErrors()) {
+            try {
+                ubicaciones.asignarEncargados(id, formulario);
+                return exito(redirect, "Encargados asignados correctamente.");
+            } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
+                errores.reject("regla", mensajeError(ex));
+            }
         }
         model.addAttribute("piso", ubicaciones.buscarPiso(id));
         model.addAttribute("encargados", ubicaciones.encargadosActivos());
@@ -108,7 +111,7 @@ public class UbicacionesController {
 
     @GetMapping("/{id}/camas/nueva")
     String nuevaCama(@PathVariable Long id, Model model) {
-        model.addAttribute("formulario", new CamaForm());
+        model.addAttribute("formulario", ubicaciones.consultarCamas(id));
         model.addAttribute("piso", ubicaciones.buscarPiso(id));
         return "ubicaciones/cama-formulario";
     }
@@ -120,8 +123,8 @@ public class UbicacionesController {
             try {
                 ubicaciones.crearCamas(id, formulario);
                 return exito(redirect, "Camas registradas correctamente.");
-            } catch (IllegalArgumentException ex) {
-                errores.reject("regla", ex.getMessage());
+            } catch (IllegalArgumentException | DataIntegrityViolationException ex) {
+                errores.reject("regla", mensajeError(ex));
             }
         }
         model.addAttribute("piso", ubicaciones.buscarPiso(id));
@@ -137,5 +140,12 @@ public class UbicacionesController {
     private String exito(RedirectAttributes redirect, String mensaje) {
         redirect.addFlashAttribute("mensaje", mensaje);
         return "redirect:/admin/ubicaciones";
+    }
+
+    private String mensajeError(Exception ex) {
+        if (ex instanceof DataIntegrityViolationException) {
+            return "Los datos coinciden con un registro existente. Revise piso, cama, encargado y turno.";
+        }
+        return ex.getMessage();
     }
 }

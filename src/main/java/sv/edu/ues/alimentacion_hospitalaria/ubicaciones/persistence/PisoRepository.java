@@ -18,6 +18,10 @@ public interface PisoRepository extends JpaRepository<Piso, Long> {
 
     boolean existsByCodigoIgnoreCaseAndIdNot(String codigo, Long id);
 
+    boolean existsByNombreIgnoreCase(String nombre);
+
+    boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
+
     @Query("""
         select piso from Piso piso
         where (:busqueda = '' or lower(piso.codigo) like lower(concat('%', :busqueda, '%'))
