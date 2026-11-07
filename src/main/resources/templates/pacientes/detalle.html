@@ -57,7 +57,10 @@
                         <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.alergias)}">No tiene alergias registradas.</li>
                         <li class="list-group-item d-flex justify-content-between gap-2" th:each="alergia : ${paciente.alergias}">
                             <span th:text="${alergia.nombre}"></span>
-                            <span class="badge text-bg-secondary" th:text="${alergia.severidad}"></span>
+                            <span class="badge"
+                                  th:classappend="${alergia.severidad.name() == 'LEVE'} ? ' text-bg-primary' : (${alergia.severidad.name() == 'MODERADA'} ? ' text-dark' : ' text-bg-danger')"
+                                  th:style="${alergia.severidad.name() == 'MODERADA'} ? 'background-color:#fd7e14' : null"
+                                  th:text="${alergia.severidad.name() == 'LEVE'} ? 'Leve' : (${alergia.severidad.name() == 'MODERADA'} ? 'Moderado' : 'Grave')"></span>
                         </li>
                     </ul>
                 </div>

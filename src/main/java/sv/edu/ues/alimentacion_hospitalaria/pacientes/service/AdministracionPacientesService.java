@@ -16,6 +16,8 @@ import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteDetalleVista;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteVista;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteForm;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.AlergiaForm;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteAlergiaRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteEnfermedadRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteMedicamentoRepository;
@@ -67,6 +69,47 @@ public class AdministracionPacientesService {
         paciente.getAlergias().size();
         paciente.getMedicamentos().size();
         return PacienteDetalleVista.desde(paciente);
+    }
+
+    public Paciente consultarPacienteAlergias(Long id) {
+        return pacienteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+    }
+
+    public java.util.List<PacienteAlergia> alergias(Long pacienteId) {
+        return alergiaRepository.findByPacienteId(pacienteId);
+    }
+
+    @Transactional
+    public void agregarAlergia(Long pacienteId, AlergiaForm formulario) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        PacienteAlergia alergia = new PacienteAlergia(
+            formulario.getNombre().trim(), formulario.getSeveridad());
+        paciente.agregarAlergia(alergia);
+        pacienteRepository.save(paciente);
+    }
+
+    @Transactional
+    public void actualizarAlergia(Long pacienteId, Long alergiaId, AlergiaForm formulario) {
+        PacienteAlergia alergia = alergiaRepository.findById(alergiaId)
+            .orElseThrow(() -> new ResourceNotFoundException("La alergia solicitada no existe."));
+        if (!alergia.getPaciente().getId().equals(pacienteId)) {
+            throw new IllegalArgumentException("La alergia no pertenece al paciente seleccionado.");
+        }
+        alergia.setNombre(formulario.getNombre().trim());
+        alergia.setSeveridad(formulario.getSeveridad());
+        alergiaRepository.save(alergia);
+    }
+
+    @Transactional
+    public void eliminarAlergia(Long pacienteId, Long alergiaId) {
+        PacienteAlergia alergia = alergiaRepository.findById(alergiaId)
+            .orElseThrow(() -> new ResourceNotFoundException("La alergia solicitada no existe."));
+        if (!alergia.getPaciente().getId().equals(pacienteId)) {
+            throw new IllegalArgumentException("La alergia no pertenece al paciente seleccionado.");
+        }
+        alergiaRepository.delete(alergia);
     }
 
     public java.util.List<Piso> pisosDisponibles() {

@@ -19,6 +19,8 @@ a { color: var(--app-accent); }
 .page-eyebrow, .navigation-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; color: var(--app-muted); }
 .page-heading { margin-bottom: 1.75rem; }
 .ubicaciones-table { overflow: visible; }
+.alergias-table { overflow: visible; }
+.alergias-table .dropdown-menu { z-index: 1060; }
 .pacientes-table { table-layout: fixed; width: 100%; }
 .pacientes-table th, .pacientes-table td { overflow-wrap: anywhere; }
 .pacientes-table .paciente-nombre { max-width: 8rem; }
