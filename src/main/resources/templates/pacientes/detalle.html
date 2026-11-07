@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Detalle del paciente')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="page-eyebrow mb-2">PACIENTES</p>
+                <h1 class="mb-0" th:text="|${paciente.nombres} ${paciente.apellidos}|"></h1>
+                <p class="text-body-secondary mb-0 mt-2" th:text="|Código: ${paciente.codigo}|"></p>
+            </div>
+            <a class="btn btn-secondary" th:href="@{/pacientes}">Volver a pacientes</a>
+        </div>
+
+        <section class="card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Información general</h2></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Código</dt><dd class="col-sm-9" th:text="${paciente.codigo}"></dd>
+                    <dt class="col-sm-3">Nombre</dt><dd class="col-sm-9" th:text="${paciente.nombres}"></dd>
+                    <dt class="col-sm-3">Apellido</dt><dd class="col-sm-9" th:text="${paciente.apellidos}"></dd>
+                    <dt class="col-sm-3">Fecha de nacimiento</dt><dd class="col-sm-9" th:text="${#temporals.format(paciente.fechaNacimiento, 'dd/MM/yyyy')}"></dd>
+                    <dt class="col-sm-3">Edad</dt><dd class="col-sm-9" th:text="${paciente.edadExacta}"></dd>
+                    <dt class="col-sm-3">Peso</dt><dd class="col-sm-9" th:text="|${paciente.pesoKg} kg|"></dd>
+                    <dt class="col-sm-3">Altura</dt><dd class="col-sm-9" th:text="|${paciente.alturaCm} cm|"></dd>
+                    <dt class="col-sm-3">Estado</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge rounded-pill"
+                              th:classappend="${paciente.estado.name() == 'INGRESADO'} ? 'text-bg-warning' : 'text-bg-success'"
+                              th:text="${paciente.estado}"></span>
+                    </dd>
+                    <dt class="col-sm-3">Ubicación</dt><dd class="col-sm-9" th:text="${paciente.ubicacion}"></dd>
+                </dl>
+            </div>
+        </section>
+
+        <div class="row g-4">
+            <section class="col-lg-4 card-section">
+                <div class="card h-100">
+                    <div class="card-header bg-white"><h2 class="h5 mb-0">Medicamentos</h2></div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.medicamentos)}">No tiene medicamentos registrados.</li>
+                        <li class="list-group-item" th:each="medicamento : ${paciente.medicamentos}">
+                            <strong th:text="${medicamento.nombre}"></strong>
+                            <span class="d-block small text-body-secondary"
+                                  th:text="|Dosis: ${medicamento.dosis} · Cada ${medicamento.frecuenciaHoras} horas · Primera dosis: ${medicamento.horaPrimeraDosis}|"></span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            <section class="col-lg-4 card-section">
+                <div class="card h-100">
+                    <div class="card-header bg-white"><h2 class="h5 mb-0">Alergias</h2></div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.alergias)}">No tiene alergias registradas.</li>
+                        <li class="list-group-item d-flex justify-content-between gap-2" th:each="alergia : ${paciente.alergias}">
+                            <span th:text="${alergia.nombre}"></span>
+                            <span class="badge text-bg-secondary" th:text="${alergia.severidad}"></span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            <section class="col-lg-4 card-section">
+                <div class="card h-100">
+                    <div class="card-header bg-white"><h2 class="h5 mb-0">Enfermedades</h2></div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.enfermedades)}">No tiene enfermedades registradas.</li>
+                        <li class="list-group-item" th:each="enfermedad : ${paciente.enfermedades}" th:text="${enfermedad}"></li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

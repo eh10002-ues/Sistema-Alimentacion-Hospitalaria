@@ -19,6 +19,9 @@ a { color: var(--app-accent); }
 .page-eyebrow, .navigation-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; color: var(--app-muted); }
 .page-heading { margin-bottom: 1.75rem; }
 .ubicaciones-table { overflow: visible; }
+.pacientes-table { table-layout: fixed; width: 100%; }
+.pacientes-table th, .pacientes-table td { overflow-wrap: anywhere; }
+.pacientes-table .paciente-nombre { max-width: 8rem; }
 .card { --bs-card-border-color: var(--app-border); --bs-card-border-radius: 0.8rem; background: #fff; box-shadow: 0 2px 8px rgb(23 43 58 / 2%); }
 .card-body { padding: 1.75rem; }
 .form-card { max-width: 880px; }

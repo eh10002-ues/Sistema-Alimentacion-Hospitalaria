@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Pacientes')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="page-eyebrow mb-2">PACIENTES</p>
+                <h1 class="mb-2">Gestionar pacientes</h1>
+                <p class="text-body-secondary mb-0">Consulte los pacientes, su ubicación y su información clínica.</p>
+            </div>
+
+            <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${mensaje}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            <div th:if="${mensajeError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${mensajeError}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+            <a class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO')" th:href="@{/pacientes/nuevo}">
+                Ingresar Nuevo Paciente
+            </a>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/pacientes}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="buscar" class="form-label">Buscar paciente</label>
+                    <input id="buscar" name="buscar" type="search" class="form-control"
+                           th:value="${buscar}" placeholder="Código, nombre o apellido">
+                </div>
+                <div class="col-md-auto">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select id="estado" name="estado" class="form-select">
+                        <option th:value="${null}" th:selected="${estadoSeleccionado == null}">Todos</option>
+                        <option th:each="estadoItem : ${estados}" th:value="${estadoItem}"
+                                th:selected="${estadoItem == estadoSeleccionado}" th:text="${estadoItem}"></option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <label for="pisoId" class="form-label">Piso</label>
+                    <select id="pisoId" name="pisoId" class="form-select">
+                        <option th:value="${null}" th:selected="${pisoSeleccionadoId == null}">Todos</option>
+                        <option th:each="piso : ${pisos}" th:value="${piso.id}"
+                                th:selected="${piso.id == pisoSeleccionadoId}"
+                                th:text="|${piso.codigo} - ${piso.nombre}|"></option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button class="btn btn-primary" type="submit">Buscar</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card">
+            <div class="table-responsive ubicaciones-table">
+                <table class="table align-middle mb-0 pacientes-table">
+                    <caption class="visually-hidden">Pacientes registrados y sus datos principales</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Apellido</th>
+                        <th scope="col">Enfermedades</th>
+                        <th scope="col">Alergias</th>
+                        <th scope="col">Ubicación</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${pagina.empty}">
+                        <td colspan="8" class="text-center text-body-secondary py-5">No hay pacientes para mostrar.</td>
+                    </tr>
+                    <tr th:each="paciente : ${pagina.content}">
+                        <td class="fw-semibold" th:text="${paciente.codigo}"></td>
+                        <td class="paciente-nombre" th:text="${paciente.nombres}"></td>
+                        <td th:text="${paciente.apellidos}"></td>
+                        <td th:text="${paciente.enfermedades}"></td>
+                        <td th:text="${paciente.alergias}"></td>
+                        <td th:text="${paciente.ubicacion}"></td>
+                        <td>
+                            <span class="badge rounded-pill"
+                                  th:classappend="${paciente.estado.name() == 'INGRESADO'} ? 'text-bg-warning' : 'text-bg-success'"
+                                  th:text="${paciente.estado}"></span>
+                        </td>
+                        <td>
+                            <div class="dropdown" sec:authorize="hasAnyRole('ADMIN', 'MEDICO')">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">Acciones</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" th:href="@{/pacientes/{id}/editar(id=${paciente.id})}">
+                                            Editar Paciente
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" th:href="@{/pacientes/{id}(id=${paciente.id})}">
+                                            Ver Paciente
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li th:if="${paciente.estado.name() == 'INGRESADO'}">
+                                        <form th:action="@{/pacientes/{id}/dar-de-alta(id=${paciente.id})}" method="post"
+                                              th:attr="data-cama=${paciente.ubicacion}"
+                                              onsubmit="return confirm('Al dar de alta al paciente, la cama ' + this.dataset.cama + ' quedará liberada. ¿Desea continuar?');">
+                                            <button class="dropdown-item text-danger" type="submit">Dar de alta</button>
+                                        </form>
+                                    </li>
+                                    <li th:if="${paciente.estado.name() == 'ALTA'}">
+                                        <form th:action="@{/pacientes/{id}/reingresar(id=${paciente.id})}" method="post">
+                                            <button class="dropdown-item text-success" type="submit">Reingresar</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            <a sec:authorize="!hasAnyRole('ADMIN', 'MEDICO')" class="btn btn-sm btn-outline-primary"
+                               th:href="@{/pacientes/{id}(id=${paciente.id})}">Ver Paciente</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white d-flex flex-wrap align-items-center justify-content-between gap-3 py-3 px-4">
+                <span class="small text-body-secondary" th:text="|Página ${pagina.number + 1} · ${pagina.totalElements} pacientes|"></span>
+                <nav aria-label="Páginas de pacientes">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:if="${pagina.hasPrevious()}">
+                            <a class="page-link" th:href="@{/pacientes(pagina=${pagina.number - 1},buscar=${buscar},estado=${estadoSeleccionado},pisoId=${pisoSeleccionadoId})}">Anterior</a>
+                        </li>
+                        <li class="page-item" th:if="${pagina.hasNext()}">
+                            <a class="page-link" th:href="@{/pacientes(pagina=${pagina.number + 1},buscar=${buscar},estado=${estadoSeleccionado},pisoId=${pisoSeleccionadoId})}">Siguiente</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

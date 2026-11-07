@@ -19,7 +19,7 @@ import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.service.AdministracionUb
 import org.springframework.dao.DataIntegrityViolationException;
 
 @Controller
-@RequestMapping("/admin/ubicaciones")
+@RequestMapping("/ubicaciones")
 public class UbicacionesController {
 
     private final AdministracionUbicacionesService ubicaciones;
@@ -133,13 +133,13 @@ public class UbicacionesController {
 
     private String prepararPiso(Model model, Long id) {
         model.addAttribute("creacion", id == null);
-        model.addAttribute("accion", id == null ? "/admin/ubicaciones" : "/admin/ubicaciones/" + id);
+        model.addAttribute("accion", id == null ? "/ubicaciones" : "/ubicaciones/" + id);
         return "ubicaciones/piso-formulario";
     }
 
     private String exito(RedirectAttributes redirect, String mensaje) {
         redirect.addFlashAttribute("mensaje", mensaje);
-        return "redirect:/admin/ubicaciones";
+        return "redirect:/ubicaciones";
     }
 
     private String mensajeError(Exception ex) {

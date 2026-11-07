@@ -98,7 +98,7 @@ class DashboardPermisosTests {
 		Set<Rol> asignaciones = Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA);
 		List<Caso> casos = List.of(
 			new Caso("/pacientes/1", clinicosPiso, medico),
-			new Caso("/ubicaciones/1", clinicosPiso, piso),
+			new Caso("/ubicaciones/1", piso, piso),
 			new Caso("/menus/1", todos, nutricion),
 			new Caso("/dietas/1", todos, nutricion),
 			new Caso("/asignaciones/1", asignaciones, asignaciones),

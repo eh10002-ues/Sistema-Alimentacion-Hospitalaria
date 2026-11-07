@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -18,6 +19,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 
 @Entity
 //se asigna solo un numero de cama por cada piso, ej.: no pueden haber 2 camas #10 en piso 5
@@ -43,6 +47,9 @@ public class Cama {
     @Size(max = 10)
     @Column(nullable = false, length = 10)
     private String numero;
+
+    @OneToMany(mappedBy = "cama")
+    private List<Paciente> pacientes = new ArrayList<>();
 
     public Cama(Piso piso, String numero) {
         this.piso = piso;
