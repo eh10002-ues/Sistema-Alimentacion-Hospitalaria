@@ -10,7 +10,7 @@
             <h1 class="mb-2">Gestionar medicamentos</h1>
             <p class="text-body-secondary mb-0"
                th:text="|${paciente.nombres} ${paciente.apellidos} · ${paciente.codigo}|"></p>
-            <div class="d-flex flex-wrap gap-2 mt-3">
+            <div class="d-flex flex-wrap gap-2 mt-3" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">
                 <a class="btn btn-secondary"
                    th:href="@{/pacientes/{id}(id=${paciente.id})}">Ver Paciente</a>
                 <a class="btn btn-outline-success"

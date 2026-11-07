@@ -41,7 +41,7 @@
                 <div class="card h-100">
                     <div class="card-header bg-white d-flex justify-content-between">
                         <h2 class="h5 mb-0">Medicamentos</h2>
-                        <a class="btn btn-sm btn-primary"
+                        <a class="btn btn-sm btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')"
                            th:href="@{/pacientes/{id}/medicamentos(id=${paciente.id})}">Gestionar Medicamentos</a>
                     </div>
                     <ul class="list-group list-group-flush">
@@ -58,7 +58,7 @@
                 <div class="card h-100">
                     <div class="card-header bg-white d-flex justify-content-between">
                         <h2 class="h5 mb-0">Alergias</h2>
-                        <a class="btn btn-sm btn-primary"
+                        <a class="btn btn-sm btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')"
                            th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">Gestionar Alergias</a>
                     </div>
                     <ul class="list-group list-group-flush">
@@ -77,7 +77,7 @@
                 <div class="card h-100">
                     <div class="card-header bg-white d-flex justify-content-between">
                         <h2 class="h5 mb-0">Enfermedades</h2>
-                        <a class="btn btn-sm btn-primary"
+                        <a class="btn btn-sm btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')"
                            th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">Gestionar Enfermedades</a>
                     </div>
                     <ul class="list-group list-group-flush">

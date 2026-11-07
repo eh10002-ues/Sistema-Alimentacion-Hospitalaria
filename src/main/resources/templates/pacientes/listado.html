@@ -88,11 +88,11 @@
                                   th:text="${paciente.estado}"></span>
                         </td>
                         <td>
-                            <div class="dropdown" sec:authorize="hasAnyRole('ADMIN', 'MEDICO')">
+                            <div class="dropdown" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">
                                 <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
                                         data-bs-toggle="dropdown" aria-expanded="false">Acciones</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li>
+                                    <li sec:authorize="hasAnyRole('ADMIN', 'MEDICO')">
                                         <a class="dropdown-item" th:href="@{/pacientes/{id}/editar(id=${paciente.id})}">
                                             Editar Paciente
                                         </a>
@@ -117,22 +117,22 @@
                                             Gestionar Medicamentos
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li th:if="${paciente.estado.name() == 'INGRESADO'}">
+                                    <li sec:authorize="hasAnyRole('ADMIN', 'MEDICO')"><hr class="dropdown-divider"></li>
+                                    <li sec:authorize="hasAnyRole('ADMIN', 'MEDICO')" th:if="${paciente.estado.name() == 'INGRESADO'}">
                                         <form th:action="@{/pacientes/{id}/dar-de-alta(id=${paciente.id})}" method="post"
                                               th:attr="data-cama=${paciente.ubicacion}"
                                               onsubmit="return confirm('Al dar de alta al paciente, la cama ' + this.dataset.cama + ' quedará liberada. ¿Desea continuar?');">
                                             <button class="dropdown-item text-danger" type="submit">Dar de alta</button>
                                         </form>
                                     </li>
-                                    <li th:if="${paciente.estado.name() == 'ALTA'}">
+                                    <li sec:authorize="hasAnyRole('ADMIN', 'MEDICO')" th:if="${paciente.estado.name() == 'ALTA'}">
                                         <form th:action="@{/pacientes/{id}/reingresar(id=${paciente.id})}" method="post">
                                             <button class="dropdown-item text-success" type="submit">Reingresar</button>
                                         </form>
                                     </li>
                                 </ul>
                             </div>
-                            <a sec:authorize="!hasAnyRole('ADMIN', 'MEDICO')" class="btn btn-sm btn-outline-primary"
+                            <a sec:authorize="!hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" class="btn btn-sm btn-outline-primary"
                                th:href="@{/pacientes/{id}(id=${paciente.id})}">Ver Paciente</a>
                         </td>
                     </tr>
