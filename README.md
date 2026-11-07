@@ -269,6 +269,39 @@ se habilita definiendo `HU01_PLAYWRIGHT_MODULE` con la ruta del paquete
 Playwright. Sin esa variable se omite. Su ejecución está pendiente y no se
 considera evidencia de un comportamiento ya verificado en navegador.
 
+## SC-03.3 — Proyección semanal y mensual de insumos
+
+La opción «Proyección de insumos» está disponible para Administración,
+Nutrición y Cocina. Calcula los siguientes 7 o 30 días calendario, incluyendo
+hoy, y permite ajustar el margen de abastecimiento (10 % por defecto).
+El margen se captura como porcentaje y se envía al cálculo como fracción
+(`0.10` representa 10 %). La fecha inicial se obtiene en la zona
+`America/El_Salvador`; el período mensual finaliza 29 días calendario después.
+
+La proyección usa las asignaciones actuales: cuenta una ración por paciente
+ingresado y por día en que coincidan una asignación activa y aprobada, un menú
+activo y el período consultado. Suma `cantidad_por_racion × días vigentes` por
+insumo (`neto`), divide por `1 − merma` (`bruto`) y aplica el margen
+(`total_con_margen`). La cantidad de compra es el techo de
+`total_con_margen / cantidad_presentacion`; los cálculos intermedios conservan
+precisión decimal. Si falta merma, se toma como cero y se muestra una
+advertencia. Si falta una cantidad de presentación válida, se advierte que no
+se puede calcular la cantidad de compra.
+
+La tabla muestra cantidades con formato local, convierte gramos a kilogramos y
+mililitros a litros desde 1000 unidades, y conserva los valores crudos en los
+atributos de datos de cada celda. El costo estimado se calcula usando el costo
+por unidad base del insumo y su total proyectado con margen. Si falta un costo,
+se indica en la fila y el presupuesto total se marca como no disponible. El
+resumen también muestra pacientes incluidos y el promedio de raciones diarias,
+calculado como raciones-día dividido entre los días del período.
+
+La merma se almacena como fracción entre 0 y 1 (por ejemplo, `0.10` equivale a
+10 %). La migración V9 convierte los porcentajes ya almacenados. Los insumos
+con merma histórica de 100 % deben corregirse antes de migrar porque no existe
+un bruto finito para esa merma. Esta proyección se basa en asignaciones; no es
+un pronóstico aprendido del consumo histórico real.
+
 ## Interfaz provisional con Bootstrap
 
 Las vistas utilizan Bootstrap 5.3.8 y ajustes propios en `static/css/styles.css`.
@@ -281,9 +314,15 @@ Se conservan las licencias MIT de Bootstrap y de Popper, incluido en el bundle.
 El fragmento `templates/fragments/layout.html` define el menú lateral compartido.
 En escritorio permanece a la izquierda; por debajo de 992 px se abre con el
 botón «Menú», mediante el componente offcanvas de Bootstrap. La navegación
-incluye Inicio, administración de usuarios exclusivamente para Administrador,
-la cuenta actual y el cierre de sesión. La opción actual se resalta. Los
-accesos de navegación del dashboard se concentran en este menú lateral.
+incluye Inicio, proyección de insumos para Administración, Nutrición y Cocina,
+administración de usuarios exclusivamente para Administrador, la cuenta actual
+y el cierre de sesión. La opción actual se resalta. Los accesos de navegación
+del dashboard se concentran en este menú lateral.
+
+La proyección exporta PDF con jsPDF/AutoTable y Excel con ExcelJS. Los bundles
+y sus licencias se sirven localmente desde `static/vendor/exportacion/`; no se
+usan CDN. Para regenerarlos después de actualizar las dependencias, ejecutar
+`npm ci` y `npm run copiar:librerias-exportacion`.
 
 Login, dashboard, formularios, listado de usuarios y páginas de error comparten
 una presentación sencilla: fondo claro, tarjetas, formularios adaptables,

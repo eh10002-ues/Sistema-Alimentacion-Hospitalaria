@@ -19,12 +19,14 @@ public class ReglasAcceso {
 	private static final String[] NUTRICION = {"ADMIN", "NUTRICIONISTA"};
 	// SAH-2: solo médicos y nutricionistas evalúan y autorizan dietas; el administrador no participa.
 	private static final String[] PRESCRIPCION = {"MEDICO", "NUTRICIONISTA"};
+	private static final String[] PROYECCION_INSUMOS = {"ADMIN", "NUTRICIONISTA", "COCINA"};
 	private static final String[] APROBACIONES = {"/asignaciones/*/aprobar", "/asignaciones/*/aprobar/**",
 		"/asignaciones/*/rechazar", "/asignaciones/*/rechazar/**"};
 
 	public void configurar(HttpSecurity http) throws Exception {
 		http.authorizeHttpRequests(auth -> auth
-			.requestMatchers("/css/**", "/js/**", "/img/**", "/vendor/bootstrap/**", "/favicon.ico", "/error", "/login").permitAll()
+			.requestMatchers("/css/**", "/js/**", "/img/**", "/vendor/bootstrap/**", "/vendor/exportacion/**",
+				"/favicon.ico", "/error", "/login").permitAll()
 			.requestMatchers("/acceso-denegado").authenticated()
 			.requestMatchers(lectura("/", "/dashboard")).hasAnyRole(TODOS)
 			.requestMatchers("/admin/**").hasRole("ADMIN")
@@ -41,6 +43,7 @@ public class ReglasAcceso {
 			.requestMatchers(lectura("/reportes/asignaciones", "/reportes/asignaciones/**", "/reportes/menus", "/reportes/menus/**"))
 				.hasAnyRole(TODOS)
 			.requestMatchers(lectura("/pacientes/**", "/ubicaciones/**")).hasAnyRole(CLINICOS_Y_PISO)
+			.requestMatchers(lectura("/insumos/**")).hasAnyRole(PROYECCION_INSUMOS)
 			.requestMatchers(lectura("/menus/**", "/dietas/**")).hasAnyRole(TODOS)
 			.requestMatchers(lectura("/asignaciones/**")).hasAnyRole(ASIGNACIONES)
 			.requestMatchers(porMetodos(Set.of("POST", "PUT", "PATCH"), "/pacientes/**")).hasAnyRole("ADMIN", "MEDICO")

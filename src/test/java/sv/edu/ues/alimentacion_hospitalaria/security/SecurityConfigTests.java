@@ -106,7 +106,9 @@ class SecurityConfigTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"/css/styles.css", "/vendor/bootstrap/bootstrap.min.css", "/vendor/bootstrap/bootstrap.bundle.min.js"})
+	@ValueSource(strings = {"/css/styles.css", "/vendor/bootstrap/bootstrap.min.css",
+		"/vendor/bootstrap/bootstrap.bundle.min.js", "/vendor/exportacion/exceljs.min.js",
+		"/vendor/exportacion/jspdf.umd.min.js", "/vendor/exportacion/jspdf.plugin.autotable.min.js"})
 	void staticResourcesArePublic(String ruta) throws Exception {
 		mvc.perform(get(ruta))
 			.andExpect(status().isOk());

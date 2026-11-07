@@ -40,11 +40,9 @@ public class Insumo {
     @Column(nullable = false, length = 20)
     private String unidad;
 
-    // Porcentaje de merma por cocción o manipulación (0 a 100).
-    @NotNull
     @DecimalMin("0.00")
-    @DecimalMax("100.00")
-    @Column(nullable = false, precision = 5, scale = 2)
+    @DecimalMax(value = "1.00", inclusive = false)
+    @Column(precision = 5, scale = 4)
     private BigDecimal merma = BigDecimal.ZERO;
 
     // Forma en que se compra: "paquete", "saco", "caja"...
