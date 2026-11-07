@@ -1,6 +1,7 @@
 package sv.edu.ues.alimentacion_hospitalaria.usuarios.persistence;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,4 +30,6 @@ public interface UsuarioRepository extends Repository<Usuario, Long> {
 	Integer bloquearAdministracion();
 
 	Page<Usuario> findAll(Pageable pageable);
+
+	List<Usuario> findByRolAndActivoTrue(Rol rol);
 }

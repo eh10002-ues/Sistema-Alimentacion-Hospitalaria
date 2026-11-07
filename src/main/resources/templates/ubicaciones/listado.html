@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Ubicaciones')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('ubicaciones')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="page-eyebrow mb-2">ADMINISTRACIÓN / UBICACIONES</p>
+                <h1 class="mb-2">Pisos y camas</h1>
+                <p class="text-body-secondary mb-0">Administre los pisos, sus encargados y las camas registradas.</p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/admin/ubicaciones/nuevo}">Agregar piso</a>
+        </div>
+        <p class="alert alert-success" role="status" th:if="${mensaje}" th:text="${mensaje}"></p>
+        <p class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></p>
+        <form class="card card-body mb-3" th:action="@{/admin/ubicaciones}" method="get" role="search">
+            <label for="buscar" class="form-label">Buscar piso</label>
+            <div class="input-group">
+                <input id="buscar" name="buscar" type="search" class="form-control" th:value="${buscar}"
+                       placeholder="Código o nombre del piso">
+                <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+            </div>
+        </form>
+        <div class="card">
+            <div class="table-responsive ubicaciones-table">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Pisos registrados, encargados y camas</caption>
+                    <thead><tr><th>Código</th><th>Nombre</th><th>Encargados</th><th>Camas</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${pagina.empty}"><td colspan="5" class="text-center text-body-secondary py-5">No hay pisos para mostrar.</td></tr>
+                    <tr th:each="piso : ${pagina.content}">
+                        <td class="fw-semibold" th:text="${piso.codigo}"></td>
+                        <td th:text="${piso.nombre}"></td>
+                        <td th:text="${piso.encargados}"></td>
+                        <td th:text="${piso.camas}"></td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Acciones</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}(id=${piso.id})}">Ver piso</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}/editar(id=${piso.id})}">Editar</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}/encargados(id=${piso.id})}">Asignar encargado</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}/camas/nueva(id=${piso.id})}">Agregar camas</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white d-flex flex-wrap align-items-center justify-content-between gap-3 py-3 px-4">
+                <span class="small text-body-secondary" th:text="|Página ${pagina.number + 1} · ${pagina.totalElements} pisos|"></span>
+                <nav aria-label="Páginas de pisos">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:if="${pagina.hasPrevious()}">
+                            <a class="page-link" th:href="@{/admin/ubicaciones(pagina=${pagina.number - 1},buscar=${buscar})}">Anterior</a>
+                        </li>
+                        <li class="page-item" th:if="${pagina.hasNext()}">
+                            <a class="page-link" th:href="@{/admin/ubicaciones(pagina=${pagina.number + 1},buscar=${buscar})}">Siguiente</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -14,4 +14,10 @@ public interface AsignacionPisoRepository extends JpaRepository<AsignacionPiso, 
 
     //para traer por encargado
     List<AsignacionPiso> findByUsuarioId(Long usuarioId);
+
+    List<AsignacionPiso> findByPisoIdOrderByTurnoAsc(Long pisoId);
+
+    long countByPisoId(Long pisoId);
+
+    boolean existsByUsuarioIdAndTurno(Long usuarioId, Turno turno);
 }

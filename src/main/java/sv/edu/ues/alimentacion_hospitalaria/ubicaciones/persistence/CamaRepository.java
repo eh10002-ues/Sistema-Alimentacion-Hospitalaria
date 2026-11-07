@@ -9,4 +9,8 @@ public interface CamaRepository extends JpaRepository<Cama, Long> {
     List<Cama> findByPisoId(Long pisoId);
 
     boolean existsByPisoIdAndNumero(Long pisoId, String numero);
+
+    long countByPisoId(Long pisoId);
+
+    List<Cama> findByPisoIdOrderByNumeroAsc(Long pisoId);
 }
