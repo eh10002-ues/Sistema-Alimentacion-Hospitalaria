@@ -16,6 +16,7 @@ public class ReglasAcceso {
 	private static final String[] TODOS = {"ADMIN", "MEDICO", "NUTRICIONISTA", "ENCARGADO_PISO", "COCINA"};
 	private static final String[] CLINICOS_Y_PISO = {"ADMIN", "MEDICO", "NUTRICIONISTA", "ENCARGADO_PISO"};
 	private static final String[] ASIGNACIONES = {"ADMIN", "MEDICO", "NUTRICIONISTA"};
+	private static final String[] CLINICOS = {"ADMIN", "MEDICO", "NUTRICIONISTA"};
 	private static final String[] NUTRICION = {"ADMIN", "NUTRICIONISTA"};
 	// SAH-2: solo médicos y nutricionistas evalúan y autorizan dietas; el administrador no participa.
 	private static final String[] PRESCRIPCION = {"MEDICO", "NUTRICIONISTA"};
@@ -36,6 +37,9 @@ public class ReglasAcceso {
 				"/dietas/nuevo", "/dietas/nuevo/**", "/dietas/*/editar", "/dietas/*/editar/**"))
 				.hasAnyRole(NUTRICION)
 			.requestMatchers(lectura("/pacientes/nuevo", "/pacientes/nuevo/**", "/pacientes/*/editar", "/pacientes/*/editar/**")).hasAnyRole("ADMIN", "MEDICO")
+			.requestMatchers(lectura("/pacientes/*/alergias", "/pacientes/*/alergias/**",
+				"/pacientes/*/enfermedades", "/pacientes/*/enfermedades/**",
+				"/pacientes/*/medicamentos", "/pacientes/*/medicamentos/**")).hasAnyRole(CLINICOS)
 			.requestMatchers(lectura("/ubicaciones/nuevo", "/ubicaciones/nuevo/**", "/ubicaciones/*/editar", "/ubicaciones/*/editar/**")).hasAnyRole("ADMIN", "ENCARGADO_PISO")
 			.requestMatchers(porMetodos(Set.of("GET", "HEAD", "POST"), APROBACIONES)).hasAnyRole(NUTRICION)
 			.requestMatchers(APROBACIONES).denyAll()
@@ -48,6 +52,10 @@ public class ReglasAcceso {
 			.requestMatchers(lectura("/insumos/**")).hasAnyRole(PROYECCION_INSUMOS)
 			.requestMatchers(lectura("/menus/**", "/dietas/**")).hasAnyRole(TODOS)
 			.requestMatchers(lectura("/asignaciones/**")).hasAnyRole(ASIGNACIONES)
+			.requestMatchers(porMetodos(Set.of("POST", "PUT", "PATCH", "DELETE"),
+				"/pacientes/*/alergias", "/pacientes/*/alergias/**",
+				"/pacientes/*/enfermedades", "/pacientes/*/enfermedades/**",
+				"/pacientes/*/medicamentos", "/pacientes/*/medicamentos/**")).hasAnyRole(CLINICOS)
 			.requestMatchers(porMetodos(Set.of("POST", "PUT", "PATCH"), "/pacientes/**")).hasAnyRole("ADMIN", "MEDICO")
 			.requestMatchers(escritura("/menus/**", "/dietas/**")).hasAnyRole(NUTRICION)
 			.requestMatchers(escritura("/ubicaciones/**")).hasAnyRole("ADMIN", "ENCARGADO_PISO")
