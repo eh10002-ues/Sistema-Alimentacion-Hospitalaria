@@ -14,6 +14,7 @@ import sv.edu.ues.alimentacion_hospitalaria.shared.exception.ResourceNotFoundExc
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.AsignacionPiso;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Cama;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
+import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Turno;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.dto.AsignacionPisoForm;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.dto.AsignacionPisoItemForm;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.dto.CamaForm;
@@ -151,6 +152,24 @@ public class AdministracionUbicacionesService {
         return formulario;
     }
 
+    public AsignacionPisoForm consultarEncargados(Long pisoId) {
+        buscarPiso(pisoId);
+        AsignacionPisoForm formulario = new AsignacionPisoForm();
+        formulario.setAsignaciones(asignaciones.findByPisoIdOrderByTurnoAsc(pisoId).stream()
+            .map(asignacion -> {
+                AsignacionPisoItemForm item = new AsignacionPisoItemForm();
+                item.setId(asignacion.getId());
+                item.setUsuarioId(asignacion.getUsuario().getId());
+                item.setTurno(asignacion.getTurno());
+                return item;
+            })
+            .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new)));
+        if (formulario.getAsignaciones().isEmpty()) {
+            formulario.getAsignaciones().add(new AsignacionPisoItemForm());
+        }
+        return formulario;
+    }
+
     @Transactional
     public void asignarEncargados(Long pisoId, AsignacionPisoForm formulario) {
         if (formulario.estaVacio()) {
@@ -158,7 +177,9 @@ public class AdministracionUbicacionesService {
         }
         Piso piso = buscarPiso(pisoId);
         Set<String> claves = new HashSet<>();
-        Set<String> pisosPorTurno = new HashSet<>();
+        Set<Turno> turnosFormulario = new HashSet<>();
+        java.util.Map<Long, AsignacionPiso> existentes = asignaciones.findByPisoId(pisoId).stream()
+            .collect(java.util.stream.Collectors.toMap(AsignacionPiso::getId, asignacion -> asignacion));
         for (AsignacionPisoItemForm item : formulario.getAsignaciones()) {
             if (item.getUsuarioId() == null || item.getTurno() == null) {
                 throw new IllegalArgumentException("Complete el encargado y el turno de cada asignación.");
@@ -167,24 +188,44 @@ public class AdministracionUbicacionesService {
             if (!claves.add(clave)) {
                 throw new IllegalArgumentException("No repita el mismo encargado en el mismo turno.");
             }
-            if (!pisosPorTurno.add(item.getTurno().name())) {
+            if (!turnosFormulario.add(item.getTurno())) {
                 throw new IllegalArgumentException("El piso solo puede tener un encargado por turno.");
+            }
+            Long propioId = item.getId();
+            if (propioId != null && !existentes.containsKey(propioId)) {
+                throw new IllegalArgumentException("El encargado seleccionado ya no existe.");
             }
             Usuario usuario = usuarios.findById(item.getUsuarioId())
                 .orElseThrow(() -> new IllegalArgumentException("El usuario seleccionado no existe."));
             if (!usuario.isActivo() || usuario.getRol() != Rol.ROLE_ENCARGADO_PISO) {
                 throw new IllegalArgumentException("El usuario seleccionado debe tener el rol Encargado de piso y estar activo.");
             }
-            if (asignaciones.existsByUsuarioIdAndTurno(usuario.getId(), item.getTurno())) {
+            if (asignaciones.existsByUsuarioIdAndTurnoAndIdNot(usuario.getId(), item.getTurno(), propioId == null ? -1L : propioId)) {
                 throw new IllegalArgumentException("El usuario ya tiene asignado un piso en ese turno.");
             }
-            if (asignaciones.findByPisoIdAndTurno(pisoId, item.getTurno()).isPresent()) {
+            if (asignaciones.existsByPisoIdAndTurnoAndIdNot(pisoId, item.getTurno(), propioId == null ? -1L : propioId)) {
                 throw new IllegalArgumentException("El piso ya tiene un encargado para ese turno.");
+            }
+        }
+        for (AsignacionPiso existente : existentes.values()) {
+            boolean conservada = formulario.getAsignaciones().stream()
+                .anyMatch(item -> item.getId() != null && item.getId().equals(existente.getId()));
+            if (!conservada) {
+                throw new IllegalArgumentException("Los encargados ya registrados no pueden eliminarse.");
             }
         }
         for (AsignacionPisoItemForm item : formulario.getAsignaciones()) {
             Usuario usuario = usuarios.findById(item.getUsuarioId()).orElseThrow();
-            asignaciones.save(new AsignacionPiso(piso, usuario, item.getTurno()));
+            if (item.getId() == null) {
+                asignaciones.save(new AsignacionPiso(piso, usuario, item.getTurno()));
+            } else {
+                AsignacionPiso existente = existentes.get(item.getId());
+                if (!existente.getPiso().getId().equals(pisoId)) {
+                    throw new IllegalArgumentException("El encargado no pertenece al piso seleccionado.");
+                }
+                existente.setUsuario(usuario);
+                existente.setTurno(item.getTurno());
+            }
         }
     }
 

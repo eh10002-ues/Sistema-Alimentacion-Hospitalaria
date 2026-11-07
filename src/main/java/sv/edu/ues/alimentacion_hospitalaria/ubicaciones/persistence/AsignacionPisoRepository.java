@@ -20,4 +20,10 @@ public interface AsignacionPisoRepository extends JpaRepository<AsignacionPiso, 
     long countByPisoId(Long pisoId);
 
     boolean existsByUsuarioIdAndTurno(Long usuarioId, Turno turno);
+
+    boolean existsByUsuarioIdAndTurnoAndIdNot(Long usuarioId, Turno turno, Long id);
+
+    boolean existsByPisoIdAndTurnoAndIdNot(Long pisoId, Turno turno, Long id);
+
+    long countByPisoIdAndTurno(Long pisoId, Turno turno);
 }

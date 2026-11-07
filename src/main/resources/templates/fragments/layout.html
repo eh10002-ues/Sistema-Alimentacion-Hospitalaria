@@ -38,7 +38,7 @@
                     <a class="nav-link" th:classappend="${active == 'usuarios'} ? 'active'" th:attr="aria-current=${active == 'usuarios' ? 'page' : null}"
                        th:href="@{/admin/usuarios}">Administrar usuarios</a>
                     <a class="nav-link" th:classappend="${active == 'ubicaciones'} ? 'active'" th:attr="aria-current=${active == 'ubicaciones' ? 'page' : null}"
-                       th:href="@{/admin/ubicaciones}">Ubicaciones</a>
+                       th:href="@{/admin/ubicaciones}">Pisos y Camas</a>
                 </th:block>
                 <th:block sec:authorize="hasAnyRole('MEDICO', 'NUTRICIONISTA')">
                     <span class="navigation-label mt-4">ALIMENTACIÓN</span>

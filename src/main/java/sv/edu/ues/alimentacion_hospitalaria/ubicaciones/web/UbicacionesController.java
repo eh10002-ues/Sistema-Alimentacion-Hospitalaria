@@ -84,7 +84,7 @@ public class UbicacionesController {
 
     @GetMapping("/{id}/encargados")
     String asignarEncargados(@PathVariable Long id, Model model) {
-        AsignacionPisoForm formulario = new AsignacionPisoForm();
+        AsignacionPisoForm formulario = ubicaciones.consultarEncargados(id);
         model.addAttribute("formulario", formulario);
         model.addAttribute("piso", ubicaciones.buscarPiso(id));
         model.addAttribute("encargados", ubicaciones.encargadosActivos());

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
-<head th:replace="~{fragments/layout :: head('Asignar encargados')}"></head>
+<head th:replace="~{fragments/layout :: head('Gestionar encargados')}"></head>
 <body class="app-layout">
 <th:block th:replace="~{fragments/layout :: header('ubicaciones')}"></th:block>
 <div class="app-content">
     <main id="contenido-principal" class="app-main">
         <div class="page-heading">
-            <p class="page-eyebrow mb-2">ADMINISTRACIÓN / UBICACIONES</p>
-            <h1 class="mb-2">Asignar encargados</h1>
+            <p class="page-eyebrow mb-2">ADMINISTRACIÓN / PISOS Y CAMAS</p>
+            <h1 class="mb-2">Gestionar encargados</h1>
             <p class="text-body-secondary mb-0" th:text="|Piso: ${piso.codigo} - ${piso.nombre}|"></p>
         </div>
         <div class="card form-card">
@@ -27,6 +27,7 @@
                                     <option th:each="usuario : ${encargados}" th:value="${usuario.id}"
                                             th:text="|${usuario.nombreCompleto} (${usuario.nombreUsuario})|"></option>
                                 </select>
+                                <input type="hidden" th:field="*{asignaciones[__${item.index}__].id}">
                             </div>
                             <div class="col-md-4">
                                 <label th:for="|turno-${item.index}|" class="form-label">Turno</label>
@@ -35,7 +36,7 @@
                                     <option th:each="turno : ${turnos}" th:value="${turno}" th:text="${turno}"></option>
                                 </select>
                             </div>
-                            <div class="col-md-1" th:if="${item.index > 0}">
+                            <div class="col-md-1" th:if="${asignacion.id == null}">
                                 <button type="button" class="btn btn-outline-danger w-100 quitar-asignacion" aria-label="Quitar asignación">&times;</button>
                             </div>
                         </div>
@@ -80,6 +81,18 @@ document.getElementById('agregar-asignacion').addEventListener('click', () => {
 contenedor.addEventListener('click', evento => {
     if (evento.target.closest('.quitar-asignacion')) {
         evento.target.closest('.asignacion-fila').remove();
+        contenedor.querySelectorAll('.asignacion-fila').forEach((fila, indice) => {
+            const usuario = fila.querySelector('select[id^="usuario-"]');
+            const turno = fila.querySelector('select[id^="turno-"]');
+            usuario.id = `usuario-${indice}`;
+            usuario.name = `asignaciones[${indice}].usuarioId`;
+            usuario.previousElementSibling.htmlFor = usuario.id;
+            turno.id = `turno-${indice}`;
+            turno.name = `asignaciones[${indice}].turno`;
+            turno.previousElementSibling.htmlFor = turno.id;
+            const oculto = fila.querySelector('input[type="hidden"]');
+            if (oculto) oculto.name = `asignaciones[${indice}].id`;
+        });
     }
 });
 /*]]>*/

@@ -14,4 +14,6 @@ public class AsignacionPisoItemForm {
 
     @NotNull(message = "Seleccione el turno.")
     private Turno turno;
+
+    private Long id;
 }
