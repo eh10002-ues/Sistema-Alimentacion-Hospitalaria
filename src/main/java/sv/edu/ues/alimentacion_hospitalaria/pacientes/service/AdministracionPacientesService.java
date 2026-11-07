@@ -18,8 +18,10 @@ import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteVista;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.AlergiaForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.EnfermedadForm;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.MedicamentoForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteEnfermedad;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteMedicamento;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteAlergiaRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteEnfermedadRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteMedicamentoRepository;
@@ -113,6 +115,44 @@ public class AdministracionPacientesService {
 
     public java.util.List<PacienteAlergia> alergias(Long pacienteId) {
         return alergiaRepository.findByPacienteId(pacienteId);
+    }
+
+    public java.util.List<PacienteMedicamento> medicamentos(Long pacienteId) {
+        return medicamentoRepository.findByPacienteId(pacienteId);
+    }
+
+    @Transactional
+    public void agregarMedicamento(Long pacienteId, MedicamentoForm formulario) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        paciente.agregarMedicamento(new PacienteMedicamento(
+            formulario.getNombre().trim(), formulario.getDosis().trim(),
+            formulario.getFrecuenciaHoras(), formulario.getHoraPrimeraDosis()));
+        pacienteRepository.save(paciente);
+    }
+
+    @Transactional
+    public void actualizarMedicamento(Long pacienteId, Long medicamentoId, MedicamentoForm formulario) {
+        PacienteMedicamento medicamento = medicamentoRepository.findById(medicamentoId)
+            .orElseThrow(() -> new ResourceNotFoundException("El medicamento solicitado no existe."));
+        if (!medicamento.getPaciente().getId().equals(pacienteId)) {
+            throw new IllegalArgumentException("El medicamento no pertenece al paciente seleccionado.");
+        }
+        medicamento.setNombre(formulario.getNombre().trim());
+        medicamento.setDosis(formulario.getDosis().trim());
+        medicamento.setFrecuenciaHoras(formulario.getFrecuenciaHoras());
+        medicamento.setHoraPrimeraDosis(formulario.getHoraPrimeraDosis());
+        medicamentoRepository.save(medicamento);
+    }
+
+    @Transactional
+    public void eliminarMedicamento(Long pacienteId, Long medicamentoId) {
+        PacienteMedicamento medicamento = medicamentoRepository.findById(medicamentoId)
+            .orElseThrow(() -> new ResourceNotFoundException("El medicamento solicitado no existe."));
+        if (!medicamento.getPaciente().getId().equals(pacienteId)) {
+            throw new IllegalArgumentException("El medicamento no pertenece al paciente seleccionado.");
+        }
+        medicamentoRepository.delete(medicamento);
     }
 
     @Transactional

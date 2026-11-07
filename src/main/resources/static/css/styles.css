@@ -26,6 +26,8 @@ a { color: var(--app-accent); }
 .pacientes-table { table-layout: fixed; width: 100%; }
 .pacientes-table th, .pacientes-table td { overflow-wrap: anywhere; }
 .pacientes-table .paciente-nombre { max-width: 8rem; }
+.medicamentos-table { overflow: visible; }
+.medicamentos-table .dropdown-menu { z-index: 1060; }
 .card { --bs-card-border-color: var(--app-border); --bs-card-border-radius: 0.8rem; background: #fff; box-shadow: 0 2px 8px rgb(23 43 58 / 2%); }
 .card-body { padding: 1.75rem; }
 .form-card { max-width: 880px; }
