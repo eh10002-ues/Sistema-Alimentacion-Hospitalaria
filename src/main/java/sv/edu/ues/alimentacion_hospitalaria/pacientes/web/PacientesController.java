@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.EstadoPaciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.AlergiaForm;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.EnfermedadForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.SeveridadAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.service.AdministracionPacientesService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -103,6 +104,42 @@ public class PacientesController {
         AlergiaForm formulario = new AlergiaForm();
         model.addAttribute("formulario", formulario);
         return prepararAlergias(model, id);
+    }
+
+    @GetMapping("/{id}/enfermedades")
+    String gestionarEnfermedades(@PathVariable Long id, Model model) {
+        model.addAttribute("formulario", new EnfermedadForm());
+        return prepararEnfermedades(model, id);
+    }
+
+    @PostMapping("/{id}/enfermedades")
+    String agregarEnfermedad(@PathVariable Long id, @Valid @ModelAttribute("formulario") EnfermedadForm formulario,
+                             BindingResult errores, Model model, RedirectAttributes redirect) {
+        if (!errores.hasErrors()) {
+            pacientesService.agregarEnfermedad(id, formulario);
+            redirect.addFlashAttribute("mensaje", "Enfermedad agregada correctamente.");
+            return "redirect:/pacientes/" + id + "/enfermedades";
+        }
+        return prepararEnfermedades(model, id);
+    }
+
+    @PostMapping("/{id}/enfermedades/{enfermedadId}/editar")
+    String editarEnfermedad(@PathVariable Long id, @PathVariable Long enfermedadId,
+                            @Valid @ModelAttribute("formulario") EnfermedadForm formulario,
+                            BindingResult errores, Model model, RedirectAttributes redirect) {
+        if (!errores.hasErrors()) {
+            pacientesService.actualizarEnfermedad(id, enfermedadId, formulario);
+            redirect.addFlashAttribute("mensaje", "Enfermedad actualizada correctamente.");
+            return "redirect:/pacientes/" + id + "/enfermedades";
+        }
+        return prepararEnfermedades(model, id);
+    }
+
+    @PostMapping("/{id}/enfermedades/{enfermedadId}/eliminar")
+    String eliminarEnfermedad(@PathVariable Long id, @PathVariable Long enfermedadId, RedirectAttributes redirect) {
+        pacientesService.eliminarEnfermedad(id, enfermedadId);
+        redirect.addFlashAttribute("mensaje", "Enfermedad eliminada correctamente.");
+        return "redirect:/pacientes/" + id + "/enfermedades";
     }
 
     @PostMapping("/{id}/alergias")
@@ -196,11 +233,18 @@ public class PacientesController {
     }
 
     private String prepararAlergias(Model model, Long pacienteId) {
-        model.addAttribute("paciente", pacientesService.consultarPacienteAlergias(pacienteId));
+        model.addAttribute("paciente", pacientesService.consultarPacienteClinico(pacienteId));
         model.addAttribute("alergias", pacientesService.alergias(pacienteId));
         model.addAttribute("severidades", SeveridadAlergia.values());
         model.addAttribute("hoy", LocalDate.now());
         return "pacientes/alergias";
+    }
+
+    private String prepararEnfermedades(Model model, Long pacienteId) {
+        model.addAttribute("paciente", pacientesService.consultarPacienteClinico(pacienteId));
+        model.addAttribute("enfermedades", pacientesService.enfermedades(pacienteId));
+        model.addAttribute("hoy", LocalDate.now());
+        return "pacientes/enfermedades";
     }
 
     private String redireccionExito(RedirectAttributes redirect, String mensaje) {

@@ -17,7 +17,9 @@ import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteDetalleVista;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteVista;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.PacienteForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.AlergiaForm;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.dto.EnfermedadForm;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
+import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteEnfermedad;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteAlergiaRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteEnfermedadRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.persistence.PacienteMedicamentoRepository;
@@ -71,9 +73,42 @@ public class AdministracionPacientesService {
         return PacienteDetalleVista.desde(paciente);
     }
 
-    public Paciente consultarPacienteAlergias(Long id) {
+    public Paciente consultarPacienteClinico(Long id) {
         return pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+    }
+
+    public java.util.List<PacienteEnfermedad> enfermedades(Long pacienteId) {
+        return enfermedadRepository.findByPacienteId(pacienteId);
+    }
+
+    @Transactional
+    public void agregarEnfermedad(Long pacienteId, EnfermedadForm formulario) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        paciente.agregarEnfermedad(new PacienteEnfermedad(formulario.getNombre().trim()));
+        pacienteRepository.save(paciente);
+    }
+
+    @Transactional
+    public void actualizarEnfermedad(Long pacienteId, Long enfermedadId, EnfermedadForm formulario) {
+        PacienteEnfermedad enfermedad = enfermedadRepository.findById(enfermedadId)
+            .orElseThrow(() -> new ResourceNotFoundException("La enfermedad solicitada no existe."));
+        if (!enfermedad.getPaciente().getId().equals(pacienteId)) {
+            throw new IllegalArgumentException("La enfermedad no pertenece al paciente seleccionado.");
+        }
+        enfermedad.setNombre(formulario.getNombre().trim());
+        enfermedadRepository.save(enfermedad);
+    }
+
+    @Transactional
+    public void eliminarEnfermedad(Long pacienteId, Long enfermedadId) {
+        PacienteEnfermedad enfermedad = enfermedadRepository.findById(enfermedadId)
+            .orElseThrow(() -> new ResourceNotFoundException("La enfermedad solicitada no existe."));
+        if (!enfermedad.getPaciente().getId().equals(pacienteId)) {
+            throw new IllegalArgumentException("La enfermedad no pertenece al paciente seleccionado.");
+        }
+        enfermedadRepository.delete(enfermedad);
     }
 
     public java.util.List<PacienteAlergia> alergias(Long pacienteId) {

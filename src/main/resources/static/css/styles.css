@@ -21,6 +21,8 @@ a { color: var(--app-accent); }
 .ubicaciones-table { overflow: visible; }
 .alergias-table { overflow: visible; }
 .alergias-table .dropdown-menu { z-index: 1060; }
+.enfermedades-table { overflow: visible; }
+.enfermedades-table .dropdown-menu { z-index: 1060; }
 .pacientes-table { table-layout: fixed; width: 100%; }
 .pacientes-table th, .pacientes-table td { overflow-wrap: anywhere; }
 .pacientes-table .paciente-nombre { max-width: 8rem; }

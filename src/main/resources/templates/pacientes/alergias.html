@@ -15,7 +15,8 @@
                    th:href="@{/pacientes/{id}(id=${paciente.id})}">Ver Paciente</a>
                 <a class="btn btn-primary"
                    th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">Gestionar Alergias</a>
-                <button class="btn btn-outline-secondary" type="button" disabled>Gestionar Enfermedades</button>
+                <a class="btn btn-outline-secondary"
+                   th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">Gestionar Enfermedades</a>
                 <button class="btn btn-outline-secondary" type="button" disabled>Gestionar Medicamentos</button>
             </div>
         </div>

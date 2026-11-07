@@ -107,6 +107,11 @@
                                             Gestionar Alergias
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">
+                                            Gestionar Enfermedades
+                                        </a>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li th:if="${paciente.estado.name() == 'INGRESADO'}">
                                         <form th:action="@{/pacientes/{id}/dar-de-alta(id=${paciente.id})}" method="post"
