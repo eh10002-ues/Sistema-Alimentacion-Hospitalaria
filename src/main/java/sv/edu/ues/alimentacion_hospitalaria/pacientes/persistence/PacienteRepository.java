@@ -22,18 +22,21 @@ public interface PacienteRepository extends JpaRepository<Paciente, Long> {
 
     List<Paciente> findByEstado(EstadoPaciente estado);
 
-    Optional<Paciente> findByCamaId(Long camaId);
+    List<Paciente> findByCamaId(Long camaId);
+
+    List<Paciente> findByCamaIdAndEstado(Long camaId, EstadoPaciente estado);
 
     List<Paciente> findByMedicoResponsableId(Long usuarioId);
 
     @Query("""
         select p from Paciente p
+        left join p.cama cama
         where (:buscar is null or :buscar = ''
             or lower(p.codigo) like lower(concat('%', :buscar, '%'))
             or lower(p.nombres) like lower(concat('%', :buscar, '%'))
             or lower(p.apellidos) like lower(concat('%', :buscar, '%')))
         and (:estado is null or p.estado = :estado)
-        and (:pisoId is null or (p.cama is not null and p.cama.piso.id = :pisoId))
+        and (:pisoId is null or cama.piso.id = :pisoId)
         """)
     Page<Paciente> buscar(
         @Param("buscar") String buscar,

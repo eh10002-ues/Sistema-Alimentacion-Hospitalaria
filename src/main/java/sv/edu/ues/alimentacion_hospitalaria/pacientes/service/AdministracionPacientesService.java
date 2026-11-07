@@ -80,11 +80,42 @@ public class AdministracionPacientesService {
         return pisoRepository.findAll(Sort.by(Sort.Order.asc("codigo"), Sort.Order.asc("id")));
     }
 
+    public PacienteForm consultarParaEditar(Long id) {
+        Paciente paciente = pacienteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        PacienteForm formulario = new PacienteForm();
+        formulario.setCodigo(paciente.getCodigo());
+        formulario.setNombres(paciente.getNombres());
+        formulario.setApellidos(paciente.getApellidos());
+        formulario.setFechaNacimiento(paciente.getFechaNacimiento());
+        formulario.setPesoKg(paciente.getPesoKg());
+        formulario.setAlturaCm(paciente.getAlturaCm());
+        formulario.setMedicoResponsableId(paciente.getMedicoResponsable() != null
+            ? paciente.getMedicoResponsable().getId() : null);
+        if (paciente.getCama() != null) {
+            formulario.setPisoId(paciente.getCama().getPiso().getId());
+            formulario.setCamaId(paciente.getCama().getId());
+        }
+        return formulario;
+    }
+
     public java.util.List<Cama> camasDisponibles(Long pisoId) {
         if (pisoId == null) {
             return java.util.List.of();
         }
         return camaRepository.buscarDisponibles(pisoId, EstadoPaciente.INGRESADO);
+    }
+
+    public java.util.List<Cama> camasDisponiblesEdicion(Long pisoId, Long pacienteId) {
+        java.util.ArrayList<Cama> camas = new java.util.ArrayList<>(camasDisponibles(pisoId));
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        if (paciente.getCama() != null && paciente.getCama().getPiso().getId().equals(pisoId)) {
+            camas.removeIf(cama -> cama.getId().equals(paciente.getCama().getId()));
+            camas.add(paciente.getCama());
+            camas.sort(java.util.Comparator.comparing(Cama::getNumero));
+        }
+        return camas;
     }
 
     public java.util.List<Usuario> responsablesActivos() {
@@ -110,12 +141,11 @@ public class AdministracionPacientesService {
             throw new IllegalArgumentException("La cama seleccionada no pertenece al piso indicado.");
         }
 
-        pacienteRepository.findByCamaId(cama.getId()).ifPresent(pacienteExistente -> {
-            if (pacienteExistente.getEstado() == EstadoPaciente.INGRESADO) {
-                throw new IllegalArgumentException("La cama seleccionada ya está ocupada por otro paciente ingresado.");
-            }
-            pacienteExistente.setCama(null);
-        });
+        var pacientesIngresados = pacienteRepository.findByCamaIdAndEstado(
+            cama.getId(), EstadoPaciente.INGRESADO);
+        if (!pacientesIngresados.isEmpty()) {
+            throw new IllegalArgumentException("La cama seleccionada ya está ocupada por otro paciente ingresado.");
+        }
 
         Usuario responsable = usuarioRepository.findById(formulario.getMedicoResponsableId())
             .orElseThrow(() -> new IllegalArgumentException("El médico responsable seleccionado ya no existe."));
@@ -135,5 +165,79 @@ public class AdministracionPacientesService {
         paciente.setCama(cama);
         paciente.setMedicoResponsable(responsable);
         return pacienteRepository.save(paciente);
+    }
+
+    @Transactional
+    public Paciente actualizar(Long id, PacienteForm formulario) {
+        Paciente paciente = pacienteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+
+        Cama cama = camaRepository.findById(formulario.getCamaId())
+            .orElseThrow(() -> new IllegalArgumentException("La cama seleccionada ya no existe."));
+        if (!cama.getPiso().getId().equals(formulario.getPisoId())) {
+            throw new IllegalArgumentException("La cama seleccionada no pertenece al piso indicado.");
+        }
+
+        Long camaActualId = paciente.getCama() == null ? null : paciente.getCama().getId();
+        if (!cama.getId().equals(camaActualId)) {
+            boolean ocupada = pacienteRepository.findByCamaIdAndEstado(
+                cama.getId(), EstadoPaciente.INGRESADO).stream()
+                .anyMatch(ocupante -> !ocupante.getId().equals(paciente.getId()));
+            if (ocupada) {
+                throw new IllegalArgumentException("La cama seleccionada ya está ocupada por otro paciente ingresado.");
+            }
+        }
+
+        paciente.setNombres(formulario.getNombres().trim());
+        paciente.setApellidos(formulario.getApellidos().trim());
+        paciente.setFechaNacimiento(formulario.getFechaNacimiento());
+        paciente.setPesoKg(formulario.getPesoKg());
+        paciente.setAlturaCm(formulario.getAlturaCm());
+        paciente.setCama(cama);
+        return pacienteRepository.save(paciente);
+    }
+
+    @Transactional
+    public sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista darDeAlta(Long id) {
+        Paciente paciente = pacienteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        if (paciente.getEstado() == EstadoPaciente.ALTA) {
+            throw new IllegalArgumentException("El paciente ya se encuentra dado de alta.");
+        }
+
+        String ubicacion = paciente.getCama() == null
+            ? "Sin ubicación"
+            : paciente.getCama().getPiso().getCodigo() + "-" + paciente.getCama().getNumero();
+        paciente.setEstado(EstadoPaciente.ALTA);
+        pacienteRepository.saveAndFlush(paciente);
+        return new sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista(
+            paciente.getCodigo(), ubicacion);
+    }
+
+    @Transactional
+    public sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista reingresar(Long id) {
+        Paciente paciente = pacienteRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
+        if (paciente.getEstado() == EstadoPaciente.INGRESADO) {
+            throw new IllegalArgumentException("El paciente ya se encuentra ingresado.");
+        }
+        if (paciente.getCama() == null) {
+            throw new IllegalArgumentException(
+                "La ubicación del paciente debe editarse antes de reingresar.");
+        }
+
+        Cama cama = paciente.getCama();
+        boolean ocupada = pacienteRepository.findByCamaIdAndEstado(
+            cama.getId(), EstadoPaciente.INGRESADO).stream()
+            .anyMatch(ocupante -> !ocupante.getId().equals(paciente.getId()));
+        if (ocupada) {
+            throw new IllegalArgumentException(
+                "La cama asignada ya está ocupada. Edite la ubicación del paciente antes de reingresar.");
+        }
+        paciente.setEstado(EstadoPaciente.INGRESADO);
+        pacienteRepository.save(paciente);
+        String ubicacion = cama.getPiso().getCodigo() + "-" + cama.getNumero();
+        return new sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista(
+            paciente.getCodigo(), ubicacion);
     }
 }
