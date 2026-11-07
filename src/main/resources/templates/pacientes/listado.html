@@ -11,6 +11,9 @@
                 <h1 class="mb-2">Gestionar pacientes</h1>
                 <p class="text-body-secondary mb-0">Consulte los pacientes, su ubicación y su información clínica.</p>
             </div>
+            <a class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO')" th:href="@{/pacientes/nuevo}">
+                Ingresar Nuevo Paciente
+            </a>
         </div>
 
         <form class="card card-body mb-3" th:action="@{/pacientes}" method="get">
@@ -26,6 +29,15 @@
                         <option th:value="${null}" th:selected="${estadoSeleccionado == null}">Todos</option>
                         <option th:each="estadoItem : ${estados}" th:value="${estadoItem}"
                                 th:selected="${estadoItem == estadoSeleccionado}" th:text="${estadoItem}"></option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <label for="pisoId" class="form-label">Piso</label>
+                    <select id="pisoId" name="pisoId" class="form-select">
+                        <option th:value="${null}" th:selected="${pisoSeleccionadoId == null}">Todos</option>
+                        <option th:each="piso : ${pisos}" th:value="${piso.id}"
+                                th:selected="${piso.id == pisoSeleccionadoId}"
+                                th:text="|${piso.codigo} - ${piso.nombre}|"></option>
                     </select>
                 </div>
                 <div class="col-md-auto">
@@ -76,10 +88,10 @@
                 <nav aria-label="Páginas de pacientes">
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item" th:if="${pagina.hasPrevious()}">
-                            <a class="page-link" th:href="@{/pacientes(pagina=${pagina.number - 1},buscar=${buscar},estado=${estadoSeleccionado})}">Anterior</a>
+                            <a class="page-link" th:href="@{/pacientes(pagina=${pagina.number - 1},buscar=${buscar},estado=${estadoSeleccionado},pisoId=${pisoSeleccionadoId})}">Anterior</a>
                         </li>
                         <li class="page-item" th:if="${pagina.hasNext()}">
-                            <a class="page-link" th:href="@{/pacientes(pagina=${pagina.number + 1},buscar=${buscar},estado=${estadoSeleccionado})}">Siguiente</a>
+                            <a class="page-link" th:href="@{/pacientes(pagina=${pagina.number + 1},buscar=${buscar},estado=${estadoSeleccionado},pisoId=${pisoSeleccionadoId})}">Siguiente</a>
                         </li>
                     </ul>
                 </nav>

@@ -16,6 +16,10 @@ public interface PacienteRepository extends JpaRepository<Paciente, Long> {
 
     boolean existsByCodigo(String codigo);
 
+    boolean existsByCodigoIgnoreCase(String codigo);
+
+    Optional<Paciente> findByCodigoIgnoreCase(String codigo);
+
     List<Paciente> findByEstado(EstadoPaciente estado);
 
     Optional<Paciente> findByCamaId(Long camaId);
@@ -29,9 +33,11 @@ public interface PacienteRepository extends JpaRepository<Paciente, Long> {
             or lower(p.nombres) like lower(concat('%', :buscar, '%'))
             or lower(p.apellidos) like lower(concat('%', :buscar, '%')))
         and (:estado is null or p.estado = :estado)
+        and (:pisoId is null or (p.cama is not null and p.cama.piso.id = :pisoId))
         """)
     Page<Paciente> buscar(
         @Param("buscar") String buscar,
         @Param("estado") EstadoPaciente estado,
+        @Param("pisoId") Long pisoId,
         Pageable pageable);
 }

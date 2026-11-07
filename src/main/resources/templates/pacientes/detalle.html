@@ -11,7 +11,7 @@
                 <h1 class="mb-0" th:text="|${paciente.nombres} ${paciente.apellidos}|"></h1>
                 <p class="text-body-secondary mb-0 mt-2" th:text="|Código: ${paciente.codigo}|"></p>
             </div>
-            <a class="btn btn-outline-secondary" th:href="@{/pacientes}">Volver a pacientes</a>
+            <a class="btn btn-secondary" th:href="@{/pacientes}">Volver a pacientes</a>
         </div>
 
         <section class="card mb-4">
@@ -21,8 +21,8 @@
                     <dt class="col-sm-3">Código</dt><dd class="col-sm-9" th:text="${paciente.codigo}"></dd>
                     <dt class="col-sm-3">Nombre</dt><dd class="col-sm-9" th:text="${paciente.nombres}"></dd>
                     <dt class="col-sm-3">Apellido</dt><dd class="col-sm-9" th:text="${paciente.apellidos}"></dd>
-                    <dt class="col-sm-3">Fecha de nacimiento</dt><dd class="col-sm-9" th:text="${paciente.fechaNacimiento}"></dd>
-                    <dt class="col-sm-3">Edad</dt><dd class="col-sm-9" th:text="|${paciente.edad} años|"></dd>
+                    <dt class="col-sm-3">Fecha de nacimiento</dt><dd class="col-sm-9" th:text="${#temporals.format(paciente.fechaNacimiento, 'dd/MM/yyyy')}"></dd>
+                    <dt class="col-sm-3">Edad</dt><dd class="col-sm-9" th:text="${paciente.edadExacta}"></dd>
                     <dt class="col-sm-3">Peso</dt><dd class="col-sm-9" th:text="|${paciente.pesoKg} kg|"></dd>
                     <dt class="col-sm-3">Altura</dt><dd class="col-sm-9" th:text="|${paciente.alturaCm} cm|"></dd>
                     <dt class="col-sm-3">Estado</dt>

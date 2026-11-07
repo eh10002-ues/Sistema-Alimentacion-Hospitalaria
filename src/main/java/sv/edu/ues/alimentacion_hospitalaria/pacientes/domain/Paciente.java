@@ -121,6 +121,14 @@ public class Paciente extends AuditableEntity {
         return Period.between(fechaNacimiento, LocalDate.now()).getYears();
     }
 
+    public String calcularEdadExacta() {
+        Period edad = Period.between(fechaNacimiento, LocalDate.now());
+        return "%d %s, %d %s y %d %s".formatted(
+            edad.getYears(), edad.getYears() == 1 ? "año" : "años",
+            edad.getMonths(), edad.getMonths() == 1 ? "mes" : "meses",
+            edad.getDays(), edad.getDays() == 1 ? "día" : "días");
+    }
+
     public void agregarEnfermedad(PacienteEnfermedad enfermedad) {
         enfermedades.add(enfermedad);
         enfermedad.setPaciente(this);

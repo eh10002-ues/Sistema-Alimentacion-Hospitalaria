@@ -78,10 +78,10 @@
                 <a class="nav-link" th:classappend="${active == 'pacientes'} ? 'active'" th:attr="aria-current=${active == 'pacientes' ? 'page' : null}"
                    th:href="@{/pacientes}">
                     <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="10" cy="7" r="4"></circle>
-                        <path d="M18 8v6m-3-3h6"></path>
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                        <path d="M9 14h6"/><path d="M12 17v-6"/>
                     </svg>
                     <span>Gestionar pacientes</span>
                 </a>
