@@ -162,6 +162,15 @@ Seguir la [guía de prueba manual de impresión](docs/HU-02-prueba-manual-impres
 Las pruebas automatizadas de HTML, permisos y límites no acreditan el resultado
 visual de un PDF guardado. El cierre de HU-02 y su evidencia siguen pendientes.
 
+### Datos sintéticos de demostración HU-02
+
+Se cargó un conjunto local identificable por los pisos `HU02-D1`/`HU02-D2`, los
+códigos de paciente `HU02-D001` a `HU02-D068` y los menús `HU02 DEMO - Menú`.
+La [guía de datos y resultados esperados](docs/HU-02-datos-demostracion.md)
+incluye las consultas SQL, los conteos comprobados y los casos para paginación,
+fechas, estados, altas y camas disponibles. La carga ya fue ejecutada; no repetirla
+ni usar datos reales de pacientes.
+
 ## HU-01 — Paso 1: persistencia de usuarios
 
 El modelo `Usuario` almacena un nombre de usuario único, normalizado en
