@@ -225,6 +225,7 @@ se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
 | Asignaciones | Administrador, Médico y Nutricionista | Administrador, Médico y Nutricionista; aprobación/rechazo solo Administrador y Nutricionista |
 | Reportes de pacientes y ocupación | Administrador, Médico, Nutricionista y Encargado de piso | Sin modificación |
 | Reportes de asignaciones y menús | Los cinco roles | Sin modificación |
+| Consultas operativas de cocina (SAH-6: pacientes por régimen y menús por paciente) | Administrador, Nutricionista y Cocina | Sin modificación |
 
 Un acceso no autorizado responde con HTTP 403 y presenta la vista de acceso
 denegado, con un enlace para regresar al dashboard. El servicio de dashboard
