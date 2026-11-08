@@ -332,6 +332,11 @@ aplicándose en el servidor; las pruebas por capturas continúan fuera de alcanc
 
 ## Detención y persistencia
 
+Para crear respaldos y restaurarlos en una base local vacía, consultar
+[HU-03 — Respaldo y restauración MySQL](docs/HU-03-respaldo-restauracion.md).
+El procedimiento incluye SHA-256 y una prueba independiente de recuperación
+con datos sintéticos; no requiere borrar el volumen de desarrollo.
+
 ```bash
 docker compose down
 ```
