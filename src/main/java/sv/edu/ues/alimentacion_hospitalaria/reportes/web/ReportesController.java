@@ -60,6 +60,22 @@ public class ReportesController {
         return "reportes/pacientes-sin-menu";
     }
 
+    @GetMapping("/expediente-paciente")
+    String expedientePaciente(@RequestParam(required = false) String codigoPaciente,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+                              @RequestParam(required = false) String estadoAsignacion, Model model) {
+        model.addAttribute("codigoPaciente", codigoPaciente);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+        model.addAttribute("estadoAsignacion", estadoAsignacion);
+        if (codigoPaciente != null && !codigoPaciente.isBlank()) {
+            model.addAttribute("reporte", reportes.expedientePaciente(codigoPaciente.trim(), fechaDesde, fechaHasta,
+                estadoAsignacion));
+        }
+        return "reportes/expediente-paciente";
+    }
+
     private void filtroPiso(Model model, Long pisoId) {
         model.addAttribute("pisos", reportes.pisos());
         model.addAttribute("pisoSeleccionado", pisoId);

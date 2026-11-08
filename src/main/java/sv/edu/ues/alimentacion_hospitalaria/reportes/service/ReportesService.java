@@ -27,6 +27,7 @@ import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.AlergiasSeverasReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.AsignacionesPendientesReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ComandasReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.EncabezadoReporte;
+import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ExpedientePacienteReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.OpcionFiltro;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.PacientesSinMenuReporte;
@@ -189,6 +190,62 @@ public class ReportesService {
         return new PacientesSinMenuReporte(encabezado, fecha, filas, pendientes);
     }
 
+    /** RD-01: expediente clínico-nutricional de un paciente identificado por su código. */
+    @PreAuthorize(CLINICOS)
+    public ExpedientePacienteReporte expedientePaciente(String codigo, LocalDate fechaDesde, LocalDate fechaHasta,
+                                                        String estadoAsignacion) {
+        Paciente paciente = reportes.buscarPacientePorCodigo(codigo)
+            .orElseThrow(() -> new ResourceNotFoundException("No existe un paciente con el código indicado."));
+        if (fechaDesde != null && fechaHasta != null && fechaDesde.isAfter(fechaHasta)) {
+            throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la fecha final.");
+        }
+
+        Boolean activa = switch (estadoAsignacion == null ? "" : estadoAsignacion.trim().toUpperCase()) {
+            case "ACTIVA" -> Boolean.TRUE;
+            case "INACTIVA" -> Boolean.FALSE;
+            default -> null;
+        };
+        List<AsignacionMenu> asignaciones = reportes.buscarAsignacionesPaciente(paciente.getId(), activa,
+            fechaDesde, fechaHasta);
+
+        List<String> patologias = paciente.getEnfermedades().stream()
+            .map(enfermedad -> enfermedad.getNombre())
+            .sorted(String.CASE_INSENSITIVE_ORDER)
+            .toList();
+        List<ExpedientePacienteReporte.Medicamento> medicamentos = paciente.getMedicamentos().stream()
+            .sorted(Comparator.comparing(medicamento -> medicamento.getNombre(), String.CASE_INSENSITIVE_ORDER))
+            .map(medicamento -> new ExpedientePacienteReporte.Medicamento(medicamento.getNombre(),
+                medicamento.getDosis(), medicamento.getFrecuenciaHoras(),
+                FECHA_HORA.format(medicamento.getHoraPrimeraDosis())))
+            .toList();
+        List<ExpedientePacienteReporte.Alergia> alergias = paciente.getAlergias().stream()
+            .sorted(Comparator.comparing(alergia -> alergia.getNombre(), String.CASE_INSENSITIVE_ORDER))
+            .map(alergia -> new ExpedientePacienteReporte.Alergia(alergia.getNombre(),
+                severidad(alergia.getSeveridad())))
+            .toList();
+        List<ExpedientePacienteReporte.MenuAsignado> menus = asignaciones.stream()
+            .map(asignacion -> new ExpedientePacienteReporte.MenuAsignado(asignacion.getMenu().getNombre(),
+                asignacion.getMenu().getTipoDieta().getEtiqueta(), asignacion.getFechaInicio(), asignacion.getFechaFin(),
+                asignacion.isActiva(), asignacion.isActiva() ? "Activa" : "Inactiva"))
+            .toList();
+
+        ExpedientePacienteReporte.Paciente ficha = new ExpedientePacienteReporte.Paciente(
+            paciente.getCodigo(), nombreCompleto(paciente), paciente.calcularEdad(), paciente.getEstado().toString(),
+            paciente.getPesoKg().toPlainString(), paciente.getAlturaCm().toPlainString(),
+            piso(paciente.getCama()), cama(paciente.getCama()), patologias, medicamentos, alergias);
+        String estadoFiltro = estadoAsignacion == null || estadoAsignacion.isBlank()
+            ? "Todas" : "Activa".equalsIgnoreCase(estadoAsignacion) ? "Activas" : "Inactivas";
+        List<String> filtros = new ArrayList<>();
+        filtros.add("Código: " + paciente.getCodigo());
+        filtros.add("Desde: " + (fechaDesde == null ? "Sin límite" : fechaDesde.format(FECHA)));
+        filtros.add("Hasta: " + (fechaHasta == null ? "Sin límite" : fechaHasta.format(FECHA)));
+        filtros.add("Asignaciones: " + estadoFiltro);
+        EncabezadoReporte encabezado = encabezado("RD-01", "Expediente clínico-nutricional",
+            "rd-01-expediente-" + paciente.getCodigo(), filtros,
+            "Ficha vigente del paciente y menús asignados que cumplen los filtros de fecha y estado.");
+        return new ExpedientePacienteReporte(encabezado, codigo, ficha, menus);
+    }
+
     private String filtroPiso(Long pisoId) {
         if (pisoId == null) {
             return "Todos los pisos";
@@ -223,4 +280,15 @@ public class ReportesService {
     private static String cama(Cama cama) {
         return cama == null ? "—" : cama.getNumero();
     }
+
+    private static String severidad(SeveridadAlergia severidad) {
+        return switch (severidad) {
+            case LEVE -> "Leve";
+            case MODERADA -> "Moderada";
+            case SEVERA -> "Grave";
+        };
+    }
+
+    private static final java.time.format.DateTimeFormatter FECHA_HORA =
+        java.time.format.DateTimeFormatter.ofPattern("hh:mm a");
 }

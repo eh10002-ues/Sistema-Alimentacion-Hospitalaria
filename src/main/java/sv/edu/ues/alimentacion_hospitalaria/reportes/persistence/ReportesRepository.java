@@ -133,4 +133,27 @@ public interface ReportesRepository extends Repository<AsignacionMenu, Long> {
         order by asignacion.fechaInicio desc, asignacion.id desc
         """)
     List<AsignacionMenu> buscarAsignacionesAprobadas(@Param("pacienteIds") Collection<Long> pacienteIds);
+
+    @Query("""
+        select paciente from Paciente paciente
+        left join fetch paciente.cama cama
+        left join fetch cama.piso piso
+        where lower(paciente.codigo) = lower(:codigo)
+        """)
+    Optional<Paciente> buscarPacientePorCodigo(@Param("codigo") String codigo);
+
+    @Query("""
+        select asignacion from AsignacionMenu asignacion
+        join fetch asignacion.menu menu
+        where asignacion.paciente.id = :pacienteId
+          and (:activa is null or asignacion.activa = :activa)
+          and (:fechaDesde is null or asignacion.fechaFin is null or asignacion.fechaFin >= :fechaDesde)
+          and (:fechaHasta is null or asignacion.fechaInicio <= :fechaHasta)
+        order by asignacion.fechaInicio desc, asignacion.id desc
+        """)
+    List<AsignacionMenu> buscarAsignacionesPaciente(
+        @Param("pacienteId") Long pacienteId,
+        @Param("activa") Boolean activa,
+        @Param("fechaDesde") LocalDate fechaDesde,
+        @Param("fechaHasta") LocalDate fechaHasta);
 }
