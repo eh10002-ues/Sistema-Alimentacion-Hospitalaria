@@ -14,3 +14,10 @@ config
 *.sql
 *.sql.gz
 .DS_Store
+
+# HU-03: nunca incorporar respaldos ni configuración del cliente a la imagen.
+backups
+docs/evidencias
+tests
+*.cnf
+**/__pycache__

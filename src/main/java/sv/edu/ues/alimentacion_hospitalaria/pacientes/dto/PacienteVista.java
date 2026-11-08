@@ -8,12 +8,16 @@ public record PacienteVista(
     String codigo,
     String nombres,
     String apellidos,
-    int enfermedades,
-    int alergias,
+    Integer enfermedades,
+    Integer alergias,
     String ubicacion,
     EstadoPaciente estado) {
 
     public static PacienteVista desde(Paciente paciente) {
+        return desde(paciente, true);
+    }
+
+    public static PacienteVista desde(Paciente paciente, boolean incluirClinica) {
         String ubicacion = paciente.getCama() == null
             ? "Sin ubicación"
             : paciente.getCama().getPiso().getCodigo() + " - " + paciente.getCama().getNumero();
@@ -22,8 +26,8 @@ public record PacienteVista(
             paciente.getCodigo(),
             paciente.getNombres(),
             paciente.getApellidos(),
-            paciente.getEnfermedades().size(),
-            paciente.getAlergias().size(),
+            incluirClinica ? paciente.getEnfermedades().size() : null,
+            incluirClinica ? paciente.getAlergias().size() : null,
             ubicacion,
             paciente.getEstado());
     }

@@ -42,6 +42,143 @@ Hibernate la validación. La migración `V1__HU01_crear_usuarios.sql` crea la ta
 de usuarios al iniciar una versión de la aplicación que la incluya; no inserta
 cuentas ni credenciales iniciales.
 
+## HU-02 — Paso 1: contrato de reportes
+
+El [contrato de los cuatro reportes generales](docs/HU-02-contrato-reportes.md)
+define las columnas, filtros, permisos, reglas de consulta e impresión y pruebas
+previstas. Las decisiones sobre habitaciones, fuente de asignaciones y programación por
+fecha fueron aprobadas por el usuario el 8 de noviembre de 2026.
+La implementación y su evidencia se registran en los pasos siguientes.
+
+## HU-02 — Paso 2: base del módulo por capas
+
+La portada `/reportes`, accesible desde el menú lateral, muestra únicamente los
+reportes autorizados para cada rol. Cocina ve asignaciones y menús; los otros
+cuatro roles ven los cuatro reportes. Las tarjetas enlazan a las pantallas de
+consulta desde el paso 5.
+
+El paquete `reportes` incorpora controlador, servicio de catálogo de solo lectura,
+DTO sin entidades JPA y filtros tipados con validación de página, identificadores
+y longitud de búsqueda. La resolución de fechas opcionales y la validación de
+existencia del piso se completaron en el paso 3; el enlace de filtros mediante
+parámetros HTTP se incorporó en el paso 4. El paso 2 no añadió consultas, migraciones ni dependencias.
+Las decisiones D-01, D-02 y D-03 del contrato ya fueron aprobadas.
+
+## HU-02 — Paso 3: consultas paginadas
+
+`ConsultaReportesService` consulta pacientes, asignaciones de menú aprobadas y
+vigentes, menús por fecha y ocupación de camas con páginas de 20 filas. Resuelve
+la fecha omitida con el día actual de El Salvador y valida el piso solicitado.
+Los resultados contienen DTO, sin entidades ni datos clínicos innecesarios;
+las asignaciones usan salidas distintas para personal clínico, piso y Cocina.
+
+Las consultas emplean proyecciones escalares, conteos explícitos y carga por
+lotes de tiempos de comida y ocupantes. Las camas con varios ingresados se
+identifican como inconsistentes y conservan todos sus ocupantes. Los menús no se
+duplican por paciente y se ordenan por la secuencia operativa de tiempos de comida
+antes de paginar, conservando sus horas de servicio originales.
+
+Este paso implementó el acceso a datos y la transformación en el servicio.
+La conexión HTTP se añadió en el paso 4 y las tablas y formularios en el paso 5.
+La impresión se incorporó en el paso 6, con validación visual manual pendiente.
+No se modificó el esquema de MySQL.
+
+## HU-02 — Paso 4: acceso HTTP y validación por rol
+
+Las rutas `/reportes/pacientes`, `/reportes/asignaciones`, `/reportes/menus` y
+`/reportes/ocupacion` conectan las consultas a GET/HEAD, también con barra final.
+Aceptan los parámetros definidos en el contrato. `pagina` omitida usa cero;
+la fecha omitida de asignaciones y menús usa el día actual de El Salvador.
+
+Los filtros inválidos responden HTTP 400 con mensajes en español, sin mostrar
+valores rechazados ni detalles internos. Un piso inexistente es un error de
+filtro, mientras que una consulta válida sin coincidencias responde HTTP 200.
+Los cinco roles consultan asignaciones y menús; Cocina recibe HTTP 403 para
+pacientes y ocupación antes de ejecutar consultas. Las escrituras se rechazan,
+incluso si contienen CSRF válido, y se conserva el contrato de un único rol.
+
+Por ejemplo, `GET /reportes/menus?fecha=2026-11-08&tiempoComida=ALMUERZO` muestra
+esa consulta a un usuario autorizado. El modelo de vista contiene las filas
+paginadas con los DTO permitidos para su rol. El paso 4 incorporó el resumen; el
+paso 5 añadió tablas, formularios y selección desde las tarjetas. La impresión
+se incorporó en el paso 6. No se añadieron API REST, migraciones ni dependencias.
+
+## HU-02 — Paso 5: pantallas de consulta
+
+Desde **Reportes generales**, seleccione **Consultar reporte** en una tarjeta.
+Cada pantalla incluye tabla, total de coincidencias, filtros y navegación de
+20 filas por página. **Aplicar filtros** reinicia la página; **Anterior** y
+**Siguiente** conservan los filtros, incluida la fecha efectiva. **Limpiar filtros**
+restablece los valores iniciales. Una página fuera del rango permite regresar
+a la primera página con los mismos filtros.
+
+| Reporte | Filtros disponibles |
+| --- | --- |
+| Pacientes y ubicación | Código o nombre completo, piso y estado del paciente. |
+| Asignaciones activas | Código o nombre completo, piso, fecha y tipo de dieta. |
+| Menús programados | Fecha, tiempo de comida y tipo de dieta. |
+| Camas y ocupación | Piso, código de cama y estado de ocupación. |
+
+La ubicación de pacientes de alta se identifica como referencia histórica. En
+ocupación, una cama con varios pacientes ingresados aparece como **Inconsistente**
+y muestra todos los ocupantes actuales. Los menús muestran su hora de servicio
+original. Los reportes de fecha describen vigencia con el estado actual de los
+registros, sin reconstruir ubicaciones o estados históricos.
+
+En asignaciones, Administración, Médico y Nutrición ven responsable y fechas
+individuales; piso recibe las columnas operativas sin esos datos ni tiempos de
+comida; Cocina ve fecha de consulta y tiempos, sin responsable ni historial.
+Los DTO ya excluyen los campos no autorizados antes de renderizar las tablas.
+Cocina solo puede seleccionar asignaciones y menús.
+
+Para probar con datos sintéticos, use los registros de demostración creados en
+los módulos existentes: consulte cada reporte, combine filtros, compruebe un
+estado vacío y navegue un conjunto de más de 20 coincidencias. Verifique también
+la referencia de alta y los permisos de cada rol. No use datos reales de pacientes.
+La impresión/PDF y las evidencias de demostración final corresponden a los pasos 6 y 7.
+
+## HU-02 — Paso 6: impresión y guardado como PDF
+
+En cualquiera de los cuatro reportes, **Imprimir / PDF** abre una vista sin menú
+lateral ni paginación, con título, fecha de generación, filtros y las mismas
+columnas permitidas para el rol. Incluye todos los resultados filtrados hasta
+1000 registros, aunque la pantalla de consulta esté en otra página.
+
+La vista reutiliza las tablas y propone papel A4 horizontal, ajuste de columnas
+y encabezados repetidos. Pulse **Imprimir o guardar PDF** y seleccione **Guardar
+como PDF** en el diálogo del navegador. **Volver al reporte** conserva los filtros.
+
+Si hay más de 1000 coincidencias, la aplicación responde HTTP 422 y solicita
+reducir los filtros antes de cargar filas; no genera una salida parcial. Las
+consultas de impresión usan una transacción de lectura con aislamiento repetible
+para mantener coherentes el conteo y los registros recuperados.
+
+Las rutas son `/reportes/pacientes/impresion`, `/reportes/asignaciones/impresion`,
+`/reportes/menus/impresion` y `/reportes/ocupacion/impresion`. Conservan los filtros
+y permisos de sus reportes. No se añade una dependencia de PDF al servidor.
+
+La exportación y la revisión visual serán realizadas manualmente por el usuario.
+Seguir la [guía de prueba manual de impresión](docs/HU-02-prueba-manual-impresion.md).
+Las pruebas automatizadas de HTML, permisos y límites no acreditan el resultado
+visual de un PDF guardado. El cierre de HU-02 y su evidencia siguen pendientes.
+
+### Datos sintéticos de demostración HU-02
+
+Se cargó un conjunto local identificable por los pisos `HU02-D1`/`HU02-D2`, los
+códigos de paciente `HU02-D001` a `HU02-D068` y los menús `HU02 DEMO - Menú`.
+La [guía de datos y resultados esperados](docs/HU-02-datos-demostracion.md)
+incluye las consultas SQL, los conteos comprobados y los casos para paginación,
+fechas, estados, altas y camas disponibles. La carga ya fue ejecutada; no repetirla
+ni usar datos reales de pacientes.
+
+### Integración de HU-02 y SAH-9
+
+Los reportes generales de HU-02 se atienden en `ReportesGeneralesController`;
+los reportes específicos de SAH-9 conservan `ReportesController`. Comparten el
+prefijo `/reportes`, con rutas distintas y sus propias validaciones. Se mantienen
+la portada general y los enlaces específicos autorizados en el menú, junto con
+las reglas de seguridad y pruebas de ambos módulos.
+
 ## HU-01 — Paso 1: persistencia de usuarios
 
 El modelo `Usuario` almacena un nombre de usuario único, normalizado en
@@ -230,6 +367,14 @@ se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
 | SAH-9 RE-02: comandas de producción por tiempo de comida | Administrador, Nutricionista y Cocina | Sin modificación |
 | SAH-9 RE-03 y RE-04: asignaciones de menú pendientes y pacientes sin menú vigente | Administrador, Médico y Nutricionista | Sin modificación |
 
+HU-01: el Encargado de piso recibe únicamente identificación, estado y ubicación
+al consultar pacientes; el modelo de vista excluye datos y conteos clínicos.
+Administrador y Médico pueden modificar alergias, enfermedades y medicamentos.
+Nutricionista puede consultar esas secciones sin formularios de escritura.
+Cocina no accede a `/pacientes/**`; consulta los datos operativos autorizados
+mediante las consultas de cocina. Estas restricciones se validan en el servidor,
+con respuestas HTTP 403 y protección CSRF en las modificaciones.
+
 Un acceso no autorizado responde con HTTP 403 y presenta la vista de acceso
 denegado, con un enlace para regresar al dashboard. El servicio de dashboard
 rechaza cuentas sin un rol reconocido o con más de un rol del contrato.
@@ -396,6 +541,11 @@ base visual provisional. Las reglas de autorización y las validaciones siguen
 aplicándose en el servidor; las pruebas por capturas continúan fuera de alcance.
 
 ## Detención y persistencia
+
+Para crear respaldos y restaurarlos en una base local vacía, consultar
+[HU-03 — Respaldo y restauración MySQL](docs/HU-03-respaldo-restauracion.md).
+El procedimiento incluye SHA-256 y una prueba independiente de recuperación
+con datos sintéticos; no requiere borrar el volumen de desarrollo.
 
 ```bash
 docker compose down

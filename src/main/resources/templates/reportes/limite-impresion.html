@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Reduzca los resultados para imprimir')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reportes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading"><h1>Reduzca los resultados para imprimir</h1></div>
+        <div class="alert alert-warning" role="alert">
+            <p th:text="|La consulta tiene ${total} registros y el límite de impresión es ${limite}.|"></p>
+            <p class="mb-0">Ajuste los filtros en el reporte y vuelva a intentar. No se generó una impresión parcial.</p>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/reportes}">Volver a reportes</a>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

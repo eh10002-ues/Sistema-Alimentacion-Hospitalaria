@@ -49,6 +49,10 @@
                     </svg>
                     <span>Inicio</span>
                 </a>
+                <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')"
+                   th:classappend="${active == 'reportes'} ? 'active'"
+                   th:attr="aria-current=${active == 'reportes' ? 'page' : null}"
+                   th:href="@{/reportes}">Reportes generales</a>
                 <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA','COCINA')">
                     <span class="navigation-label mt-4">ABASTECIMIENTO</span>
                     <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA')">
@@ -88,17 +92,19 @@
                         <span>Administrar usuarios</span>
                     </a>
                 </th:block>
-                <span class="navigation-label mt-4">PACIENTES</span>
-                <a class="nav-link" th:classappend="${active == 'pacientes'} ? 'active'" th:attr="aria-current=${active == 'pacientes' ? 'page' : null}"
-                   th:href="@{/pacientes}">
-                    <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
-                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                        <path d="M9 14h6"/><path d="M12 17v-6"/>
-                    </svg>
-                    <span>Gestionar pacientes</span>
-                </a>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO')">
+                    <span class="navigation-label mt-4">PACIENTES</span>
+                    <a class="nav-link" th:classappend="${active == 'pacientes'} ? 'active'" th:attr="aria-current=${active == 'pacientes' ? 'page' : null}"
+                       th:href="@{/pacientes}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <path d="M9 14h6"/><path d="M12 17v-6"/>
+                        </svg>
+                        <span>Gestionar pacientes</span>
+                    </a>
+                </th:block>
                 <th:block sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO_PISO')">
                     <span class="navigation-label mt-4">UBICACIONES</span>
                     <a class="nav-link" th:classappend="${active == 'ubicaciones'} ? 'active'" th:attr="aria-current=${active == 'ubicaciones' ? 'page' : null}"

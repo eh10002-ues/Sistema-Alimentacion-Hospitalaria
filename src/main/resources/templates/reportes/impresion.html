@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|${titulo} - Alimentación hospitalaria|"></title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/reportes-impresion.css}">
+    <script th:src="@{/js/reportes-impresion.js}" defer></script>
+</head>
+<body class="reporte-impresion">
+    <div class="herramientas-impresion">
+        <button class="btn btn-primary" id="imprimir-reporte" type="button">Imprimir o guardar PDF</button>
+        <a class="btn btn-outline-secondary" th:href="${enlaces.primera}">Volver al reporte</a>
+        <p class="text-body-secondary mt-2 mb-0">En el diálogo de impresión seleccione «Guardar como PDF». Se incluyen todos los resultados filtrados.</p>
+    </div>
+    <main>
+        <header class="cabecera-reporte">
+            <p class="sistema-reporte">Sistema de alimentación hospitalaria</p>
+            <h1 th:text="${titulo}"></h1>
+            <p th:text="|Generado: ${#temporals.format(generadoEn, 'dd/MM/yyyy HH:mm:ss z')}|"></p>
+            <p th:text="|Total de registros: ${pagina.totalElements}|"></p>
+            <h2>Filtros aplicados</h2>
+            <dl class="filtros-impresion"><div th:each="filtro : ${resumenFiltros}"><dt th:text="${filtro.nombre}"></dt><dd th:text="${filtro.valor}"></dd></div></dl>
+            <p th:if="${tipoReporte.name() == 'PACIENTES'}">La ubicación conservada de pacientes de alta es una referencia histórica.</p>
+            <p th:if="${fechaConsulta != null}">La vigencia se evalúa con el estado actual de los registros, sin reconstruir estados históricos.</p>
+        </header>
+        <div th:switch="${tipoReporte.name()}">
+            <th:block th:case="'PACIENTES'"><table th:replace="~{reportes/tablas :: pacientes}"></table></th:block>
+            <th:block th:case="'ASIGNACIONES'"><table th:replace="~{reportes/tablas :: asignaciones}"></table></th:block>
+            <th:block th:case="'MENUS'"><table th:replace="~{reportes/tablas :: menus}"></table></th:block>
+            <th:block th:case="'OCUPACION'"><table th:replace="~{reportes/tablas :: ocupacion}"></table></th:block>
+        </div>
+    </main>
+</body>
+</html>

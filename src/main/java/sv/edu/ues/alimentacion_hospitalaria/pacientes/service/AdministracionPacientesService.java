@@ -6,6 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Cama;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
@@ -32,6 +34,7 @@ import sv.edu.ues.alimentacion_hospitalaria.usuarios.domain.Usuario;
 import sv.edu.ues.alimentacion_hospitalaria.usuarios.persistence.UsuarioRepository;
 
 @Service
+@PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO')")
 @Transactional(readOnly = true)
 public class AdministracionPacientesService {
 
@@ -63,28 +66,30 @@ public class AdministracionPacientesService {
         String filtro = buscar == null ? "" : buscar.trim();
         Pageable pageable = PageRequest.of(Math.max(0, pagina), 20,
             Sort.by(Sort.Order.asc("codigo"), Sort.Order.asc("id")));
-        return pacienteRepository.buscar(filtro, estado, pisoId, pageable).map(PacienteVista::desde);
+        boolean incluirClinica = puedeConsultarClinica();
+        return pacienteRepository.buscar(filtro, estado, pisoId, pageable)
+            .map(paciente -> PacienteVista.desde(paciente, incluirClinica));
     }
 
     public PacienteDetalleVista consultar(Long id) {
         var paciente = pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
-        paciente.getEnfermedades().size();
-        paciente.getAlergias().size();
-        paciente.getMedicamentos().size();
-        return PacienteDetalleVista.desde(paciente);
+        return PacienteDetalleVista.desde(paciente, puedeConsultarClinica());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')")
     public Paciente consultarPacienteClinico(Long id) {
         return pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')")
     public java.util.List<PacienteEnfermedad> enfermedades(Long pacienteId) {
         return enfermedadRepository.findByPacienteId(pacienteId);
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void agregarEnfermedad(Long pacienteId, EnfermedadForm formulario) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -93,6 +98,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void actualizarEnfermedad(Long pacienteId, Long enfermedadId, EnfermedadForm formulario) {
         PacienteEnfermedad enfermedad = enfermedadRepository.findById(enfermedadId)
             .orElseThrow(() -> new ResourceNotFoundException("La enfermedad solicitada no existe."));
@@ -104,6 +110,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void eliminarEnfermedad(Long pacienteId, Long enfermedadId) {
         PacienteEnfermedad enfermedad = enfermedadRepository.findById(enfermedadId)
             .orElseThrow(() -> new ResourceNotFoundException("La enfermedad solicitada no existe."));
@@ -113,15 +120,18 @@ public class AdministracionPacientesService {
         enfermedadRepository.delete(enfermedad);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')")
     public java.util.List<PacienteAlergia> alergias(Long pacienteId) {
         return alergiaRepository.findByPacienteId(pacienteId);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')")
     public java.util.List<PacienteMedicamento> medicamentos(Long pacienteId) {
         return medicamentoRepository.findByPacienteId(pacienteId);
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void agregarMedicamento(Long pacienteId, MedicamentoForm formulario) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -132,6 +142,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void actualizarMedicamento(Long pacienteId, Long medicamentoId, MedicamentoForm formulario) {
         PacienteMedicamento medicamento = medicamentoRepository.findById(medicamentoId)
             .orElseThrow(() -> new ResourceNotFoundException("El medicamento solicitado no existe."));
@@ -146,6 +157,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void eliminarMedicamento(Long pacienteId, Long medicamentoId) {
         PacienteMedicamento medicamento = medicamentoRepository.findById(medicamentoId)
             .orElseThrow(() -> new ResourceNotFoundException("El medicamento solicitado no existe."));
@@ -156,6 +168,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void agregarAlergia(Long pacienteId, AlergiaForm formulario) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -166,6 +179,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void actualizarAlergia(Long pacienteId, Long alergiaId, AlergiaForm formulario) {
         PacienteAlergia alergia = alergiaRepository.findById(alergiaId)
             .orElseThrow(() -> new ResourceNotFoundException("La alergia solicitada no existe."));
@@ -178,6 +192,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public void eliminarAlergia(Long pacienteId, Long alergiaId) {
         PacienteAlergia alergia = alergiaRepository.findById(alergiaId)
             .orElseThrow(() -> new ResourceNotFoundException("La alergia solicitada no existe."));
@@ -198,6 +213,7 @@ public class AdministracionPacientesService {
         return pisoRepository.findAll(Sort.by(Sort.Order.asc("codigo"), Sort.Order.asc("id")));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public PacienteForm consultarParaEditar(Long id) {
         Paciente paciente = pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -247,6 +263,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public Paciente crear(PacienteForm formulario) {
         String codigo = formulario.getCodigo().trim();
         if (pacienteRepository.existsByCodigoIgnoreCase(codigo)) {
@@ -286,6 +303,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public Paciente actualizar(Long id, PacienteForm formulario) {
         Paciente paciente = pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -316,6 +334,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista darDeAlta(Long id) {
         Paciente paciente = pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -333,6 +352,7 @@ public class AdministracionPacientesService {
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO')")
     public sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista reingresar(Long id) {
         Paciente paciente = pacienteRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
@@ -357,5 +377,12 @@ public class AdministracionPacientesService {
         String ubicacion = cama.getPiso().getCodigo() + "-" + cama.getNumero();
         return new sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista(
             paciente.getCodigo(), ubicacion);
+    }
+
+    private boolean puedeConsultarClinica() {
+        var autenticacion = SecurityContextHolder.getContext().getAuthentication();
+        return autenticacion != null && autenticacion.getAuthorities().stream()
+            .anyMatch(autoridad -> java.util.Set.of("ROLE_ADMIN", "ROLE_MEDICO", "ROLE_NUTRICIONISTA")
+                .contains(autoridad.getAuthority()));
     }
 }

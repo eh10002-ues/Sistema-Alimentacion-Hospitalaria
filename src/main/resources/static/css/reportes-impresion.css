@@ -1,0 +1,24 @@
+@page { size: A4 landscape; margin: 12mm; }
+.reporte-impresion { margin: 0 auto; padding: 8mm; max-width: 297mm; background: white; color: #111; font-size: 10pt; }
+.herramientas-impresion { padding: 4mm 0; margin-bottom: 5mm; border-bottom: 1px solid #aaa; }
+.cabecera-reporte { margin-bottom: 5mm; }
+.cabecera-reporte h1 { font-size: 18pt; margin: 0 0 3mm; }
+.cabecera-reporte h2 { font-size: 10pt; margin: 3mm 0 2mm; }
+.cabecera-reporte p { margin-bottom: 2mm; }
+.sistema-reporte { font-weight: 600; }
+.filtros-impresion { display: flex; flex-wrap: wrap; gap: 2mm 8mm; margin-bottom: 3mm; }
+.filtros-impresion > div { display: flex; gap: 2mm; max-width: 100%; overflow-wrap: anywhere; }
+.filtros-impresion dt::after { content: ':'; }
+.filtros-impresion dd { margin: 0; }
+.reporte-impresion table { width: 100%; table-layout: fixed; font-size: 9pt; border-collapse: collapse; }
+.reporte-impresion th, .reporte-impresion td { padding: 1.8mm 1.5mm; overflow-wrap: anywhere; vertical-align: top; border: 0.2mm solid #bbb; }
+.reporte-impresion thead th { background: #eee; font-weight: 700; }
+.reporte-impresion thead { display: table-header-group; }
+.reporte-impresion tr { break-inside: avoid; page-break-inside: avoid; }
+@media print {
+    .herramientas-impresion { display: none !important; }
+    .reporte-impresion { padding: 0; max-width: none; }
+    .reporte-impresion table { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .reporte-impresion .badge { color: #111 !important; background: none !important; padding: 0; font-size: 9pt; white-space: normal; }
+    a { color: inherit; text-decoration: none; }
+}

@@ -42,3 +42,8 @@ AGENTS.md
 historias.md
 
 .agents/
+
+# HU-03: respaldos operativos y configuración temporal del cliente MySQL.
+/backups/
+*.cnf
+__pycache__/
