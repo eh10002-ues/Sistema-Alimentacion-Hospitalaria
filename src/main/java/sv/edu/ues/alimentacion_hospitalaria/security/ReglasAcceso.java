@@ -21,6 +21,9 @@ public class ReglasAcceso {
 	// SAH-2: solo médicos y nutricionistas evalúan y autorizan dietas; el administrador no participa.
 	private static final String[] PRESCRIPCION = {"MEDICO", "NUTRICIONISTA"};
 	private static final String[] PROYECCION_INSUMOS = {"ADMIN", "NUTRICIONISTA", "COCINA"};
+	// SAH-6: cocina consulta menús aprobados y tiempos de comida, la nutricionista los administra y el administrador supervisa.
+	// El encargado de piso accede a las asignaciones activas mediante su reporte, no mediante estas consultas.
+	private static final String[] CONSULTAS_COCINA = {"ADMIN", "NUTRICIONISTA", "COCINA"};
 	private static final String[] APROBACIONES = {"/asignaciones/*/aprobar", "/asignaciones/*/aprobar/**",
 		"/asignaciones/*/rechazar", "/asignaciones/*/rechazar/**"};
 
@@ -66,6 +69,8 @@ public class ReglasAcceso {
 			.requestMatchers(porMetodos(Set.of("GET", "HEAD", "POST"), "/prescripciones/**")).hasAnyRole(PRESCRIPCION)
 			// SAH-2: recepción en tiempo real de las órdenes aprobadas.
 			.requestMatchers(lectura("/cocina/ordenes", "/cocina/ordenes/**")).hasRole("COCINA")
+			// SAH-6: consultas operativas de cocina (solo lectura).
+			.requestMatchers(lectura("/cocina/consultas/**")).hasAnyRole(CONSULTAS_COCINA)
 			.anyRequest().denyAll());
 	}
 

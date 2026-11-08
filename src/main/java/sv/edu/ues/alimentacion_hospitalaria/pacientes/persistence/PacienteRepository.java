@@ -22,6 +22,8 @@ public interface PacienteRepository extends JpaRepository<Paciente, Long> {
 
     List<Paciente> findByEstado(EstadoPaciente estado);
 
+    List<Paciente> findByEstadoOrderByApellidosAscNombresAscCodigoAsc(EstadoPaciente estado);
+
     List<Paciente> findByCamaId(Long camaId);
 
     List<Paciente> findByCamaIdAndEstado(Long camaId, EstadoPaciente estado);
