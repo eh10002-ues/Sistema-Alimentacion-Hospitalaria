@@ -54,7 +54,7 @@ public class ReglasAcceso {
 				.hasAnyRole(CLINICOS_Y_PISO)
 			.requestMatchers(lectura("/reportes/asignaciones", "/reportes/asignaciones/**", "/reportes/menus", "/reportes/menus/**"))
 				.hasAnyRole(TODOS)
-			.requestMatchers(lectura("/pacientes/**")).hasAnyRole(TODOS)
+			.requestMatchers(lectura("/pacientes/**")).hasAnyRole(CLINICOS_Y_PISO)
 			.requestMatchers(lectura("/ubicaciones/**")).hasAnyRole("ADMIN", "ENCARGADO_PISO")
 			.requestMatchers(lectura("/insumos/**")).hasAnyRole(PROYECCION_INSUMOS)
 			.requestMatchers(lectura("/menus/**", "/dietas/**")).hasAnyRole(TODOS)
@@ -62,7 +62,7 @@ public class ReglasAcceso {
 			.requestMatchers(porMetodos(Set.of("POST", "PUT", "PATCH", "DELETE"),
 				"/pacientes/*/alergias", "/pacientes/*/alergias/**",
 				"/pacientes/*/enfermedades", "/pacientes/*/enfermedades/**",
-				"/pacientes/*/medicamentos", "/pacientes/*/medicamentos/**")).hasAnyRole(CLINICOS)
+				"/pacientes/*/medicamentos", "/pacientes/*/medicamentos/**")).hasAnyRole("ADMIN", "MEDICO")
 			.requestMatchers(porMetodos(Set.of("POST", "PUT", "PATCH"), "/pacientes/**")).hasAnyRole("ADMIN", "MEDICO")
 			.requestMatchers(escritura("/menus/**", "/dietas/**")).hasAnyRole(NUTRICION)
 			.requestMatchers(escritura("/ubicaciones/**")).hasAnyRole("ADMIN", "ENCARGADO_PISO")

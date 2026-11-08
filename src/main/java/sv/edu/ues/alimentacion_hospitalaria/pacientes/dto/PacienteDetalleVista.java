@@ -24,6 +24,10 @@ public record PacienteDetalleVista(
     List<MedicamentoVista> medicamentos) {
 
     public static PacienteDetalleVista desde(Paciente paciente) {
+        return desde(paciente, true);
+    }
+
+    public static PacienteDetalleVista desde(Paciente paciente, boolean incluirClinica) {
         String ubicacion = paciente.getCama() == null
             ? "Sin ubicación"
             : paciente.getCama().getPiso().getCodigo() + " - " + paciente.getCama().getNumero();
@@ -32,21 +36,21 @@ public record PacienteDetalleVista(
             paciente.getCodigo(),
             paciente.getNombres(),
             paciente.getApellidos(),
-            paciente.getFechaNacimiento(),
-            paciente.calcularEdadExacta(),
-            paciente.getPesoKg(),
-            paciente.getAlturaCm(),
+            incluirClinica ? paciente.getFechaNacimiento() : null,
+            incluirClinica ? paciente.calcularEdadExacta() : null,
+            incluirClinica ? paciente.getPesoKg() : null,
+            incluirClinica ? paciente.getAlturaCm() : null,
             paciente.getEstado(),
             ubicacion,
-            paciente.getEnfermedades().stream().map(enfermedad -> enfermedad.getNombre()).toList(),
-            paciente.getAlergias().stream()
+            incluirClinica ? paciente.getEnfermedades().stream().map(enfermedad -> enfermedad.getNombre()).toList() : List.of(),
+            incluirClinica ? paciente.getAlergias().stream()
                 .map(alergia -> new AlergiaVista(alergia.getNombre(), alergia.getSeveridad()))
-                .toList(),
-            paciente.getMedicamentos().stream()
+                .toList() : List.of(),
+            incluirClinica ? paciente.getMedicamentos().stream()
                 .map(medicamento -> new MedicamentoVista(
                     medicamento.getNombre(), medicamento.getDosis(), medicamento.getFrecuenciaHoras(),
                     medicamento.getHoraPrimeraDosis()))
-                .toList());
+                .toList() : List.of());
     }
 
     public record AlergiaVista(String nombre, SeveridadAlergia severidad) { }

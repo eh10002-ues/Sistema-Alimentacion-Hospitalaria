@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/layout :: head('Pacientes')}"></head>
 <body class="app-layout">
 <th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
@@ -9,7 +9,7 @@
             <div>
                 <p class="page-eyebrow mb-2">PACIENTES</p>
                 <h1 class="mb-2">Gestionar pacientes</h1>
-                <p class="text-body-secondary mb-0">Consulte los pacientes, su ubicación y su información clínica.</p>
+                <p class="text-body-secondary mb-0">Consulte los pacientes y la información autorizada para su rol.</p>
             </div>
 
             <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -64,8 +64,8 @@
                         <th scope="col">Código</th>
                         <th scope="col">Nombre</th>
                         <th scope="col">Apellido</th>
-                        <th scope="col">Enfermedades</th>
-                        <th scope="col">Alergias</th>
+                        <th scope="col" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">Enfermedades</th>
+                        <th scope="col" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">Alergias</th>
                         <th scope="col">Ubicación</th>
                         <th scope="col">Estado</th>
                         <th scope="col">Acciones</th>
@@ -79,8 +79,8 @@
                         <td class="fw-semibold" th:text="${paciente.codigo}"></td>
                         <td class="paciente-nombre" th:text="${paciente.nombres}"></td>
                         <td th:text="${paciente.apellidos}"></td>
-                        <td th:text="${paciente.enfermedades}"></td>
-                        <td th:text="${paciente.alergias}"></td>
+                        <td sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:text="${paciente.enfermedades}"></td>
+                        <td sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:text="${paciente.alergias}"></td>
                         <td th:text="${paciente.ubicacion}"></td>
                         <td>
                             <span class="badge rounded-pill"
@@ -104,17 +104,17 @@
                                     </li>
                                     <li>
                                         <a class="dropdown-item" th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">
-                                            Gestionar Alergias
+                                            Consultar alergias
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">
-                                            Gestionar Enfermedades
+                                            Consultar enfermedades
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" th:href="@{/pacientes/{id}/medicamentos(id=${paciente.id})}">
-                                            Gestionar Medicamentos
+                                            Consultar medicamentos
                                         </a>
                                     </li>
                                     <li sec:authorize="hasAnyRole('ADMIN', 'MEDICO')"><hr class="dropdown-divider"></li>

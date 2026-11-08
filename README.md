@@ -227,6 +227,14 @@ se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
 | Reportes de asignaciones y menús | Los cinco roles | Sin modificación |
 | Consultas operativas de cocina (SAH-6: pacientes por régimen y menús por paciente) | Administrador, Nutricionista y Cocina | Sin modificación |
 
+HU-01: el Encargado de piso recibe únicamente identificación, estado y ubicación
+al consultar pacientes; el modelo de vista excluye datos y conteos clínicos.
+Administrador y Médico pueden modificar alergias, enfermedades y medicamentos.
+Nutricionista puede consultar esas secciones sin formularios de escritura.
+Cocina no accede a `/pacientes/**`; consulta los datos operativos autorizados
+mediante las consultas de cocina. Estas restricciones se validan en el servidor,
+con respuestas HTTP 403 y protección CSRF en las modificaciones.
+
 Un acceso no autorizado responde con HTTP 403 y presenta la vista de acceso
 denegado, con un enlace para regresar al dashboard. El servicio de dashboard
 rechaza cuentas sin un rol reconocido o con más de un rol del contrato.

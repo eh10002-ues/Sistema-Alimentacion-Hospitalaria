@@ -71,12 +71,19 @@ class DashboardPermisosTests {
 		} else {
 			assertThat(html).doesNotContain("href=\"/admin/usuarios\"", "Crear y mantener cuentas de usuario");
 		}
+		if (rol == Rol.ROLE_COCINA) {
+			assertThat(html).doesNotContain("href=\"/pacientes\"");
+		}
 		mvc.perform(get("/").session(sesion)).andExpect(redirectedUrl("/dashboard"));
 	}
 
 	@ParameterizedTest(name = "{0}: {1} {2} permitido={3}")
 	@MethodSource("matriz")
 	void servidorAplicaLaMatrizSinEjecutarOperacionesDenegadas(Rol rol, String metodo, String ruta, boolean permitido) throws Exception {
+		// El sufijo evita ejecutar los controladores funcionales incorporados al proyecto.
+		if (!ruta.equals("/admin/prueba") && !ruta.equals("/sin-regla")) {
+			ruta = ruta + (ruta.endsWith("/") ? "" : "/") + "prueba-permisos";
+		}
 		int antes = rutas.invocaciones.get();
 		var resultado = mvc.perform(request(HttpMethod.valueOf(metodo), ruta)
 			.with(user("prueba").authorities(new SimpleGrantedAuthority(rol.name()))).with(csrf()));
