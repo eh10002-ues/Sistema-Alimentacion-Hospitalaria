@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,6 +52,13 @@ class DashboardPermisosTests {
 	@Autowired private ServicioContrasenas contrasenas;
 	@Autowired private RutasPrueba rutas;
 
+	// SAH-9: únicos enlaces a /reportes admitidos en el panel, con los roles de ReglasAcceso.
+	private static final Map<String, Set<Rol>> ENLACES_REPORTES_SAH9 = Map.of(
+		"/reportes/alergias-severas", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA),
+		"/reportes/comandas", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_NUTRICIONISTA, Rol.ROLE_COCINA),
+		"/reportes/asignaciones-pendientes", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA),
+		"/reportes/pacientes-sin-menu", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA));
+
 	@ParameterizedTest
 	@EnumSource(Rol.class)
 	void loginRealAbreElPanelDeCadaRolSinEnlacesInexistentes(Rol rol) throws Exception {
@@ -64,7 +72,19 @@ class DashboardPermisosTests {
 			.andExpect(view().name("index")).andReturn();
 		assertThat(((PanelRol) panel.getModelAndView().getModel().get("panel")).rol()).isEqualTo(rol);
 		String html = panel.getResponse().getContentAsString();
-		assertThat(html).contains(rol.getEtiqueta(), "Funciones de su rol", "Cerrar sesión")
+		// Cada enlace de SAH-9 aparece solo para sus roles; se descarta antes de exigir que no existan otros /reportes.
+		String htmlSinReportesSah9 = html;
+		for (var enlace : ENLACES_REPORTES_SAH9.entrySet()) {
+			String href = "href=\"" + enlace.getKey() + "\"";
+			if (enlace.getValue().contains(rol)) {
+				assertThat(html).contains(href);
+			} else {
+				assertThat(html).doesNotContain(href);
+			}
+			htmlSinReportesSah9 = htmlSinReportesSah9.replace(href, "");
+		}
+		assertThat(html).contains(rol.getEtiqueta(), "Funciones de su rol", "Cerrar sesión");
+		assertThat(htmlSinReportesSah9)
 			.doesNotContain(clave, "href=\"/menus", "href=\"/asignaciones", "href=\"/reportes");
 		if (rol == Rol.ROLE_ADMIN) {
 			assertThat(html).contains("Administrar usuarios", "href=\"/admin/usuarios\"");

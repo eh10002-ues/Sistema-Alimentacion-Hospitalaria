@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Pacientes sin menú vigente')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-pacientes-sin-menu')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTES · RE-04 (PROPUESTA)</p>
+            <h1 class="mb-2">Pacientes ingresados sin menú vigente aprobado</h1>
+            <p class="text-body-secondary mb-0">Pacientes ingresados que no tienen una asignación de menú activa,
+                aprobada y vigente en la fecha seleccionada. Reporte propuesto en sustitución del registro de
+                interacciones fármaco-nutriente, pendiente de validación del equipo.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/reportes/pacientes-sin-menu}" method="get">
+            <div class="row g-3 align-items-end">
+                <div th:replace="~{reportes/fragments :: filtroFecha}"></div>
+                <div th:replace="~{reportes/fragments :: filtroPiso}"></div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Consultar</button>
+                </div>
+            </div>
+        </form>
+
+        <section class="card card-body" aria-label="Resultado del reporte">
+            <th:block th:replace="~{reportes/fragments :: encabezado(${reporte.encabezado})}"></th:block>
+
+            <p class="mb-3" data-reporte-resumen
+               th:text="|Pacientes sin menú vigente: ${#lists.size(reporte.filas)} · Con asignación pendiente: ${reporte.conAsignacionPendiente}|">
+                Pacientes sin menú vigente: 0</p>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" data-reporte-tabla>
+                    <caption class="caption-top fw-semibold text-body">Pacientes ingresados sin menú vigente aprobado</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Piso</th>
+                        <th scope="col">Cama</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Paciente</th>
+                        <th scope="col">Asignación pendiente</th>
+                        <th scope="col">Último menú aprobado</th>
+                        <th scope="col">Desde</th>
+                        <th scope="col">Hasta</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(reporte.filas)}">
+                        <td colspan="8" class="text-center text-body-secondary py-5">
+                            Todos los pacientes ingresados tienen un menú vigente aprobado en esta fecha.
+                        </td>
+                    </tr>
+                    <tr th:each="fila : ${reporte.filas}">
+                        <td th:text="${fila.piso}"></td>
+                        <td th:text="${fila.cama}"></td>
+                        <td class="fw-semibold" th:text="${fila.codigo}"></td>
+                        <td th:text="${fila.paciente}"></td>
+                        <td th:text="${fila.asignacionPendiente} ? 'Sí' : 'No'"></td>
+                        <td th:text="${fila.ultimoMenu} ?: 'Sin asignaciones aprobadas'"></td>
+                        <td th:text="${fila.ultimoMenuInicio} ? ${#temporals.format(fila.ultimoMenuInicio, 'dd/MM/yyyy')} : '—'"></td>
+                        <td th:text="${fila.ultimoMenu == null} ? '—' : (${fila.ultimoMenuFin} ? ${#temporals.format(fila.ultimoMenuFin, 'dd/MM/yyyy')} : 'Indefinido')"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{reportes/fragments :: scripts}"></th:block>
+</body>
+</html>
