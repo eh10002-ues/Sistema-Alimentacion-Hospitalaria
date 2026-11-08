@@ -226,6 +226,9 @@ se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
 | Reportes de pacientes y ocupación | Administrador, Médico, Nutricionista y Encargado de piso | Sin modificación |
 | Reportes de asignaciones y menús | Los cinco roles | Sin modificación |
 | Consultas operativas de cocina (SAH-6: pacientes por régimen y menús por paciente) | Administrador, Nutricionista y Cocina | Sin modificación |
+| SAH-9 RE-01: pacientes con alergias severas registradas por piso | Administrador, Médico y Nutricionista | Sin modificación |
+| SAH-9 RE-02: comandas de producción por tiempo de comida | Administrador, Nutricionista y Cocina | Sin modificación |
+| SAH-9 RE-03 y RE-04: asignaciones de menú pendientes y pacientes sin menú vigente | Administrador, Médico y Nutricionista | Sin modificación |
 
 Un acceso no autorizado responde con HTTP 403 y presenta la vista de acceso
 denegado, con un enlace para regresar al dashboard. El servicio de dashboard
@@ -241,8 +244,12 @@ Este controlador no se incorpora al artefacto de producción.
 ./mvnw -Dtest=DashboardPermisosTests,SecurityConfigTests,AdministracionUsuariosTests test
 ```
 
-Las reglas HTTP no implementan los módulos operativos ni los cuatro reportes.
-Cuando se integren, deberán aplicar sus filtros de estado y los DTO específicos
+Las reglas HTTP no implementan los módulos operativos. Los cuatro reportes de
+SAH-9 ya cuentan con sus rutas propias, reglas HTTP y `@PreAuthorize` (ver
+«SAH-9 — Reportes específicos en PDF»); las rutas `/reportes/pacientes`,
+`/reportes/ocupacion`, `/reportes/asignaciones` y `/reportes/menus` de HU-01
+siguen sin implementación. Cuando se integren, deberán aplicar sus filtros de
+estado y los DTO específicos
 por rol para impedir la exposición de datos clínicos o campos no autorizados.
 En particular, CA-01.26 requiere la futura implementación del reporte de
 asignaciones: no se considera cumplido por estas pruebas de rutas.
@@ -303,6 +310,44 @@ con merma histórica de 100 % deben corregirse antes de migrar porque no existe
 un bruto finito para esa merma. Esta proyección se basa en asignaciones; no es
 un pronóstico aprendido del consumo histórico real.
 
+## SAH-9 — Reportes específicos en PDF
+
+Cuatro reportes de solo lectura en `/reportes`. La pantalla muestra el resultado
+y el botón «Exportar PDF» lo genera en el navegador con jsPDF/AutoTable
+(`static/js/reportes-pdf.js`, compartido por los cuatro). Las rutas son propias
+y no reemplazan las rutas `/reportes/pacientes`, `/reportes/ocupacion`,
+`/reportes/asignaciones` ni `/reportes/menus` definidas en HU-01.
+
+| Código | Ruta | Contenido |
+| --- | --- | --- |
+| RE-01 | `/reportes/alergias-severas` | Alergias de severidad SEVERA (etiqueta «Grave», como en la ficha) de pacientes ingresados, por piso. Filtro opcional de piso. |
+| RE-02 | `/reportes/comandas` | Raciones por tiempo de comida, platillo, menú, régimen y piso, con subtotales y total general. Filtros: fecha, tiempo de comida y piso. |
+| RE-03 | `/reportes/asignaciones-pendientes` | Asignaciones de menú activas sin aprobar de pacientes ingresados. |
+| RE-04 | `/reportes/pacientes-sin-menu` | Pacientes ingresados sin asignación de menú activa, aprobada y vigente en la fecha. Filtros: fecha y piso. |
+
+Criterios y limitaciones:
+
+- RE-02 y RE-04 usan los filtros de vigencia de SAH-6 y de la proyección de
+  insumos: asignación activa y aprobada, paciente ingresado, menú activo y
+  fecha dentro del período de la asignación.
+- RE-01 lista las alergias tal como se registraron: el modelo no distingue si
+  una alergia es alimentaria, medicamentosa u otra.
+- RE-02 no muestra datos clínicos ni nombres de pacientes. Tampoco muestra las
+  horas de servicio hasta corregir y verificar el almacenamiento de las
+  columnas `TIME`; el orden del día sale del tiempo de comida.
+- RE-03 consulta asignaciones de menú pendientes, no prescripciones dietéticas
+  pendientes: en SAH-2 toda prescripción se registra directamente aprobada.
+- RE-04 es una sustitución propuesta del reporte original «Registro de posibles
+  interacciones fármaco-nutriente», pendiente de validación documental del
+  equipo. No considera la prescripción de SAH-2 como asignación de menú.
+- Mientras no exista la administración de menús y asignaciones, RE-02, RE-03 y
+  RE-04 solo muestran datos cargados por otros medios.
+- El PDF se genera en el navegador; el servidor no registra su descarga.
+
+```bash
+./mvnw -Dtest='Reportes*Tests' test
+```
+
 ## Interfaz provisional con Bootstrap
 
 Las vistas utilizan Bootstrap 5.3.8 y ajustes propios en `static/css/styles.css`.
@@ -317,7 +362,11 @@ En escritorio permanece a la izquierda; por debajo de 992 px se abre con el
 botón «Menú», mediante el componente offcanvas de Bootstrap. La navegación
 incluye Inicio, proyección de insumos para Administración, Nutrición y Cocina,
 administración de usuarios exclusivamente para Administrador, la cuenta actual
-y el cierre de sesión. La opción actual se resalta. Los accesos de navegación
+y el cierre de sesión. El bloque «Reportes» (SAH-9) muestra a cada rol solo sus
+reportes: alergias severas, asignaciones pendientes y pacientes sin menú para
+Administrador, Médico y Nutricionista; comandas de producción para
+Administrador, Nutricionista y Cocina. El Encargado de piso no ve este bloque.
+La opción actual se resalta. Los accesos de navegación
 del dashboard se concentran en este menú lateral.
 
 La proyección exporta PDF con jsPDF/AutoTable y Excel con ExcelJS. Los bundles

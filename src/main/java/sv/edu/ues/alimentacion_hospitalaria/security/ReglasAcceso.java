@@ -71,6 +71,11 @@ public class ReglasAcceso {
 			.requestMatchers(lectura("/cocina/ordenes", "/cocina/ordenes/**")).hasRole("COCINA")
 			// SAH-6: consultas operativas de cocina (solo lectura).
 			.requestMatchers(lectura("/cocina/consultas/**")).hasAnyRole(CONSULTAS_COCINA)
+			// SAH-9: reportes específicos (solo lectura). Rutas propias para no heredar las reglas de HU-01 sobre /reportes.
+			// RE-01 contiene alergias: mismos roles que /pacientes/*/alergias. RE-02 no contiene datos clínicos.
+			.requestMatchers(lectura("/reportes/alergias-severas")).hasAnyRole(CLINICOS)
+			.requestMatchers(lectura("/reportes/comandas")).hasAnyRole(CONSULTAS_COCINA)
+			.requestMatchers(lectura("/reportes/asignaciones-pendientes", "/reportes/pacientes-sin-menu")).hasAnyRole(ASIGNACIONES)
 			.anyRequest().denyAll());
 	}
 
