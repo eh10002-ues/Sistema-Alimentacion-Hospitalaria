@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Comandas de producción')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-comandas')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTES · RE-02</p>
+            <h1 class="mb-2">Comandas de producción por tiempo de comida</h1>
+            <p class="text-body-secondary mb-0">Raciones a preparar por tiempo de comida, platillo, menú, régimen y
+                piso, según las asignaciones de menú vigentes en la fecha.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/reportes/comandas}" method="get">
+            <div class="row g-3 align-items-end">
+                <div th:replace="~{reportes/fragments :: filtroFecha}"></div>
+                <div class="col-md">
+                    <label for="tiempoComida" class="form-label">Tiempo de comida</label>
+                    <select id="tiempoComida" name="tiempoComida" class="form-select">
+                        <option value="" th:selected="${tiempoSeleccionado == null}">Todos</option>
+                        <option th:each="tiempo : ${tiempos}" th:value="${tiempo}" th:text="${tiempo.etiqueta}"
+                                th:selected="${tiempo == tiempoSeleccionado}"></option>
+                    </select>
+                </div>
+                <div th:replace="~{reportes/fragments :: filtroPiso}"></div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Consultar</button>
+                </div>
+            </div>
+        </form>
+
+        <section class="card card-body" aria-label="Resultado del reporte">
+            <th:block th:replace="~{reportes/fragments :: encabezado(${reporte.encabezado})}"></th:block>
+
+            <p class="mb-3 fw-semibold" data-reporte-resumen th:text="|Total general: ${reporte.totalGeneral} raciones|">
+                Total general: 0 raciones</p>
+
+            <p th:if="${#lists.isEmpty(reporte.tiempos)}" class="text-center text-body-secondary py-5 mb-0">
+                No hay raciones que preparar con estos filtros.
+            </p>
+
+            <div class="table-responsive mb-4" th:each="grupo : ${reporte.tiempos}">
+                <table class="table align-middle mb-0" data-reporte-tabla>
+                    <caption class="caption-top fw-semibold text-body" th:text="${grupo.tiempoComida}">Desayuno</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Platillo</th>
+                        <th scope="col">Menú</th>
+                        <th scope="col">Régimen</th>
+                        <th scope="col">Piso</th>
+                        <th scope="col" class="text-end">Raciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="fila : ${grupo.filas}">
+                        <td class="fw-semibold" th:text="${fila.platillo}"></td>
+                        <td th:text="${fila.menu}"></td>
+                        <td th:text="${fila.regimen}"></td>
+                        <td th:text="${fila.piso}"></td>
+                        <td class="text-end" th:text="${fila.raciones}"></td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th scope="row" colspan="4" th:text="|Subtotal ${grupo.tiempoComida}|">Subtotal</th>
+                        <td class="text-end fw-semibold" th:text="${grupo.subtotal}">0</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{reportes/fragments :: scripts}"></th:block>
+</body>
+</html>

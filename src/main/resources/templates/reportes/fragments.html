@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+
+<!-- Encabezado común: filtros aplicados, autor, fecha de generación, nota de alcance y exportación a PDF.
+     Los atributos data-reporte-* alimentan static/js/reportes-pdf.js. -->
+<th:block th:fragment="encabezado(encabezado)">
+    <div id="reporte-datos" class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3"
+         th:attr="data-reporte-codigo=${encabezado.codigo},data-reporte-titulo=${encabezado.titulo},
+                  data-reporte-archivo=${encabezado.archivo},data-reporte-filtros=${#strings.listJoin(encabezado.filtros, ' · ')},
+                  data-reporte-nota=${encabezado.nota},data-reporte-generado-por=${encabezado.generadoPor},
+                  data-reporte-generado-en=${encabezado.generadoEn}">
+        <div class="small text-body-secondary">
+            <div th:text="${#strings.listJoin(encabezado.filtros, ' · ')}">Filtros</div>
+            <div>
+                Generado por <span th:text="${encabezado.generadoPor}">usuario</span> el
+                <time data-fecha-local th:datetime="${encabezado.generadoEn}" th:text="${encabezado.generadoEn}"></time>
+            </div>
+        </div>
+        <button id="exportar-pdf" class="btn btn-outline-secondary" type="button">Exportar PDF</button>
+    </div>
+    <div id="error-exportacion" class="alert alert-danger" role="alert" tabindex="-1" hidden></div>
+    <div th:if="${encabezado.nota}" class="alert alert-info small mb-3" role="note" th:text="${encabezado.nota}"></div>
+</th:block>
+
+<!-- Filtro de piso; usa las variables del modelo «pisos» y «pisoSeleccionado». -->
+<div th:fragment="filtroPiso" class="col-md">
+    <label for="pisoId" class="form-label">Piso</label>
+    <select id="pisoId" name="pisoId" class="form-select">
+        <option value="" th:selected="${pisoSeleccionado == null}">Todos los pisos</option>
+        <option th:each="piso : ${pisos}" th:value="${piso.id}" th:text="${piso.etiqueta}"
+                th:selected="${piso.id == pisoSeleccionado}"></option>
+    </select>
+</div>
+
+<!-- Filtro de fecha; usa la variable del modelo «fechaSeleccionada». -->
+<div th:fragment="filtroFecha" class="col-md-3">
+    <label for="fecha" class="form-label">Fecha</label>
+    <input id="fecha" name="fecha" type="date" class="form-control" required th:value="${fechaSeleccionada}">
+</div>
+
+<th:block th:fragment="scripts">
+    <script defer th:src="@{/vendor/exportacion/jspdf.umd.min.js}"></script>
+    <script defer th:src="@{/vendor/exportacion/jspdf.plugin.autotable.min.js}"></script>
+    <script defer th:src="@{/js/fechas-locales.js}"></script>
+    <script defer th:src="@{/js/reportes-pdf.js}"></script>
+</th:block>
+
+</body>
+</html>

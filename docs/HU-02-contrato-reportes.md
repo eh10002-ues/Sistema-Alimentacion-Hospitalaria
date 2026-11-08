@@ -198,7 +198,7 @@ a los pasos siguientes al cerrar el paso 1. No se requiere una migración para e
 
 ## Registro del paso 2: base por capas
 
-Se incorporaron `reportes.web.ReportesController`,
+Se incorporaron `reportes.web.ReportesGeneralesController`,
 `reportes.service.CatalogoReportesService` y los DTO `TipoReporte`,
 `OpcionReporteVista` y `FiltrosReporte`. La portada `/reportes` y `/reportes/`
 está protegida y muestra el catálogo autorizado por rol, con las consultas
@@ -291,7 +291,7 @@ Verificación del paso 3 completada el 8 de noviembre de 2026:
 
 ## Paso 4: autorización y validación en las rutas HTTP
 
-`ReportesController` conecta las cuatro consultas existentes mediante GET/HEAD
+`ReportesGeneralesController` conecta las cuatro consultas existentes mediante GET/HEAD
 con o sin barra final, manteniendo controladores delgados y DTO por rol. Los
 filtros se enlazan mediante constructor y Bean Validation. La página omitida se
 normaliza a cero; errores de conversión (incluidas fechas imposibles y enums
