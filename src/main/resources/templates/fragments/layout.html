@@ -51,6 +51,20 @@
                 </a>
                 <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA','COCINA')">
                     <span class="navigation-label mt-4">ABASTECIMIENTO</span>
+                    <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA')">
+                        <a class="nav-link" th:classappend="${active == 'insumos-catalogo'} ? 'active'"
+                           th:attr="aria-current=${active == 'insumos-catalogo' ? 'page' : null}"
+                           th:href="@{/insumos}">
+                            <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 5h16M4 12h16M4 19h16"></path>
+                                <circle cx="7" cy="5" r="1"></circle>
+                                <circle cx="7" cy="12" r="1"></circle>
+                                <circle cx="7" cy="19" r="1"></circle>
+                            </svg>
+                            <span>Catálogo de insumos</span>
+                        </a>
+                    </th:block>
                     <a class="nav-link" th:classappend="${active == 'insumos'} ? 'active'" th:attr="aria-current=${active == 'insumos' ? 'page' : null}"
                        th:href="@{/insumos/proyeccion}">
                         <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"

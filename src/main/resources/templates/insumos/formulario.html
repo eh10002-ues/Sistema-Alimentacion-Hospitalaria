@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Datos del insumo')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('insumos-catalogo')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">ABASTECIMIENTO / CATÁLOGO</p>
+            <h1 class="mb-2" th:text="${creacion ? 'Agregar insumo' : 'Editar insumo'}"></h1>
+            <p class="text-body-secondary mb-0">Registre el ingrediente y los datos usados para estimar la compra.</p>
+        </div>
+        <div class="card form-card">
+            <div class="card-body">
+                <form th:action="@{${accion}}" th:object="${formulario}" method="post">
+                    <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
+                        <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
+                        <ul class="mb-0">
+                            <li th:each="error : ${#fields.errors('*')}" th:text="${error}"></li>
+                        </ul>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">Nombre del insumo</label>
+                            <input id="nombre" type="text" class="form-control" th:field="*{nombre}"
+                                   th:errorclass="is-invalid" maxlength="150" autocomplete="off" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="unidad" class="form-label">Unidad base</label>
+                            <input id="unidad" type="text" class="form-control" th:field="*{unidad}"
+                                   th:errorclass="is-invalid" maxlength="10" list="unidades-insumo"
+                                   placeholder="Seleccione o escriba una unidad" autocomplete="off" required>
+                            <datalist id="unidades-insumo">
+                                <option value="g">Gramo</option>
+                                <option value="kg">Kilogramo</option>
+                                <option value="lb">Libra</option>
+                                <option value="oz">Onza</option>
+                                <option value="ml">Mililitro</option>
+                                <option value="l">Litro</option>
+                                <option value="unidad">Unidad</option>
+                                <option value="pieza">Pieza</option>
+                                <option value="docena">Docena</option>
+                            </datalist>
+                            <div class="form-text">Elija una sugerencia o escriba otra. Use esta misma unidad en el menú y la presentación; el sistema no convierte unidades.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="mermaPorcentaje" class="form-label">Merma (%)</label>
+                            <input id="mermaPorcentaje" type="number" class="form-control"
+                                   th:field="*{mermaPorcentaje}" th:errorclass="is-invalid"
+                                   min="0" max="99.99" step="0.01" inputmode="decimal" required>
+                            <div class="form-text">Ingrese 0 si no aplica; debe ser menor que 100%.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="costoUnitario" class="form-label">Costo por unidad base</label>
+                            <input id="costoUnitario" type="number" class="form-control"
+                                   th:field="*{costoUnitario}" th:errorclass="is-invalid"
+                                   min="0" step="0.0001" inputmode="decimal">
+                            <div class="form-text">Opcional. Ejemplo: costo por gramo si la unidad es g.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="presentacion" class="form-label">Presentación de compra</label>
+                            <input id="presentacion" type="text" class="form-control" th:field="*{presentacion}"
+                                   th:errorclass="is-invalid" maxlength="50" placeholder="Bolsa de 1 kg">
+                            <div class="form-text">Complete también la cantidad por presentación, o deje ambos campos vacíos.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cantidadPresentacion" class="form-label">Cantidad por presentación</label>
+                            <input id="cantidadPresentacion" type="number" class="form-control"
+                                   th:field="*{cantidadPresentacion}" th:errorclass="is-invalid"
+                                   min="0.01" step="0.01" inputmode="decimal">
+                            <div class="form-text">En la unidad base indicada arriba; por ejemplo, 1000 g por bolsa.</div>
+                        </div>
+                    </div>
+                    <div class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" type="submit">Guardar insumo</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/insumos}">Volver al catálogo</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

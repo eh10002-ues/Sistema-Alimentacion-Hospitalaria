@@ -270,6 +270,21 @@ se habilita definiendo `HU01_PLAYWRIGHT_MODULE` con la ruta del paquete
 Playwright. Sin esa variable se omite. Su ejecución está pendiente y no se
 considera evidencia de un comportamiento ya verificado en navegador.
 
+## Mantenimiento del catálogo de insumos
+
+Administración y Nutrición pueden consultar, buscar, registrar y editar insumos
+desde **Abastecimiento → Catálogo de insumos**. Cocina conserva acceso de solo
+lectura a la proyección. Cada insumo requiere nombre, unidad base y merma
+porcentual; la presentación y su cantidad son opcionales, pero se ingresan en
+pareja. El costo por unidad base también es opcional.
+
+La pantalla recibe la merma como porcentaje y la guarda como fracción (`10 %`
+se almacena como `0.1000`). La cantidad de presentación se expresa en la unidad
+base del insumo (por ejemplo, `1000 g` para una bolsa de `1 kg`). Un insumo
+asociado a un detalle de menú no se puede eliminar; se puede editar para
+mantener la referencia. Las altas, ediciones y eliminaciones se registran en la
+bitácora.
+
 ## SC-03.3 — Proyección semanal y mensual de insumos
 
 La opción «Proyección de insumos» está disponible para Administración,
