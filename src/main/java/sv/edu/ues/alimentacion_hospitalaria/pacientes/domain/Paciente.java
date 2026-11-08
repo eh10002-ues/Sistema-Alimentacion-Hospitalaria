@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
@@ -83,9 +82,10 @@ public class Paciente extends AuditableEntity {
     @Column(nullable = false, length = 20)
     private EstadoPaciente estado = EstadoPaciente.INGRESADO;
 
-    // Null cuando el paciente no tiene cama (alta). UNIQUE: una cama, un paciente.
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cama_id", unique = true,
+    // Una cama puede tener varios pacientes históricos, pero la lógica permite
+    // únicamente un paciente INGRESADO asociado a ella.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cama_id",
         foreignKey = @ForeignKey(name = "fk_pacientes_cama"))
     private Cama cama;
 
@@ -119,6 +119,14 @@ public class Paciente extends AuditableEntity {
     /** La edad no se guarda: se calcula desde la fecha de nacimiento. */
     public int calcularEdad() {
         return Period.between(fechaNacimiento, LocalDate.now()).getYears();
+    }
+
+    public String calcularEdadExacta() {
+        Period edad = Period.between(fechaNacimiento, LocalDate.now());
+        return "%d %s, %d %s y %d %s".formatted(
+            edad.getYears(), edad.getYears() == 1 ? "año" : "años",
+            edad.getMonths(), edad.getMonths() == 1 ? "mes" : "meses",
+            edad.getDays(), edad.getDays() == 1 ? "día" : "días");
     }
 
     public void agregarEnfermedad(PacienteEnfermedad enfermedad) {

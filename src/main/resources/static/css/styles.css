@@ -19,6 +19,15 @@ a { color: var(--app-accent); }
 .page-eyebrow, .navigation-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; color: var(--app-muted); }
 .page-heading { margin-bottom: 1.75rem; }
 .ubicaciones-table { overflow: visible; }
+.alergias-table { overflow: visible; }
+.alergias-table .dropdown-menu { z-index: 1060; }
+.enfermedades-table { overflow: visible; }
+.enfermedades-table .dropdown-menu { z-index: 1060; }
+.pacientes-table { table-layout: fixed; width: 100%; }
+.pacientes-table th, .pacientes-table td { overflow-wrap: anywhere; }
+.pacientes-table .paciente-nombre { max-width: 8rem; }
+.medicamentos-table { overflow: visible; }
+.medicamentos-table .dropdown-menu { z-index: 1060; }
 .card { --bs-card-border-color: var(--app-border); --bs-card-border-radius: 0.8rem; background: #fff; box-shadow: 0 2px 8px rgb(23 43 58 / 2%); }
 .card-body { padding: 1.75rem; }
 .form-card { max-width: 880px; }
@@ -31,17 +40,35 @@ a { color: var(--app-accent); }
 .btn-primary { --bs-btn-bg: var(--app-accent); --bs-btn-border-color: var(--app-accent); --bs-btn-hover-bg: #1d514c; --bs-btn-hover-border-color: #1d514c; --bs-btn-active-bg: #194640; --bs-btn-active-border-color: #194640; --bs-btn-focus-shadow-rgb: 37, 99, 93; }
 .btn-outline-secondary { --bs-btn-color: #526171; --bs-btn-border-color: #d9e0e7; --bs-btn-hover-bg: #f0f3f6; --bs-btn-hover-color: var(--app-ink); --bs-btn-hover-border-color: #c9d2dc; }
 .alert { font-size: 0.875rem; border-radius: 0.55rem; }
-.app-sidebar { --bs-offcanvas-width: var(--app-sidebar-width); background-color: #fff !important; border-right: 1px solid var(--app-border); }
-.app-brand { display: flex; align-items: center; gap: 0.8rem; padding: 2rem 1.4rem; text-decoration: none; color: var(--app-ink); line-height: 1.45; }
-.brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 0.65rem; background: #e8f2ef; color: var(--app-accent); font-weight: 700; font-size: 0.875rem; }
-.app-navigation { padding: 0 1rem; --bs-nav-link-color: #536171; --bs-nav-link-hover-color: var(--app-ink); --bs-nav-pills-link-active-color: #215b53; --bs-nav-pills-link-active-bg: #e8f2ef; }
-.navigation-label { padding: 0 0.8rem; margin-bottom: 0.45rem; }
-.app-navigation .nav-link { font-size: 0.875rem; border-radius: 0.5rem; padding: 0.7rem 0.8rem; }
-.app-navigation .nav-link:hover { background-color: #f4f6f8; }
-.app-navigation .nav-link.active { font-weight: 600; }
-.sidebar-account { border-top: 1px solid var(--app-border); margin: 1.5rem 1rem 0; padding: 1.25rem 0; }
-.account-name { overflow-wrap: anywhere; font-size: 0.85rem; }
-.mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; background: #fff; border-bottom: 1px solid var(--app-border); }
+.app-sidebar { --bs-offcanvas-width: var(--app-sidebar-width); background: linear-gradient(180deg, #fff 0%, #fbfcfd 100%) !important; border-right: 1px solid var(--app-border); box-shadow: 8px 0 28px rgb(23 43 58 / 3%); }
+.app-brand { display: flex; align-items: center; gap: 0.8rem; margin: 0 0.8rem; padding: 1.55rem 0.7rem 1.35rem; border-bottom: 1px solid #edf0f3; text-decoration: none; color: var(--app-ink); line-height: 1.35; }
+.brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 0.85rem; background: linear-gradient(145deg, #347d72, #20564f); box-shadow: 0 5px 12px rgb(37 99 93 / 20%); color: #fff; font-weight: 750; font-size: 0.9rem; letter-spacing: -0.035em; }
+.brand-copy { color: #738090; font-size: 0.76rem; letter-spacing: 0.015em; }
+.brand-copy strong { color: var(--app-ink); font-size: 0.95rem; letter-spacing: -0.02em; }
+.app-navigation { padding: 1.5rem 0.85rem 1rem; --bs-nav-link-color: #536171; --bs-nav-link-hover-color: var(--app-ink); --bs-nav-pills-link-active-color: #205b52; --bs-nav-pills-link-active-bg: #e8f3ef; }
+.navigation-label { display: flex; align-items: center; gap: 0.55rem; padding: 0 0.8rem; margin-bottom: 0.5rem; color: #8993a0; font-size: 0.64rem; letter-spacing: 0.12em; }
+.navigation-label::before { width: 0.36rem; height: 0.36rem; border-radius: 50%; background: #a4c4bb; content: ""; }
+.app-navigation .nav-link { position: relative; display: flex; align-items: center; gap: 0.8rem; min-height: 2.85rem; padding: 0.68rem 0.85rem; border: 1px solid transparent; border-radius: 0.7rem; font-size: 0.85rem; font-weight: 500; transition: background-color 150ms ease, color 150ms ease, transform 150ms ease, border-color 150ms ease; }
+.app-navigation .nav-link:hover { transform: translateX(2px); background-color: #f1f5f4; }
+.app-navigation .nav-link.active { border-color: #dcece6; background: linear-gradient(100deg, #e8f3ef, #f3f8f6); box-shadow: 0 2px 6px rgb(37 99 93 / 5%); font-weight: 650; }
+.app-navigation .nav-link.active::before { position: absolute; top: 0.55rem; bottom: 0.55rem; left: -0.87rem; width: 3px; border-radius: 0 3px 3px 0; background: #347d72; content: ""; }
+.navigation-icon { width: 1.15rem; height: 1.15rem; flex: 0 0 1.15rem; color: #7b8997; }
+.app-navigation .nav-link:hover .navigation-icon, .app-navigation .nav-link.active .navigation-icon { color: var(--app-accent); }
+.sidebar-account { margin: 1rem 0.85rem 0.8rem; padding: 0.85rem; border: 1px solid #e6eeeb; border-radius: 0.9rem; background: linear-gradient(145deg, #f5f9f7, #f0f5f3); }
+.account-identity { display: flex; align-items: center; gap: 0.65rem; min-width: 0; margin-bottom: 0.7rem; }
+.account-avatar { display: inline-flex; align-items: center; justify-content: center; width: 2.15rem; height: 2.15rem; flex: 0 0 2.15rem; border: 1px solid #dce9e4; border-radius: 50%; background: #fff; color: var(--app-accent); }
+.account-avatar svg { width: 1.15rem; height: 1.15rem; }
+.account-copy { display: grid; min-width: 0; gap: 0.12rem; }
+.account-label { color: var(--app-muted); font-size: 0.68rem; }
+.account-name { overflow-wrap: anywhere; color: var(--app-ink); font-size: 0.8rem; font-weight: 650; }
+.logout-button { display: flex; align-items: center; justify-content: flex-start; gap: 0.6rem; min-height: 2.45rem; padding: 0.5rem 0.6rem; border-color: #dfe7e4; background: rgb(255 255 255 / 76%); font-size: 0.8rem; }
+.logout-button svg { width: 1rem; height: 1rem; }
+.mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 1rem; background: #fff; border-bottom: 1px solid var(--app-border); box-shadow: 0 2px 10px rgb(23 43 58 / 4%); }
+.mobile-brand { display: flex; align-items: center; gap: 0.6rem; color: var(--app-ink); font-size: 0.84rem; line-height: 1.25; }
+.mobile-brand .brand-mark { width: 36px; height: 36px; flex-basis: 36px; border-radius: 0.7rem; font-size: 0.76rem; }
+.mobile-brand .small { color: var(--app-muted); font-size: 0.7rem; }
+.mobile-header .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.7rem; }
+.mobile-header .btn svg { width: 1rem; height: 1rem; }
 .rol-panel { display: inline-block; color: var(--app-accent); font-size: 0.75rem; font-weight: 600; background: #e8f2ef; border-radius: 99px; padding: 0.35rem 0.7rem; }
 .account-details dt { color: var(--app-muted); font-size: 0.8rem; font-weight: 400; margin-bottom: 0.3rem; }
 .account-details dd { font-weight: 500; margin: 0; overflow-wrap: anywhere; }

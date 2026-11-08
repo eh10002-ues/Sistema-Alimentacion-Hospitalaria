@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Ingresar paciente')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">PACIENTES</p>
+            <h1 class="mb-2" th:text="${edicion} ? 'Editar paciente' : 'Ingresar nuevo paciente'">Ingresar nuevo paciente</h1>
+            <p class="text-body-secondary mb-0" th:text="${edicion} ? 'Modifique los datos personales y la ubicación.' : 'Complete los datos generales, asignación clínica y ubicación.'"></p>
+        </div>
+        <div class="card form-card">
+            <div class="card-body">
+                <form th:action="${edicion} ? @{/pacientes/{id}/editar(id=${pacienteId})} : @{/pacientes}"
+                      th:object="${formulario}" method="post">
+                    <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
+                        <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
+                        <ul class="mb-0">
+                            <li th:each="error : ${#fields.allErrors()}" th:text="${error.defaultMessage}"></li>
+                        </ul>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="nombres" class="form-label">Nombre</label>
+                            <input id="nombres" class="form-control" th:field="*{nombres}" th:errorclass="is-invalid" maxlength="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="apellidos" class="form-label">Apellido</label>
+                            <input id="apellidos" class="form-control" th:field="*{apellidos}" th:errorclass="is-invalid" maxlength="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fechaNacimiento" class="form-label">Fecha de nacimiento</label>
+                            <input id="fechaNacimiento" class="form-control" type="date" name="fechaNacimiento"
+                                   th:value="${formulario.fechaNacimiento != null ? #temporals.format(formulario.fechaNacimiento, 'yyyy-MM-dd') : ''}"
+                                   th:max="${hoy}" th:classappend="${#fields.hasErrors('fechaNacimiento')} ? 'is-invalid'" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="codigo" class="form-label">Código</label>
+                            <input id="codigo" class="form-control" th:field="*{codigo}" th:errorclass="is-invalid"
+                                   maxlength="20" th:readonly="${edicion}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pesoKg" class="form-label">Peso (kg)</label>
+                            <input id="pesoKg" class="form-control" type="number" step="0.01" min="0.01" th:field="*{pesoKg}" th:errorclass="is-invalid" required>
+                            <div class="form-text">Valor positivo con máximo dos decimales.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="alturaCm" class="form-label">Altura (cm)</label>
+                            <input id="alturaCm" class="form-control" type="number" step="0.01" min="0.01" th:field="*{alturaCm}" th:errorclass="is-invalid" required>
+                            <div class="form-text">Valor positivo con máximo dos decimales.</div>
+                        </div>
+                        <div class="col-12">
+                            <label for="medicoResponsableId" class="form-label">Médico responsable</label>
+                            <select id="medicoResponsableId" class="form-select" th:field="*{medicoResponsableId}"
+                                    th:errorclass="is-invalid" th:disabled="${edicion}" required>
+                                <option value="">Seleccione un responsable</option>
+                                <option th:each="responsable : ${responsables}" th:value="${responsable.id}"
+                                        th:text="|${responsable.nombreCompleto} (${responsable.rol.etiqueta})|"></option>
+                            </select>
+                            <input th:if="${edicion}" type="hidden" th:field="*{medicoResponsableId}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pisoId" class="form-label">Piso</label>
+                            <select id="pisoId" class="form-select" th:field="*{pisoId}" th:errorclass="is-invalid" required>
+                                <option value="">Seleccione un piso</option>
+                                <option th:each="piso : ${pisos}" th:value="${piso.id}" th:text="|${piso.codigo} - ${piso.nombre}|"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="camaId" class="form-label">Cama disponible</label>
+                            <select id="camaId" class="form-select" th:field="*{camaId}" th:errorclass="is-invalid" required disabled>
+                                <option value="">Primero seleccione un piso</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" type="submit"
+                                th:text="${edicion} ? 'Guardar cambios' : 'Ingresar paciente'">Ingresar paciente</button>
+                        <a class="btn btn-secondary" th:href="@{/pacientes}">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    const piso = document.getElementById("pisoId");
+    const cama = document.getElementById("camaId");
+    async function cargarCamas() {
+        cama.innerHTML = '<option value="">Cargando camas...</option>';
+        cama.disabled = true;
+        if (!piso.value) {
+            cama.innerHTML = '<option value="">Primero seleccione un piso</option>';
+            return;
+        }
+        const esEdicion = [[${edicion != null && edicion}]];
+        const pacienteId = [[${pacienteId != null ? pacienteId : 'null'}]];
+        const camaSeleccionada = [[${formulario.camaId != null ? formulario.camaId : 'null'}]];
+        const url = esEdicion
+            ? `/pacientes/pisos/${piso.value}/camas-disponibles-edicion?pacienteId=${pacienteId}`
+            : `/pacientes/pisos/${piso.value}/camas-disponibles`;
+        const respuesta = await fetch(url);
+        const camas = await respuesta.json();
+        cama.innerHTML = '<option value="">Seleccione una cama</option>';
+        camas.forEach(item => {
+            const opcion = document.createElement("option");
+            opcion.value = item.id;
+            opcion.textContent = item.numero;
+            if (esEdicion && String(item.id) === String(camaSeleccionada)) opcion.selected = true;
+            cama.appendChild(opcion);
+        });
+        cama.disabled = camas.length === 0;
+        if (camas.length === 0) cama.innerHTML = '<option value="">No hay camas disponibles</option>';
+    }
+    piso.addEventListener("change", cargarCamas);
+    if (piso.value) cargarCamas();
+</script>
+</body>
+</html>

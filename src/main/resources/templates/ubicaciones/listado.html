@@ -7,15 +7,15 @@
     <main id="contenido-principal" class="app-main">
         <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
             <div>
-                <p class="page-eyebrow mb-2">ADMINISTRACIÓN / PISOS Y CAMAS</p>
+                <p class="page-eyebrow mb-2">UBICACIONES / PISOS Y CAMAS</p>
                 <h1 class="mb-2">Pisos y camas</h1>
                 <p class="text-body-secondary mb-0">Administre los pisos, sus encargados y las camas registradas.</p>
             </div>
-            <a class="btn btn-primary" th:href="@{/admin/ubicaciones/nuevo}">Agregar piso</a>
+            <a class="btn btn-primary" th:href="@{/ubicaciones/nuevo}">Agregar piso</a>
         </div>
         <p class="alert alert-success" role="status" th:if="${mensaje}" th:text="${mensaje}"></p>
         <p class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></p>
-        <form class="card card-body mb-3" th:action="@{/admin/ubicaciones}" method="get" role="search">
+        <form class="card card-body mb-3" th:action="@{/ubicaciones}" method="get" role="search">
             <label for="buscar" class="form-label">Buscar piso</label>
             <div class="input-group">
                 <input id="buscar" name="buscar" type="search" class="form-control" th:value="${buscar}"
@@ -40,10 +40,10 @@
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                         data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Acciones</button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}/editar(id=${piso.id})}">Editar</a></li>
-                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}(id=${piso.id})}">Ver piso</a></li>
-                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}/encargados(id=${piso.id})}">Gestionar encargados</a></li>
-                                    <li><a class="dropdown-item" th:href="@{/admin/ubicaciones/{id}/camas/nueva(id=${piso.id})}">Gestionar camas</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/ubicaciones/{id}/editar(id=${piso.id})}">Editar</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/ubicaciones/{id}(id=${piso.id})}">Ver piso</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/ubicaciones/{id}/encargados(id=${piso.id})}">Gestionar encargados</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/ubicaciones/{id}/camas/nueva(id=${piso.id})}">Gestionar camas</a></li>
                                 </ul>
                             </div>
                         </td>
@@ -56,10 +56,10 @@
                 <nav aria-label="Páginas de pisos">
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item" th:if="${pagina.hasPrevious()}">
-                            <a class="page-link" th:href="@{/admin/ubicaciones(pagina=${pagina.number - 1},buscar=${buscar})}">Anterior</a>
+                            <a class="page-link" th:href="@{/ubicaciones(pagina=${pagina.number - 1},buscar=${buscar})}">Anterior</a>
                         </li>
                         <li class="page-item" th:if="${pagina.hasNext()}">
-                            <a class="page-link" th:href="@{/admin/ubicaciones(pagina=${pagina.number + 1},buscar=${buscar})}">Siguiente</a>
+                            <a class="page-link" th:href="@{/ubicaciones(pagina=${pagina.number + 1},buscar=${buscar})}">Siguiente</a>
                         </li>
                     </ul>
                 </nav>

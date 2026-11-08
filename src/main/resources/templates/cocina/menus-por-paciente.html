@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Menús por paciente')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('consulta-menus-paciente')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">COCINA</p>
+            <h1 class="mb-2">Menús por paciente</h1>
+            <p class="text-body-secondary mb-0">Dieta vigente, tiempos de comida, horarios de servicio e historial de
+                menús aprobados de un paciente interno.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/cocina/consultas/menus-por-paciente}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="pacienteId" class="form-label">Paciente interno</label>
+                    <select id="pacienteId" name="pacienteId" class="form-select" required>
+                        <option value="" th:selected="${pacienteSeleccionado == null}" disabled>Seleccione un paciente</option>
+                        <option th:each="paciente : ${pacientes}" th:value="${paciente.id}" th:text="${paciente.etiqueta}"
+                                th:selected="${paciente.id == pacienteSeleccionado}"></option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Consultar</button>
+                </div>
+            </div>
+            <p th:if="${#lists.isEmpty(pacientes)}" class="text-body-secondary mt-3 mb-0">No hay pacientes ingresados.</p>
+        </form>
+
+        <th:block th:if="${consulta}">
+            <div class="card mb-3">
+                <div class="card-body d-flex flex-wrap justify-content-between gap-2">
+                    <span>
+                        <strong th:text="${consulta.codigo}">PAC</strong> · <span th:text="${consulta.nombreCompleto}"></span>
+                    </span>
+                    <span class="text-body-secondary">
+                        <span th:text="${consulta.piso} ?: 'Sin ubicación'"></span>
+                        <th:block th:if="${consulta.cama}"> · Cama <span th:text="${consulta.cama}"></span></th:block>
+                        · Fecha: <span th:text="${#temporals.format(consulta.fecha, 'dd/MM/yyyy')}"></span>
+                    </span>
+                </div>
+            </div>
+
+            <h2 class="h5 mb-3">Dieta activa</h2>
+            <div th:if="${#lists.isEmpty(consulta.vigentes)}" class="alert alert-warning">
+                El paciente no tiene un menú aprobado vigente hoy.
+            </div>
+            <div th:each="vigente : ${consulta.vigentes}" class="card mb-3">
+                <div class="card-header d-flex flex-wrap justify-content-between gap-2">
+                    <span><strong th:text="${vigente.menu}">Menú</strong> · Dieta <span th:text="${vigente.tipoDieta}"></span></span>
+                    <span class="text-body-secondary">
+                        Desde <span th:text="${#temporals.format(vigente.fechaInicio, 'dd/MM/yyyy')}"></span>
+                        hasta <span th:text="${vigente.fechaFin} ? ${#temporals.format(vigente.fechaFin, 'dd/MM/yyyy')} : 'indefinido'"></span>
+                    </span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Tiempos de comida y horarios del menú vigente</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">Hora</th>
+                            <th scope="col">Tiempo de comida</th>
+                            <th scope="col">Platillo</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(vigente.tiempos)}">
+                            <td colspan="3" class="text-center text-body-secondary py-4">El menú no tiene tiempos de comida registrados.</td>
+                        </tr>
+                        <tr th:each="tiempo : ${vigente.tiempos}">
+                            <td class="fw-semibold" th:text="${#temporals.format(tiempo.horaServicio, 'HH:mm')}"></td>
+                            <td th:text="${tiempo.tiempoComida}"></td>
+                            <td th:text="${tiempo.platillo}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="h5 mb-3 mt-4">Historial de menús</h2>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <caption class="visually-hidden">Historial de menús aprobados del paciente</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">Menú</th>
+                            <th scope="col">Dieta</th>
+                            <th scope="col">Desde</th>
+                            <th scope="col">Hasta</th>
+                            <th scope="col">Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(consulta.historial)}">
+                            <td colspan="5" class="text-center text-body-secondary py-4">No hay menús aprobados para este paciente.</td>
+                        </tr>
+                        <tr th:each="fila : ${consulta.historial}">
+                            <td th:text="${fila.menu}"></td>
+                            <td th:text="${fila.tipoDieta}"></td>
+                            <td th:text="${#temporals.format(fila.fechaInicio, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${fila.fechaFin} ? ${#temporals.format(fila.fechaFin, 'dd/MM/yyyy')} : 'Indefinido'"></td>
+                            <td>
+                                <span class="badge rounded-pill"
+                                      th:classappend="${fila.estado.name() == 'VIGENTE'} ? 'text-bg-success' : 'text-bg-secondary'"
+                                      th:text="${fila.estado.etiqueta}"></span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </th:block>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

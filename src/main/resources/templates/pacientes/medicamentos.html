@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Gestionar medicamentos')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">PACIENTES / MEDICAMENTOS</p>
+            <h1 class="mb-2">Gestionar medicamentos</h1>
+            <p class="text-body-secondary mb-0"
+               th:text="|${paciente.nombres} ${paciente.apellidos} · ${paciente.codigo}|"></p>
+            <div class="d-flex flex-wrap gap-2 mt-3" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">
+                <a class="btn btn-secondary"
+                   th:href="@{/pacientes/{id}(id=${paciente.id})}">Ver Paciente</a>
+                <a class="btn btn-outline-success"
+                   th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">Gestionar Alergias</a>
+                <a class="btn btn-outline-success"
+                   th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">Gestionar Enfermedades</a>
+                <a class="btn btn-primary"
+                   th:href="@{/pacientes/{id}/medicamentos(id=${paciente.id})}">Gestionar Medicamentos</a>
+            </div>
+        </div>
+
+        <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Agregar medicamento</h2></div>
+            <div class="card-body">
+                <form th:action="@{/pacientes/{id}/medicamentos(id=${paciente.id})}"
+                      th:object="${formulario}" method="post">
+                    <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                        <span th:each="error : ${#fields.errors('*')}" th:text="${error}" class="d-block"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombreMedicamento" class="form-label">Nombre</label>
+                            <input id="nombreMedicamento" class="form-control" th:field="*{nombre}" maxlength="150" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="dosisMedicamento" class="form-label">Dosis</label>
+                            <input id="dosisMedicamento" class="form-control" th:field="*{dosis}" maxlength="50" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="frecuenciaMedicamento" class="form-label">Frecuencia (horas)</label>
+                            <input id="frecuenciaMedicamento" class="form-control" th:field="*{frecuenciaHoras}"
+                                   type="number" min="1" max="24" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="horaMedicamento" class="form-label">Hora de la primera dosis</label>
+                            <input id="horaMedicamento" class="form-control" th:field="*{horaPrimeraDosis}"
+                                   type="time" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Agregar medicamento</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Medicamentos registrados</h2></div>
+            <div class="table-responsive medicamentos-table">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Nombre</th><th>Dosis</th><th>Frecuencia</th><th>Primera dosis</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(medicamentos)}">
+                        <td colspan="5" class="text-center text-body-secondary py-4">No hay medicamentos registrados.</td>
+                    </tr>
+                    <tr th:each="medicamento : ${medicamentos}">
+                        <td th:text="${medicamento.nombre}"></td>
+                        <td th:text="${medicamento.dosis}"></td>
+                        <td th:text="|Cada ${medicamento.frecuenciaHoras} horas|"></td>
+                        <td th:text="${#temporals.format(medicamento.horaPrimeraDosis, 'HH:mm')}"></td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown">Acciones</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <button class="dropdown-item" type="button" data-bs-toggle="collapse"
+                                                th:data-bs-target="|#editar-${medicamento.id}|">Editar</button>
+                                    </li>
+                                    <li>
+                                        <form th:action="@{/pacientes/{id}/medicamentos/{medicamentoId}/eliminar(id=${paciente.id},medicamentoId=${medicamento.id})}"
+                                              method="post" onsubmit="return confirm('¿Eliminar este medicamento?');">
+                                            <button class="dropdown-item text-danger" type="submit">Eliminar</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="collapse px-3 pb-3" th:id="|editar-${medicamento.id}|">
+                                <form th:action="@{/pacientes/{id}/medicamentos/{medicamentoId}/editar(id=${paciente.id},medicamentoId=${medicamento.id})}"
+                                      method="post" class="row g-3">
+                                    <div class="col-md-6">
+                                        <label th:for="|nombre-${medicamento.id}|" class="form-label">Nombre</label>
+                                        <input th:id="|nombre-${medicamento.id}|" name="nombre" class="form-control"
+                                               th:value="${medicamento.nombre}" maxlength="150" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label th:for="|dosis-${medicamento.id}|" class="form-label">Dosis</label>
+                                        <input th:id="|dosis-${medicamento.id}|" name="dosis" class="form-control"
+                                               th:value="${medicamento.dosis}" maxlength="50" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label th:for="|frecuencia-${medicamento.id}|" class="form-label">Frecuencia (horas)</label>
+                                        <input th:id="|frecuencia-${medicamento.id}|" name="frecuenciaHoras" class="form-control"
+                                               type="number" min="1" max="24" th:value="${medicamento.frecuenciaHoras}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label th:for="|hora-${medicamento.id}|" class="form-label">Hora de la primera dosis</label>
+                                        <input th:id="|hora-${medicamento.id}|" name="horaPrimeraDosis" class="form-control"
+                                               type="time" th:value="${#temporals.format(medicamento.horaPrimeraDosis, 'HH:mm')}" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn btn-primary btn-sm" type="submit">Guardar cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <a class="btn btn-outline-secondary mt-3" th:href="@{/pacientes}">Volver</a>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

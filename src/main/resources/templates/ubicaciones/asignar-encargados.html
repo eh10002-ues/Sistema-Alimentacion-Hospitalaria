@@ -6,13 +6,13 @@
 <div class="app-content">
     <main id="contenido-principal" class="app-main">
         <div class="page-heading">
-            <p class="page-eyebrow mb-2">ADMINISTRACIÓN / PISOS Y CAMAS</p>
+            <p class="page-eyebrow mb-2">UBICACIONES / PISOS Y CAMAS</p>
             <h1 class="mb-2">Gestionar encargados</h1>
             <p class="text-body-secondary mb-0" th:text="|Piso: ${piso.codigo} - ${piso.nombre}|"></p>
         </div>
         <div class="card form-card">
             <div class="card-body">
-                <form th:action="@{/admin/ubicaciones/{id}/encargados(id=${piso.id})}" th:object="${formulario}" method="post">
+                <form th:action="@{/ubicaciones/{id}/encargados(id=${piso.id})}" th:object="${formulario}" method="post">
                     <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
                         <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
                         <p class="mb-0" th:each="error : ${#fields.errors('*')}" th:text="${error}"></p>
@@ -44,7 +44,7 @@
                     <button id="agregar-asignacion" type="button" class="btn btn-outline-secondary mt-3">Agregar otro encargado</button>
                     <div class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
                         <button class="btn btn-primary" type="submit">Guardar asignaciones</button>
-                        <a class="btn btn-outline-secondary" th:href="@{/admin/ubicaciones}">Cancelar</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/ubicaciones}">Cancelar</a>
                     </div>
                 </form>
             </div>

@@ -30,7 +30,7 @@ import sv.edu.ues.alimentacion_hospitalaria.usuarios.domain.Usuario;
 import sv.edu.ues.alimentacion_hospitalaria.usuarios.persistence.UsuarioRepository;
 
 @Service
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_PISO')")
 @Transactional(readOnly = true)
 public class AdministracionUbicacionesService {
 

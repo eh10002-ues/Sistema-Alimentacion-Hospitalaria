@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Gestionar alergias')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">PACIENTES / ALERGIAS</p>
+            <h1 class="mb-2">Gestionar alergias</h1>
+            <p class="text-body-secondary mb-0"
+               th:text="|${paciente.nombres} ${paciente.apellidos} · ${paciente.codigo}|"></p>
+            <div class="d-flex flex-wrap gap-2 mt-3" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">
+                <a class="btn btn-secondary"
+                   th:href="@{/pacientes/{id}(id=${paciente.id})}">Ver Paciente</a>
+                <a class="btn btn-primary"
+                   th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">Gestionar Alergias</a>
+                <a class="btn btn-outline-success"
+                   th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">Gestionar Enfermedades</a>
+                <a class="btn btn-outline-success"
+                   th:href="@{/pacientes/{id}/medicamentos(id=${paciente.id})}">Gestionar Medicamentos</a>
+            </div>
+        </div>
+
+        <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Agregar alergia</h2></div>
+            <div class="card-body">
+                <form th:action="@{/pacientes/{id}/alergias(id=${paciente.id})}" th:object="${formulario}" method="post">
+                    <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                        <span th:each="error : ${#fields.errors('*')}" th:text="${error}" class="d-block"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label for="nombreAlergia" class="form-label">Nombre</label>
+                            <input id="nombreAlergia" class="form-control" th:field="*{nombre}" maxlength="100" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="severidadAlergia" class="form-label">Severidad</label>
+                            <select id="severidadAlergia" class="form-select" th:field="*{severidad}" required>
+                                <option value="">Seleccione la severidad</option>
+                                <option th:each="severidad : ${severidades}" th:value="${severidad}"
+                                        th:text="${severidad.name() == 'LEVE'} ? 'Leve' : (${severidad.name() == 'MODERADA'} ? 'Moderado' : 'Grave')"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary mt-3" type="submit">Agregar alergia</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Alergias registradas</h2></div>
+            <div class="table-responsive alergias-table">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Nombre</th><th>Severidad</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(alergias)}">
+                        <td colspan="3" class="text-center text-body-secondary py-4">No hay alergias registradas.</td>
+                    </tr>
+                    <tr th:each="alergia : ${alergias}">
+                        <td th:text="${alergia.nombre}"></td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${alergia.severidad.name() == 'LEVE'} ? ' text-bg-primary' : (${alergia.severidad.name() == 'MODERADA'} ? ' text-dark' : ' text-bg-danger')"
+                                  th:style="${alergia.severidad.name() == 'MODERADA'} ? 'background-color:#fd7e14' : null"
+                                  th:text="${alergia.severidad.name() == 'LEVE'} ? 'Leve' : (${alergia.severidad.name() == 'MODERADA'} ? 'Moderado' : 'Grave')"></span>
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button"
+                                        data-bs-toggle="dropdown">Acciones</button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <button class="dropdown-item" type="button" data-bs-toggle="collapse"
+                                                th:data-bs-target="|#editar-${alergia.id}|">Editar</button>
+                                    </li>
+                                    <li>
+                                        <form th:action="@{/pacientes/{id}/alergias/{alergiaId}/eliminar(id=${paciente.id},alergiaId=${alergia.id})}"
+                                              method="post"
+                                              onsubmit="return confirm('¿Eliminar esta alergia?');">
+                                            <button class="dropdown-item text-danger" type="submit">Eliminar</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="collapse px-3 pb-3" th:id="|editar-${alergia.id}|">
+                                <form th:action="@{/pacientes/{id}/alergias/{alergiaId}/editar(id=${paciente.id},alergiaId=${alergia.id})}"
+                                      method="post" class="row g-3">
+                                    <div class="col-md-7">
+                                        <label th:for="|nombre-${alergia.id}|" class="form-label">Nombre</label>
+                                        <input th:id="|nombre-${alergia.id}|" name="nombre" class="form-control"
+                                               th:value="${alergia.nombre}" maxlength="100" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label th:for="|severidad-${alergia.id}|" class="form-label">Severidad</label>
+                                        <select th:id="|severidad-${alergia.id}|" name="severidad" class="form-select" required>
+                                            <option th:each="severidad : ${severidades}" th:value="${severidad}"
+                                                    th:selected="${severidad == alergia.severidad}"
+                                                    th:text="${severidad.name() == 'LEVE'} ? 'Leve' : (${severidad.name() == 'MODERADA'} ? 'Moderado' : 'Grave')"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <button class="btn btn-primary btn-sm" type="submit">Guardar cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <a class="btn btn-outline-secondary mt-3" th:href="@{/pacientes}">Volver</a>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
