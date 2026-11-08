@@ -65,7 +65,7 @@ class DashboardPermisosTests {
 		assertThat(((PanelRol) panel.getModelAndView().getModel().get("panel")).rol()).isEqualTo(rol);
 		String html = panel.getResponse().getContentAsString();
 		assertThat(html).contains(rol.getEtiqueta(), "Funciones de su rol", "Cerrar sesión")
-			.doesNotContain(clave, "href=\"/menus", "href=\"/asignaciones", "href=\"/reportes");
+			.doesNotContain(clave, "href=\"/menus", "href=\"/asignaciones", "href=\"/reportes/");
 		if (rol == Rol.ROLE_ADMIN) {
 			assertThat(html).contains("Administrar usuarios", "href=\"/admin/usuarios\"");
 		} else {

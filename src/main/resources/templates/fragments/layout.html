@@ -49,6 +49,10 @@
                     </svg>
                     <span>Inicio</span>
                 </a>
+                <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')"
+                   th:classappend="${active == 'reportes'} ? 'active'"
+                   th:attr="aria-current=${active == 'reportes' ? 'page' : null}"
+                   th:href="@{/reportes}">Reportes generales</a>
                 <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA','COCINA')">
                     <span class="navigation-label mt-4">ABASTECIMIENTO</span>
                     <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA')">

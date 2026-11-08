@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Filtros de reporte inválidos')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reportes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading"><h1>Revise los filtros del reporte</h1></div>
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0"><li th:each="error : ${errores}" th:text="${error}"></li></ul>
+        </div>
+        <a class="btn btn-secondary" th:href="@{/reportes}">Volver a reportes</a>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

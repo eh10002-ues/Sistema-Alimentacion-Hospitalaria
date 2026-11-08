@@ -32,7 +32,7 @@ public class ReglasAcceso {
 			.requestMatchers("/css/**", "/js/**", "/img/**", "/vendor/bootstrap/**", "/vendor/exportacion/**",
 				"/favicon.ico", "/error", "/login").permitAll()
 			.requestMatchers("/acceso-denegado").authenticated()
-			.requestMatchers(lectura("/", "/dashboard")).hasAnyRole(TODOS)
+			.requestMatchers(lectura("/", "/dashboard", "/reportes", "/reportes/")).hasAnyRole(TODOS)
 			//.requestMatchers("/admin/ubicaciones", "/admin/ubicaciones/**").hasAnyRole("ADMIN", "ENCARGADO_PISO")
 			.requestMatchers("/admin/**").hasRole("ADMIN")
 			// Las pantallas de modificación también se protegen, aunque se soliciten por GET.
