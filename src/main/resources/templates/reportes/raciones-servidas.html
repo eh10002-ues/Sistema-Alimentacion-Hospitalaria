@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Raciones servidas por piso')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-raciones-servidas')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTE MENSUAL</p>
+            <h1 class="mb-2">Raciones servidas por piso</h1>
+            <p class="text-body-secondary mb-0">Conteo acumulado de platos asignados a pacientes por piso y tiempo de comida.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/reportes/raciones-servidas}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-6 col-md-4">
+                    <label for="periodo" class="form-label">Mes del reporte</label>
+                    <input id="periodo" name="periodo" class="form-control" type="month" required
+                           th:value="${mesSeleccionado}" th:attr="max=${mesActual}">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Consultar</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="alert alert-info" role="note">
+            Para este reporte, cada asignación aprobada se considera servida en cada día de su vigencia durante el mes.
+            La clasificación usa el piso actual del paciente; el sistema todavía no registra entregas reales ni el
+            servicio clínico histórico.
+        </div>
+
+        <section id="resultado-raciones" class="card mb-3"
+                 th:attr="data-periodo=${consulta.periodo},data-fecha-corte=${consulta.fechaCorte}">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <strong>Acumulado al</strong>
+                    <span th:text="${#temporals.format(consulta.fechaCorte, 'dd/MM/yyyy')}">08/11/2026</span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-body-secondary">Total:</span>
+                    <strong id="total-raciones" th:text="${consulta.totalRaciones}">0</strong>
+                    <span class="text-body-secondary">raciones estimadas</span>
+                    <button id="exportar-pdf-raciones" class="btn btn-outline-secondary" type="button">Exportar PDF</button>
+                    <button id="exportar-excel-raciones" class="btn btn-outline-secondary" type="button">Exportar Excel</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <h2 class="h5">Totales por piso</h2>
+                <div class="table-responsive mb-4">
+                    <table id="tabla-totales-piso" class="table table-sm align-middle mb-0">
+                        <caption class="visually-hidden">Raciones estimadas acumuladas por piso</caption>
+                        <thead>
+                        <tr><th scope="col">Piso</th><th scope="col">Raciones</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(consulta.totalesPorPiso)}">
+                            <td colspan="2" class="text-center text-body-secondary py-3">No hay asignaciones aprobadas en este período.</td>
+                        </tr>
+                        <tr th:each="fila : ${consulta.totalesPorPiso}">
+                            <th scope="row" th:text="${fila.piso}">Piso 1</th>
+                            <td th:text="${fila.raciones}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2 class="h5">Detalle por tiempo de comida</h2>
+                <div class="table-responsive">
+                    <table id="tabla-raciones" class="table align-middle mb-0">
+                        <caption class="visually-hidden">Detalle de raciones estimadas agrupadas por piso y plato</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">Piso</th>
+                            <th scope="col">Tiempo de comida</th>
+                            <th scope="col">Plato</th>
+                            <th scope="col">Menú</th>
+                            <th scope="col">Raciones</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(consulta.filas)}">
+                            <td colspan="5" class="text-center text-body-secondary py-4">No hay detalle para el mes seleccionado.</td>
+                        </tr>
+                        <tr th:each="fila : ${consulta.filas}">
+                            <td th:text="${fila.piso}">Piso 1</td>
+                            <td th:text="${fila.servicio}">Almuerzo</td>
+                            <td th:text="${fila.plato}">Plato</td>
+                            <td th:text="${fila.menu}">Menú</td>
+                            <td th:text="${fila.raciones}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        <div id="error-exportacion-raciones" class="alert alert-danger" role="alert" tabindex="-1" hidden></div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script defer th:src="@{/vendor/exportacion/exceljs.min.js}"></script>
+<script defer th:src="@{/vendor/exportacion/jspdf.umd.min.js}"></script>
+<script defer th:src="@{/vendor/exportacion/jspdf.plugin.autotable.min.js}"></script>
+<script defer th:src="@{/js/raciones-servidas.js}"></script>
+</body>
+</html>

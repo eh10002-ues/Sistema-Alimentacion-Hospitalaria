@@ -80,6 +80,7 @@ public class ReglasAcceso {
 			.requestMatchers(lectura("/reportes/alergias-severas")).hasAnyRole(CLINICOS)
 			.requestMatchers(lectura("/reportes/comandas")).hasAnyRole(CONSULTAS_COCINA)
 			.requestMatchers(lectura("/reportes/asignaciones-pendientes", "/reportes/pacientes-sin-menu")).hasAnyRole(ASIGNACIONES)
+			.requestMatchers(lectura("/reportes/raciones-servidas", "/reportes/raciones-servidas/**")).hasAnyRole(TODOS)
 			.anyRequest().denyAll());
 	}
 

@@ -180,7 +180,7 @@
                         <span>Menús por paciente</span>
                     </a>
                 </th:block>
-                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')">
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')">
                     <span class="navigation-label mt-4">REPORTES</span>
                     <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-alergias-severas'} ? 'active'" th:attr="aria-current=${active == 'reporte-alergias-severas' ? 'page' : null}"
                        th:href="@{/reportes/alergias-severas}">
@@ -199,6 +199,17 @@
                             <path d="M9 8h6m-6 4h6"></path>
                         </svg>
                         <span>Comandas de producción</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')"
+                       th:classappend="${active == 'reporte-raciones-servidas'} ? 'active'"
+                       th:attr="aria-current=${active == 'reporte-raciones-servidas' ? 'page' : null}"
+                       th:href="@{/reportes/raciones-servidas}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 19V5m0 14h17"></path>
+                            <path d="M8 16v-4m5 4V8m5 8v-6"></path>
+                        </svg>
+                        <span>Raciones servidas (mensual)</span>
                     </a>
                     <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-asignaciones-pendientes'} ? 'active'" th:attr="aria-current=${active == 'reporte-asignaciones-pendientes' ? 'page' : null}"
                        th:href="@{/reportes/asignaciones-pendientes}">

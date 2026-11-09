@@ -11,6 +11,7 @@ public record ProyeccionInsumos(
     BigDecimal margenPorcentaje,
     List<ProyeccionInsumo> insumos,
     BigDecimal costoTotal,
+    ResumenProyeccionInsumos resumen,
     int pacientesIncluidos,
     BigDecimal racionesPorDia,
     List<String> advertencias
