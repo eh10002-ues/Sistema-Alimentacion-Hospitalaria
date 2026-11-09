@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Asignaciones pendientes')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-asignaciones-pendientes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTES · RE-03</p>
+            <h1 class="mb-2">Asignaciones de menú pendientes de aprobación</h1>
+            <p class="text-body-secondary mb-0">Asignaciones de menú activas de pacientes ingresados que aún no han
+                sido aprobadas, de la más antigua a la más reciente.</p>
+        </div>
+
+        <section class="card card-body" aria-label="Resultado del reporte">
+            <th:block th:replace="~{reportes/fragments :: encabezado(${reporte.encabezado})}"></th:block>
+
+            <p class="mb-3" data-reporte-resumen
+               th:text="|Asignaciones pendientes: ${#lists.size(reporte.filas)}|">Asignaciones pendientes: 0</p>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" data-reporte-tabla>
+                    <caption class="caption-top fw-semibold text-body">Asignaciones de menú sin aprobar</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Paciente</th>
+                        <th scope="col">Piso</th>
+                        <th scope="col">Cama</th>
+                        <th scope="col">Menú</th>
+                        <th scope="col">Régimen</th>
+                        <th scope="col">Desde</th>
+                        <th scope="col">Hasta</th>
+                        <th scope="col">Asignado por</th>
+                        <th scope="col">Solicitada el</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(reporte.filas)}">
+                        <td colspan="10" class="text-center text-body-secondary py-5">
+                            No hay asignaciones de menú pendientes de aprobación.
+                        </td>
+                    </tr>
+                    <tr th:each="fila : ${reporte.filas}">
+                        <td class="fw-semibold" th:text="${fila.codigo}"></td>
+                        <td th:text="${fila.paciente}"></td>
+                        <td th:text="${fila.piso}"></td>
+                        <td th:text="${fila.cama}"></td>
+                        <td th:text="${fila.menu}"></td>
+                        <td th:text="${fila.regimen}"></td>
+                        <td th:text="${#temporals.format(fila.fechaInicio, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${fila.fechaFin} ? ${#temporals.format(fila.fechaFin, 'dd/MM/yyyy')} : 'Indefinido'"></td>
+                        <td th:text="${fila.asignadoPor}"></td>
+                        <td><time data-fecha-local th:datetime="${fila.solicitadaEl}" th:text="${fila.solicitadaEl}"></time></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{reportes/fragments :: scripts}"></th:block>
+</body>
+</html>

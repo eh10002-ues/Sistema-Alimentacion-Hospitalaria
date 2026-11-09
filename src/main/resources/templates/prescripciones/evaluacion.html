@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Evaluación del paciente')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('prescripciones')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">PRESCRIPCIÓN DE DIETA / EVALUACIÓN</p>
+            <h1 class="mb-2" th:text="${evaluacion.nombreCompleto}"></h1>
+            <p class="text-body-secondary mb-0" th:text="|${evaluacion.codigo} · ${evaluacion.ubicacion}|"></p>
+        </div>
+        <p class="alert alert-success" role="status" th:if="${mensaje}" th:text="${mensaje}"></p>
+        <div class="row g-4">
+            <div class="col-xl-6">
+                <section class="card h-100" aria-labelledby="datos-titulo">
+                    <div class="card-body">
+                        <h2 id="datos-titulo" class="mb-4">Datos del paciente</h2>
+                        <dl class="account-details row g-4 mb-0">
+                            <div class="col-sm-4"><dt>Edad</dt><dd th:text="|${evaluacion.edad} años|"></dd></div>
+                            <div class="col-sm-4"><dt>Peso</dt><dd th:text="|${evaluacion.pesoKg} kg|"></dd></div>
+                            <div class="col-sm-4"><dt>Altura</dt><dd th:text="|${evaluacion.alturaCm} cm|"></dd></div>
+                            <div class="col-12"><dt>Enfermedades</dt>
+                                <dd th:text="${#lists.isEmpty(evaluacion.enfermedades)} ? 'Sin registros' : ${#strings.listJoin(evaluacion.enfermedades, ', ')}"></dd></div>
+                            <div class="col-12"><dt>Alergias</dt>
+                                <dd th:text="${#lists.isEmpty(evaluacion.alergias)} ? 'Sin registros' : ${#strings.listJoin(evaluacion.alergias, ', ')}"></dd></div>
+                            <div class="col-12"><dt>Medicamentos</dt>
+                                <dd th:text="${#lists.isEmpty(evaluacion.medicamentos)} ? 'Sin registros' : ${#strings.listJoin(evaluacion.medicamentos, ', ')}"></dd></div>
+                        </dl>
+                    </div>
+                </section>
+            </div>
+            <div class="col-xl-6">
+                <section class="card form-card h-100" aria-labelledby="autorizar-titulo">
+                    <div class="card-body">
+                        <h2 id="autorizar-titulo" class="mb-4">Régimen dietético</h2>
+                        <form th:action="@{/prescripciones/pacientes/{id}(id=${evaluacion.id})}" th:object="${formulario}" method="post">
+                            <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
+                                <p class="mb-1 fw-semibold">No se pudo autorizar la dieta.</p>
+                                <p class="mb-0" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+                            </div>
+                            <fieldset>
+                                <legend class="form-label">Seleccione el régimen</legend>
+                                <div class="form-check mb-2" th:each="regimen : ${regimenes}">
+                                    <input class="form-check-input" type="radio" th:field="*{regimen}" th:value="${regimen}"
+                                           th:errorclass="is-invalid" required>
+                                    <label class="form-check-label" th:for="${#ids.prev('regimen')}" th:text="${regimen.etiqueta}"></label>
+                                </div>
+                                <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('regimen')}">Seleccione uno de los regímenes disponibles.</div>
+                            </fieldset>
+                            <div class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
+                                <button class="btn btn-primary" type="submit">Autorizar</button>
+                                <a class="btn btn-outline-secondary" th:href="@{/prescripciones}">Volver a pacientes</a>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <section class="card overflow-hidden mt-4" aria-labelledby="historial-titulo">
+            <div class="card-body pb-0"><h2 id="historial-titulo" class="mb-3">Historial de prescripciones</h2></div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 user-table">
+                    <thead><tr><th scope="col">Fecha</th><th scope="col">Régimen</th><th scope="col">Estado</th><th scope="col">Autorizado por</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(evaluacion.historial)}"><td colspan="4" class="text-center text-body-secondary py-4">Sin prescripciones registradas.</td></tr>
+                    <tr th:each="prescripcion : ${evaluacion.historial}">
+                        <td><time data-fecha-local th:datetime="${prescripcion.fechaAutorizacion}" th:text="${prescripcion.fechaAutorizacion}"></time></td>
+                        <td th:text="${prescripcion.regimen}"></td>
+                        <td><span class="badge rounded-pill bg-success-subtle text-success-emphasis" th:text="${prescripcion.estado}"></span></td>
+                        <td th:text="|${prescripcion.autorizadoPor} (${prescripcion.rolAutorizador})|"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script defer th:src="@{/js/fechas-locales.js}"></script>
+</body>
+</html>

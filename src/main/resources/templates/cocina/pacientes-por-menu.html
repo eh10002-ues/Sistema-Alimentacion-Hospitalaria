@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Pacientes por menú')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('consulta-pacientes-menu')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">COCINA</p>
+            <h1 class="mb-2">Pacientes por menú</h1>
+            <p class="text-body-secondary mb-0">Pacientes internos asociados al régimen dietético seleccionado en la
+                fecha de hoy, en cualquiera de sus menús activos. Solo se consideran asignaciones activas y aprobadas.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/cocina/consultas/pacientes-por-menu}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="tipoDieta" class="form-label">Régimen dietético</label>
+                    <select id="tipoDieta" name="tipoDieta" class="form-select" required>
+                        <option value="" th:selected="${regimenSeleccionado == null}" disabled>Seleccione un régimen</option>
+                        <option th:each="regimen : ${regimenes}" th:value="${regimen}" th:text="${regimen.etiqueta}"
+                                th:selected="${regimen == regimenSeleccionado}"></option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Consultar</button>
+                </div>
+            </div>
+        </form>
+
+        <div th:if="${consulta}" class="card">
+            <div class="card-header d-flex flex-wrap justify-content-between gap-2">
+                <span>Régimen <strong th:text="${consulta.tipoDieta.etiqueta}">Normal</strong></span>
+                <span class="text-body-secondary">
+                    Fecha: <span th:text="${#temporals.format(consulta.fecha, 'dd/MM/yyyy')}"></span>
+                    · Pacientes: <span id="total-pacientes" th:text="${#lists.size(consulta.pacientes)}">0</span>
+                </span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Pacientes internos asociados al régimen dietético</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Piso</th>
+                        <th scope="col">Cama</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Paciente</th>
+                        <th scope="col">Menú</th>
+                        <th scope="col">Desde</th>
+                        <th scope="col">Hasta</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(consulta.pacientes)}">
+                        <td colspan="7" class="text-center text-body-secondary py-5">
+                            Ningún paciente interno tiene un menú vigente de este régimen hoy.
+                        </td>
+                    </tr>
+                    <tr th:each="fila : ${consulta.pacientes}">
+                        <td th:text="${fila.piso} ?: 'Sin ubicación'"></td>
+                        <td th:text="${fila.cama} ?: '—'"></td>
+                        <td class="fw-semibold" th:text="${fila.codigo}"></td>
+                        <td th:text="${fila.nombreCompleto}"></td>
+                        <td th:text="${fila.menu}"></td>
+                        <td th:text="${#temporals.format(fila.fechaInicio, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${fila.fechaFin} ? ${#temporals.format(fila.fechaFin, 'dd/MM/yyyy')} : 'Indefinido'"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,23 @@
+.git
+.idea
+.vscode
+.agents
+.codex
+AGENTS.md
+historias.md
+HELP.md
+target
+.env
+.env.*
+config
+**/application-local.properties
+*.sql
+*.sql.gz
+.DS_Store
+
+# HU-03: nunca incorporar respaldos ni configuración del cliente a la imagen.
+backups
+docs/evidencias
+tests
+*.cnf
+**/__pycache__

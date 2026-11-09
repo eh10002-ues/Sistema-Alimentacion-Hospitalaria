@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Acceso denegado')}"></head>
+<body th:class="${#authorization.expression('isAuthenticated()')} ? 'app-layout' : 'public-layout'">
+<th:block th:replace="~{fragments/layout :: header('')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main error-shell">
+        <section class="card">
+            <div class="card-body p-lg-5">
+                <p class="page-eyebrow mb-3">ERROR 403</p>
+                <h1 class="mb-3">Acceso denegado</h1>
+                <p class="text-body-secondary mb-4" >No tiene permisos para acceder a este recurso.</p>
+                <a class="btn btn-primary" th:href="@{/dashboard}">Volver al panel principal</a>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

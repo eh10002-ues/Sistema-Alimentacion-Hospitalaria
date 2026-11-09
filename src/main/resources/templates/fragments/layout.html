@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Alimentación Hospitalaria'">Alimentación Hospitalaria</title>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+
+<th:block th:fragment="header(active)" sec:authorize="isAuthenticated()">
+    <a href="#contenido-principal" class="visually-hidden-focusable skip-link">Ir al contenido</a>
+    <header class="mobile-header d-lg-none">
+        <a class="mobile-brand text-decoration-none" th:href="@{/dashboard}">
+            <span class="brand-mark" aria-hidden="true">AH</span>
+            <span><strong>Alimentación</strong><span class="d-block small">Hospitalaria</span></span>
+        </a>
+        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#appSidebar" aria-controls="appSidebar" aria-label="Abrir menú">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16"></path>
+            </svg>
+            <span>Menú</span>
+        </button>
+    </header>
+    <aside class="offcanvas-lg offcanvas-start app-sidebar"
+           tabindex="-1" id="appSidebar" aria-labelledby="sidebar-title">
+        <div class="offcanvas-header d-lg-none border-bottom">
+            <h2 class="offcanvas-title fs-6" id="sidebar-title">Navegación</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Cerrar menú"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-0">
+            <a class="app-brand" th:href="@{/dashboard}">
+                <span class="brand-mark" aria-hidden="true">AH</span>
+                <span class="brand-copy"><strong>Alimentación</strong><span class="d-block">Hospitalaria</span></span>
+            </a>
+            <nav class="app-navigation nav nav-pills flex-column gap-1" aria-label="Menú principal">
+                <span class="navigation-label">PRINCIPAL</span>
+                <a class="nav-link" th:classappend="${active == 'inicio'} ? 'active'" th:attr="aria-current=${active == 'inicio' ? 'page' : null}"
+                   th:href="@{/dashboard}">
+                    <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path>
+                    </svg>
+                    <span>Inicio</span>
+                </a>
+                <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')"
+                   th:classappend="${active == 'reportes'} ? 'active'"
+                   th:attr="aria-current=${active == 'reportes' ? 'page' : null}"
+                   th:href="@{/reportes}">Reportes generales</a>
+                <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA','COCINA')">
+                    <span class="navigation-label mt-4">ABASTECIMIENTO</span>
+                    <th:block sec:authorize="hasAnyRole('ADMIN','NUTRICIONISTA')">
+                        <a class="nav-link" th:classappend="${active == 'insumos-catalogo'} ? 'active'"
+                           th:attr="aria-current=${active == 'insumos-catalogo' ? 'page' : null}"
+                           th:href="@{/insumos}">
+                            <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 5h16M4 12h16M4 19h16"></path>
+                                <circle cx="7" cy="5" r="1"></circle>
+                                <circle cx="7" cy="12" r="1"></circle>
+                                <circle cx="7" cy="19" r="1"></circle>
+                            </svg>
+                            <span>Catálogo de insumos</span>
+                        </a>
+                    </th:block>
+                    <a class="nav-link" th:classappend="${active == 'insumos'} ? 'active'" th:attr="aria-current=${active == 'insumos' ? 'page' : null}"
+                       th:href="@{/insumos/proyeccion}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m12 3 9 5-9 5-9-5 9-5Z"></path>
+                            <path d="M3 12l9 5 9-5M3 16l9 5 9-5"></path>
+                        </svg>
+                        <span>Proyección de insumos</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasRole('ADMIN')">
+                    <span class="navigation-label mt-4">ADMINISTRACIÓN</span>
+                    <a class="nav-link" th:classappend="${active == 'usuarios'} ? 'active'" th:attr="aria-current=${active == 'usuarios' ? 'page' : null}"
+                       th:href="@{/admin/usuarios}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="10" cy="7" r="4"></circle>
+                            <path d="M20 8v6m-3-3h6"></path>
+                        </svg>
+                        <span>Administrar usuarios</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO')">
+                    <span class="navigation-label mt-4">PACIENTES</span>
+                    <a class="nav-link" th:classappend="${active == 'pacientes'} ? 'active'" th:attr="aria-current=${active == 'pacientes' ? 'page' : null}"
+                       th:href="@{/pacientes}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <path d="M9 14h6"/><path d="M12 17v-6"/>
+                        </svg>
+                        <span>Gestionar pacientes</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'ENCARGADO_PISO')">
+                    <span class="navigation-label mt-4">UBICACIONES</span>
+                    <a class="nav-link" th:classappend="${active == 'ubicaciones'} ? 'active'" th:attr="aria-current=${active == 'ubicaciones' ? 'page' : null}"
+                       th:href="@{/ubicaciones}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 21V8l9-5 9 5v13"></path>
+                            <path d="M3 12h18M7 12v4h4v-4m3 9v-5h4v5"></path>
+                        </svg>
+                        <span>Pisos y Camas</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('MEDICO', 'NUTRICIONISTA')">
+                    <span class="navigation-label mt-4">ALIMENTACIÓN</span>
+                    <a class="nav-link" th:classappend="${active == 'prescripciones'} ? 'active'" th:attr="aria-current=${active == 'prescripciones' ? 'page' : null}"
+                       th:href="@{/prescripciones}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M7 3v6m4-6v6M7 6h4m-2 3v12M17 3v18m0-18a4 4 0 0 1 4 4v3h-4"></path>
+                        </svg>
+                        <span>Prescripción de dieta</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')">
+                    <span class="navigation-label mt-4">MENÚS</span>
+                    <a class="nav-link" th:classappend="${active == 'menus'} ? 'active'" th:attr="aria-current=${active == 'menus' ? 'page' : null}"
+                       th:href="@{/menus}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 4h16v16H4z"></path>
+                            <path d="M8 8h8M8 12h8M8 16h5"></path>
+                        </svg>
+                        <span>Menús</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'asignaciones-menu'} ? 'active'" th:attr="aria-current=${active == 'asignaciones-menu' ? 'page' : null}"
+                       th:href="@{/asignaciones}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2m1-10 2 2 4-4"></path>
+                        </svg>
+                        <span>Asignaciones de menú</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA', 'COCINA')">
+                    <span class="navigation-label mt-4">COCINA</span>
+                    <a class="nav-link" sec:authorize="hasRole('COCINA')" th:classappend="${active == 'cocina'} ? 'active'" th:attr="aria-current=${active == 'cocina' ? 'page' : null}"
+                       th:href="@{/cocina/ordenes}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 11h18a8 8 0 0 1-8 8h-2a8 8 0 0 1-8-8Zm3 11h12"></path>
+                            <path d="M12 3v4m5-2-2 3M7 5l2 3"></path>
+                        </svg>
+                        <span>Órdenes en tiempo real</span>
+                    </a>
+                    <a class="nav-link" th:classappend="${active == 'consulta-pacientes-menu'} ? 'active'" th:attr="aria-current=${active == 'consulta-pacientes-menu' ? 'page' : null}"
+                       th:href="@{/cocina/consultas/pacientes-por-menu}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Pacientes por menú</span>
+                    </a>
+                    <a class="nav-link" th:classappend="${active == 'consulta-menus-paciente'} ? 'active'" th:attr="aria-current=${active == 'consulta-menus-paciente' ? 'page' : null}"
+                       th:href="@{/cocina/consultas/menus-por-paciente}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                            <path d="M16 2v4M8 2v4M3 10h18M8 14h4m-4 4h8"></path>
+                        </svg>
+                        <span>Menús por paciente</span>
+                    </a>
+                </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')">
+                    <span class="navigation-label mt-4">REPORTES</span>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO')" th:classappend="${active == 'reporte-expediente-paciente'} ? 'active'" th:attr="aria-current=${active == 'reporte-expediente-paciente' ? 'page' : null}"
+                       th:href="@{/reportes/expediente-paciente}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 3h9l3 3v15H6z"></path>
+                            <path d="M14 3v4h4M9 12h6m-6 4h6"></path>
+                        </svg>
+                        <span>Expediente por paciente</span>
+                    </a>
+                    <a class="nav-link" th:classappend="${active == 'reporte-hoja-ruta-entrega'} ? 'active'" th:attr="aria-current=${active == 'reporte-hoja-ruta-entrega' ? 'page' : null}"
+                       th:href="@{/reportes/hoja-ruta-entrega}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 19V5h16v14H4Z"></path>
+                            <path d="M8 9h8M8 13h5M16 13h0M8 17h8"></path>
+                        </svg>
+                        <span>Hoja de Ruta y Entrega</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-historial-dietas'} ? 'active'" th:attr="aria-current=${active == 'reporte-historial-dietas' ? 'page' : null}"
+                       th:href="@{/reportes/historial-dietas}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 8v4l2.5 2.5"></path>
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 3v2"></path>
+                        </svg>
+                        <span>Historial de dietas asignadas</span>
+                    </a>
+                    <a class="nav-link" th:classappend="${active == 'reporte-hoja-tecnica-menu'} ? 'active'" th:attr="aria-current=${active == 'reporte-hoja-tecnica-menu' ? 'page' : null}"
+                       th:href="@{/reportes/hoja-tecnica-menu}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 3h12v18H6z"></path>
+                            <path d="M9 7h6M9 11h6M9 15h3"></path>
+                        </svg>
+                        <span>Hoja técnica de gramajes</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-alergias-severas'} ? 'active'" th:attr="aria-current=${active == 'reporte-alergias-severas' ? 'page' : null}"
+                       th:href="@{/reportes/alergias-severas}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 3 2 20h20L12 3Z"></path>
+                            <path d="M12 10v4m0 3h.01"></path>
+                        </svg>
+                        <span>Alergias severas</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA', 'COCINA')" th:classappend="${active == 'reporte-comandas'} ? 'active'" th:attr="aria-current=${active == 'reporte-comandas' ? 'page' : null}"
+                       th:href="@{/reportes/comandas}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"></path>
+                            <path d="M9 8h6m-6 4h6"></path>
+                        </svg>
+                        <span>Comandas de producción</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-asignaciones-pendientes'} ? 'active'" th:attr="aria-current=${active == 'reporte-asignaciones-pendientes' ? 'page' : null}"
+                       th:href="@{/reportes/asignaciones-pendientes}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                        <span>Asignaciones pendientes</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-pacientes-sin-menu'} ? 'active'" th:attr="aria-current=${active == 'reporte-pacientes-sin-menu' ? 'page' : null}"
+                       th:href="@{/reportes/pacientes-sin-menu}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2m2-11 4 4m0-4-4 4"></path>
+                        </svg>
+                        <span>Pacientes sin menú</span>
+                    </a>
+                </th:block>
+            </nav>
+            <div class="sidebar-account mt-auto">
+                <div class="account-identity">
+                    <span class="account-avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle>
+                            <path d="M4 21a8 8 0 0 1 16 0"></path>
+                        </svg>
+                    </span>
+                    <span class="account-copy">
+                        <span class="account-label">Sesión iniciada como</span>
+                        <span class="account-name" sec:authentication="name">usuario</span>
+                    </span>
+                </div>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-secondary w-100 logout-button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M10 17l5-5-5-5m5 5H3"></path>
+                            <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"></path>
+                        </svg>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+</th:block>
+
+<footer th:fragment="footer" class="app-footer text-body-secondary">
+    <small>Sistema de Alimentación Hospitalaria</small>
+</footer>
+
+<th:block th:fragment="scripts">
+    <script defer th:src="@{/vendor/bootstrap/bootstrap.bundle.min.js}"></script>
+</th:block>
+
+</body>
+</html>

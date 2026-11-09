@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head th:replace="~{fragments/layout :: head('Menús')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('menus')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="page-eyebrow mb-2">ALIMENTACIÓN</p>
+                <h1 class="mb-2">Menús</h1>
+                <p class="text-body-secondary mb-0">Menús por tipo de dieta y sus tiempos de comida. Solo los menús
+                    activos pueden asignarse a pacientes.</p>
+            </div>
+            <a class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA')" th:href="@{/menus/nuevo}">Agregar menú</a>
+        </div>
+        <p class="alert alert-success" role="status" th:if="${mensaje}" th:text="${mensaje}"></p>
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Menús registrados</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Menú</th>
+                        <th scope="col">Tipo de dieta</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Tiempos de comida</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${menus.empty}">
+                        <td colspan="6" class="text-center text-body-secondary py-5">No hay menús registrados.</td>
+                    </tr>
+                    <tr th:each="menu : ${menus}">
+                        <td class="fw-semibold" th:text="${menu.nombre}"></td>
+                        <td th:text="${menu.tipoDieta.etiqueta}"></td>
+                        <td th:text="${menu.tipo == T(sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoMenu).GENERAL ? 'General' : 'Personalizado'}"></td>
+                        <td th:text="${menu.tiemposComida}"></td>
+                        <td th:insert="~{menus/detalle :: estado(${menu.estado})}"></td>
+                        <td><a class="btn btn-sm btn-outline-secondary" th:href="@{/menus/{id}/detalles(id=${menu.id})}">Ver detalles</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

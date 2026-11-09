@@ -1,5 +1,6 @@
 HELP.md
 target/
+node_modules/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -36,3 +37,13 @@ build/
 .env
 application-local.properties
 .DS_Store
+
+AGENTS.md
+historias.md
+
+.agents/
+
+# HU-03: respaldos operativos y configuración temporal del cliente MySQL.
+/backups/
+*.cnf
+__pycache__/

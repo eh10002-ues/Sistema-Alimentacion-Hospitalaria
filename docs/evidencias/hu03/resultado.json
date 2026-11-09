@@ -1,0 +1,208 @@
+{
+  "historia": "HU-03",
+  "fecha_utc": "20261107_070059Z",
+  "mysql": "8.4",
+  "respaldo": "alimentacion_hospitalaria_20261107_070059Z.sql",
+  "sha256": "8f88c58568c36cfd20a83b81ffd1038e5091b072694a1e4444e64c1627a0db02",
+  "tablas_y_conteos": {
+    "administracion_usuarios_lock": 1,
+    "asignaciones_menu": 1,
+    "asignaciones_piso": 0,
+    "bitacora": 1,
+    "camas": 1,
+    "flyway_schema_history": 10,
+    "insumos": 1,
+    "menu_detalle_insumos": 1,
+    "menu_detalles": 1,
+    "menus": 1,
+    "paciente_alergias": 1,
+    "paciente_enfermedades": 1,
+    "paciente_medicamentos": 1,
+    "pacientes": 1,
+    "pisos": 1,
+    "prescripciones_dieta": 1,
+    "usuarios": 2
+  },
+  "resultados": [
+    {
+      "caso": "Red exclusiva de prueba creada",
+      "correcto": true
+    },
+    {
+      "caso": "Compilación de la imagen de aplicación",
+      "correcto": true
+    },
+    {
+      "caso": "Dos servidores MySQL 8.4 independientes disponibles",
+      "correcto": true
+    },
+    {
+      "caso": "Migraciones originales aplicadas por Flyway e inicialización sintética",
+      "correcto": true
+    },
+    {
+      "caso": "Fixture sintético completo insertado sin modificar migraciones",
+      "correcto": true
+    },
+    {
+      "caso": "respaldo: código esperado 0",
+      "correcto": true
+    },
+    {
+      "caso": "Respaldo no vacío y permisos 0600",
+      "correcto": true
+    },
+    {
+      "caso": "SHA-256 coincide",
+      "correcto": true
+    },
+    {
+      "caso": "respaldo: código esperado 4",
+      "correcto": true
+    },
+    {
+      "caso": "respaldo: código esperado 3",
+      "correcto": true
+    },
+    {
+      "caso": "respaldo: código esperado 3",
+      "correcto": true
+    },
+    {
+      "caso": "respaldo: código esperado 3",
+      "correcto": true
+    },
+    {
+      "caso": "Sin archivos parciales tras errores",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 5",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 2",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 2",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 2",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 4",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 4",
+      "correcto": true
+    },
+    {
+      "caso": "Destino sigue vacío tras rechazos",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 0",
+      "correcto": true
+    },
+    {
+      "caso": "restaurar: código esperado 5",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: administracion_usuarios_lock",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: asignaciones_menu",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: asignaciones_piso",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: bitacora",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: camas",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: flyway_schema_history",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: insumos",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: menu_detalle_insumos",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: menu_detalles",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: menus",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: paciente_alergias",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: paciente_enfermedades",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: paciente_medicamentos",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: pacientes",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: pisos",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: prescripciones_dieta",
+      "correcto": true
+    },
+    {
+      "caso": "Contenido idéntico: usuarios",
+      "correcto": true
+    },
+    {
+      "caso": "Relaciones recuperadas",
+      "correcto": true
+    },
+    {
+      "caso": "Paciente, dieta, menú e insumo relacionados",
+      "correcto": true
+    },
+    {
+      "caso": "Aplicación restaurada arranca y Flyway valida su historial",
+      "correcto": true
+    },
+    {
+      "caso": "Formulario restaurado conserva CSRF",
+      "correcto": true
+    },
+    {
+      "caso": "Autenticación con el usuario recuperado",
+      "correcto": true
+    },
+    {
+      "caso": "Consulta funcional restaurada",
+      "correcto": true
+    }
+  ]
+}

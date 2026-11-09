@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+<form th:fragment="formulario" class="card card-body mb-4" th:action="@{${tipoReporte.ruta}}" th:object="${filtros}" method="get" aria-label="Filtros del reporte">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'PACIENTES' or tipoReporte.name() == 'ASIGNACIONES'}">
+            <label for="buscar" class="form-label">Paciente</label>
+            <input id="buscar" class="form-control" type="search" th:field="*{buscar}" maxlength="100" placeholder="Código o nombre completo">
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() != 'MENUS'}">
+            <label for="pisoId" class="form-label">Piso</label>
+            <select id="pisoId" class="form-select" th:field="*{pisoId}">
+                <option value="">Todos los pisos</option>
+                <option th:each="piso : ${pisos}" th:value="${piso.id}" th:text="|${piso.codigo} — ${piso.nombre}|"></option>
+            </select>
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'PACIENTES'}">
+            <label for="estado" class="form-label">Estado del paciente</label>
+            <select id="estado" class="form-select" th:field="*{estado}">
+                <option value="">Todos los estados</option>
+                <option th:each="estado : ${estadosPaciente}" th:value="${estado}" th:text="${estado.name() == 'INGRESADO' ? 'Ingresado' : 'Alta'}"></option>
+            </select>
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'ASIGNACIONES' or tipoReporte.name() == 'MENUS'}">
+            <label for="fecha" class="form-label">Fecha de consulta</label>
+            <input id="fecha" name="fecha" class="form-control" type="date" th:value="${#temporals.format(fechaConsulta, 'yyyy-MM-dd')}" required>
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'ASIGNACIONES' or tipoReporte.name() == 'MENUS'}">
+            <label for="tipoDieta" class="form-label">Tipo de dieta</label>
+            <select id="tipoDieta" class="form-select" th:field="*{tipoDieta}">
+                <option value="">Todas las dietas</option>
+                <option th:each="dieta : ${tiposDieta}" th:value="${dieta}" th:text="${dieta.etiqueta}"></option>
+            </select>
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'MENUS'}">
+            <label for="tiempoComida" class="form-label">Tiempo de comida</label>
+            <select id="tiempoComida" class="form-select" th:field="*{tiempoComida}">
+                <option value="">Todos los tiempos</option>
+                <option th:each="tiempo : ${tiemposComida}" th:value="${tiempo}" th:text="${tiempo.etiqueta}"></option>
+            </select>
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'OCUPACION'}">
+            <label for="cama" class="form-label">Cama</label>
+            <input id="cama" class="form-control" th:field="*{cama}" maxlength="10" placeholder="Código de cama">
+        </div>
+        <div class="col-md-6" th:if="${tipoReporte.name() == 'OCUPACION'}">
+            <label for="ocupacion" class="form-label">Ocupación</label>
+            <select id="ocupacion" class="form-select" th:field="*{ocupacion}">
+                <option value="">Todos los estados</option>
+                <option th:each="estado : ${estadosOcupacion}" th:value="${estado}" th:text="${estado.etiqueta}"></option>
+            </select>
+        </div>
+        <div class="col-12 d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+            <a class="btn btn-outline-secondary" th:href="@{${tipoReporte.ruta}}">Limpiar filtros</a>
+        </div>
+    </div>
+</form>
+</body>
+</html>
