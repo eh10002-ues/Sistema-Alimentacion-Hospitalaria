@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import sv.edu.ues.alimentacion_hospitalaria.asignaciones.domain.AsignacionMenu;
 import sv.edu.ues.alimentacion_hospitalaria.menus.domain.EstadoMenu;
 import sv.edu.ues.alimentacion_hospitalaria.menus.domain.TiempoComida;
+import sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoDieta;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.EstadoPaciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
@@ -28,13 +29,17 @@ import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.AsignacionesPendientesR
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ComandasReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.EncabezadoReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ExpedientePacienteReporte;
+import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.HojaRutaEntregaReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.OpcionFiltro;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.PacientesSinMenuReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.persistence.ReportesRepository;
+import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.EstadoPrescripcion;
+import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.PrescripcionDieta;
 import sv.edu.ues.alimentacion_hospitalaria.shared.exception.ResourceNotFoundException;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Cama;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
+import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.AsignacionPiso;
 import sv.edu.ues.alimentacion_hospitalaria.usuarios.domain.Usuario;
 
 /**
@@ -244,6 +249,55 @@ public class ReportesService {
             "rd-01-expediente-" + paciente.getCodigo(), filtros,
             "Ficha vigente del paciente y menús asignados que cumplen los filtros de fecha y estado.");
         return new ExpedientePacienteReporte(encabezado, codigo, ficha, menus);
+    }
+
+    /** RD-03: distribución de pacientes ingresados por piso y régimen dietético prescrito. */
+    @PreAuthorize("hasAnyRole('ADMIN', 'ENCARGADO_PISO', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
+    public HojaRutaEntregaReporte hojaRutaEntrega(Long pisoId, TipoDieta tipoDieta) {
+        String pisoFiltro = filtroPiso(pisoId);
+        Map<Long, List<String>> encargadosPorPiso = new LinkedHashMap<>();
+        for (AsignacionPiso asignacion : reportes.buscarEncargadosPisos(pisoId)) {
+            encargadosPorPiso.computeIfAbsent(asignacion.getPiso().getId(), clave -> new ArrayList<>())
+                .add(asignacion.getUsuario().getNombreCompleto());
+        }
+
+        Map<Long, PrescripcionDieta> prescripcionesActuales = new LinkedHashMap<>();
+        for (PrescripcionDieta prescripcion : reportes.buscarPrescripcionesActuales(
+            EstadoPaciente.INGRESADO, EstadoPrescripcion.APROBADO, pisoId)) {
+            prescripcionesActuales.putIfAbsent(prescripcion.getPaciente().getId(), prescripcion);
+        }
+
+        Map<Long, List<HojaRutaEntregaReporte.Fila>> filasPorPiso = new LinkedHashMap<>();
+        Map<Long, String> pisosAgrupados = new LinkedHashMap<>();
+        for (PrescripcionDieta prescripcion : prescripcionesActuales.values()) {
+            Paciente paciente = prescripcion.getPaciente();
+            if (paciente.getCama() == null || (tipoDieta != null && prescripcion.getTipoDieta() != tipoDieta)) {
+                continue;
+            }
+            Piso piso = paciente.getCama().getPiso();
+            pisosAgrupados.putIfAbsent(piso.getId(), etiqueta(piso));
+            filasPorPiso.computeIfAbsent(piso.getId(), clave -> new ArrayList<>())
+                .add(new HojaRutaEntregaReporte.Fila(cama(paciente.getCama()), paciente.getCodigo(),
+                    nombreCompleto(paciente), prescripcion.getTipoDieta().getEtiqueta()));
+        }
+
+        List<HojaRutaEntregaReporte.GrupoPiso> grupos = pisosAgrupados.entrySet().stream()
+            .sorted(Map.Entry.comparingByValue())
+            .map(grupo -> {
+                List<String> encargados = encargadosPorPiso.getOrDefault(grupo.getKey(), List.of());
+                String nombreEncargado = encargados.isEmpty() ? "Sin encargado asignado" : String.join(", ",
+                    encargados.stream().distinct().toList());
+                return new HojaRutaEntregaReporte.GrupoPiso(grupo.getValue(), nombreEncargado,
+                    List.copyOf(filasPorPiso.getOrDefault(grupo.getKey(), List.of())));
+            })
+            .toList();
+        long total = grupos.stream().mapToLong(grupo -> grupo.filas().size()).sum();
+        EncabezadoReporte encabezado = encabezado("RD-03", "Hoja de Ruta y Entrega",
+            "rd-03-hoja-ruta-entrega-" + hoy(),
+            List.of("Piso: " + pisoFiltro,
+                "Tipo de dieta: " + (tipoDieta == null ? "Todas" : tipoDieta.getEtiqueta())),
+            "Pacientes ingresados con la prescripción dietética aprobada más reciente. Solo se incluyen pacientes con cama asignada.");
+        return new HojaRutaEntregaReporte(encabezado, grupos, total);
     }
 
     private String filtroPiso(Long pisoId) {

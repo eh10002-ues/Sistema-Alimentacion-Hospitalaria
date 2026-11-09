@@ -76,6 +76,17 @@ public class ReportesController {
         return "reportes/expediente-paciente";
     }
 
+    @GetMapping("/hoja-ruta-entrega")
+    String hojaRutaEntrega(@RequestParam(required = false) Long pisoId,
+                           @RequestParam(required = false) sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoDieta tipoDieta,
+                           Model model) {
+        model.addAttribute("reporte", reportes.hojaRutaEntrega(pisoId, tipoDieta));
+        filtroPiso(model, pisoId);
+        model.addAttribute("tiposDieta", sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoDieta.values());
+        model.addAttribute("tipoDietaSeleccionada", tipoDieta);
+        return "reportes/hoja-ruta-entrega";
+    }
+
     private void filtroPiso(Model model, Long pisoId) {
         model.addAttribute("pisos", reportes.pisos());
         model.addAttribute("pisoSeleccionado", pisoId);

@@ -14,8 +14,10 @@ import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.EstadoPaciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.SeveridadAlergia;
+import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.PrescripcionDieta;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
+import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.AsignacionPiso;
 
 /**
  * SAH-9: consultas de solo lectura de los reportes específicos.
@@ -156,4 +158,30 @@ public interface ReportesRepository extends Repository<AsignacionMenu, Long> {
         @Param("activa") Boolean activa,
         @Param("fechaDesde") LocalDate fechaDesde,
         @Param("fechaHasta") LocalDate fechaHasta);
+
+    @Query("""
+        select prescripcion from PrescripcionDieta prescripcion
+        join fetch prescripcion.paciente paciente
+        left join fetch paciente.cama cama
+        left join fetch cama.piso piso
+        where paciente.estado = :estadoPaciente
+          and prescripcion.estado = :estadoPrescripcion
+          and (:pisoId is null or piso.id = :pisoId)
+        order by piso.codigo nulls last, cama.numero, paciente.apellidos, paciente.nombres,
+                 prescripcion.fechaAutorizacion desc, prescripcion.id desc
+        """)
+    List<PrescripcionDieta> buscarPrescripcionesActuales(
+        @Param("estadoPaciente") EstadoPaciente estadoPaciente,
+        @Param("estadoPrescripcion") sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.EstadoPrescripcion estadoPrescripcion,
+        @Param("pisoId") Long pisoId);
+
+    @Query("""
+        select asignacion from AsignacionPiso asignacion
+        join fetch asignacion.piso piso
+        join fetch asignacion.usuario usuario
+        where usuario.activo = true
+          and (:pisoId is null or piso.id = :pisoId)
+        order by piso.codigo, asignacion.turno
+        """)
+    List<AsignacionPiso> buscarEncargadosPisos(@Param("pisoId") Long pisoId);
 }

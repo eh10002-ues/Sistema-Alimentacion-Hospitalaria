@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Hoja de Ruta y Entrega')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-hoja-ruta-entrega')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTES · RD-03</p>
+            <h1 class="mb-2">Hoja de Ruta y Entrega</h1>
+            <p class="text-body-secondary mb-0">Distribución de pacientes ingresados por piso, cama y dieta prescrita.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/reportes/hoja-ruta-entrega}" method="get">
+            <div class="row g-3 align-items-end">
+                <div th:replace="~{reportes/fragments :: filtroPiso}"></div>
+                <div class="col-md">
+                    <label for="tipoDieta" class="form-label">Tipo de dieta</label>
+                    <select id="tipoDieta" name="tipoDieta" class="form-select">
+                        <option value="" th:selected="${tipoDietaSeleccionada == null}">Todas las dietas</option>
+                        <option th:each="tipo : ${tiposDieta}" th:value="${tipo}" th:text="${tipo.etiqueta}"
+                                th:selected="${tipo == tipoDietaSeleccionada}"></option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Consultar</button>
+                </div>
+            </div>
+        </form>
+
+        <section class="card card-body" aria-label="Resultado del reporte">
+            <th:block th:replace="~{reportes/fragments :: encabezado(${reporte.encabezado})}"></th:block>
+
+            <p class="mb-3" data-reporte-resumen th:text="|Pacientes ingresados: ${reporte.totalPacientes}|">
+                Pacientes ingresados: 0</p>
+
+            <p th:if="${#lists.isEmpty(reporte.pisos)}" class="text-center text-body-secondary py-5 mb-0">
+                No hay pacientes ingresados con la dieta y los pisos seleccionados.
+            </p>
+
+            <div class="table-responsive mb-4" th:each="grupo : ${reporte.pisos}">
+                <table class="table align-middle mb-0" data-reporte-tabla data-reporte-firma="true">
+                    <caption class="caption-top fw-semibold text-body"
+                             th:text="|${grupo.piso} · Encargado de piso: ${grupo.encargado}|">Piso · Encargado de piso</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Cama</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Paciente</th>
+                        <th scope="col">Dieta</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="fila : ${grupo.filas}">
+                        <td th:text="${fila.cama}"></td>
+                        <td class="fw-semibold" th:text="${fila.codigo}"></td>
+                        <td th:text="${fila.paciente}"></td>
+                        <td th:text="${fila.dieta}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="mt-2 mb-0"><strong>Encargado de piso:</strong> <span th:text="${grupo.encargado}"></span></p>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{reportes/fragments :: scripts}"></th:block>
+</body>
+</html>
