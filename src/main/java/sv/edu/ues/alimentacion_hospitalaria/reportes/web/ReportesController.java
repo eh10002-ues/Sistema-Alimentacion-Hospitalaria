@@ -101,6 +101,16 @@ public class ReportesController {
         return "reportes/historial-dietas";
     }
 
+    @GetMapping("/hoja-tecnica-menu")
+    String hojaTecnicaMenu(@RequestParam(required = false) Long menuId, Model model) {
+        model.addAttribute("menuSeleccionado", menuId);
+        model.addAttribute("menus", reportes.menus());
+        if (menuId != null) {
+            model.addAttribute("reporte", reportes.hojaTecnicaMenu(menuId));
+        }
+        return "reportes/hoja-tecnica-menu";
+    }
+
     private void filtroPiso(Model model, Long pisoId) {
         model.addAttribute("pisos", reportes.pisos());
         model.addAttribute("pisoSeleccionado", pisoId);

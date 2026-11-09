@@ -83,6 +83,7 @@ public class ReglasAcceso {
 			.requestMatchers(lectura("/reportes/expediente-paciente")).hasAnyRole(CLINICOS)
 			.requestMatchers(lectura("/reportes/hoja-ruta-entrega")).hasAnyRole(TODOS)
 			.requestMatchers(lectura("/reportes/historial-dietas")).hasAnyRole(CLINICOS)
+			.requestMatchers(lectura("/reportes/hoja-tecnica-menu")).hasAnyRole(CONSULTAS_COCINA)
 			.anyRequest().denyAll());
 	}
 

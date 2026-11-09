@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -21,6 +23,8 @@ import sv.edu.ues.alimentacion_hospitalaria.asignaciones.domain.AsignacionMenu;
 import sv.edu.ues.alimentacion_hospitalaria.menus.domain.EstadoMenu;
 import sv.edu.ues.alimentacion_hospitalaria.menus.domain.TiempoComida;
 import sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoDieta;
+import sv.edu.ues.alimentacion_hospitalaria.menus.domain.Menu;
+import sv.edu.ues.alimentacion_hospitalaria.menus.persistence.MenuRepository;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.EstadoPaciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
@@ -32,6 +36,7 @@ import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.EncabezadoReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ExpedientePacienteReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.HojaRutaEntregaReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.HistorialDietasPacienteReporte;
+import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.HojaTecnicaMenuReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.OpcionFiltro;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.PacientesSinMenuReporte;
@@ -65,15 +70,25 @@ public class ReportesService {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ReportesRepository reportes;
+    private final MenuRepository menus;
 
-    public ReportesService(ReportesRepository reportes) {
+    public ReportesService(ReportesRepository reportes, MenuRepository menus) {
         this.reportes = reportes;
+        this.menus = menus;
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
     public List<OpcionFiltro> pisos() {
         return reportes.buscarPisos().stream()
             .map(piso -> new OpcionFiltro(piso.getId(), etiqueta(piso)))
+            .toList();
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
+    public List<OpcionFiltro> menus() {
+        return menus.findAll().stream()
+            .sorted(Comparator.comparing(Menu::getNombre, String.CASE_INSENSITIVE_ORDER))
+            .map(menu -> new OpcionFiltro(menu.getId(), menu.getNombre() + " — " + menu.getTipoDieta().getEtiqueta()))
             .toList();
     }
 
@@ -357,6 +372,54 @@ public class ReportesService {
             "Asignaciones del paciente que se relacionan con el rango seleccionado.");
         return new HistorialDietasPacienteReporte(encabezado, paciente.getCodigo(), ficha, filas, filas.size(),
             dietaActual == null ? "Sin prescripción activa vigente" : dietaActual.getTipoDieta().getEtiqueta());
+    }
+
+    /** RD-02: gramajes, insumos y costo por ración de un menú. */
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
+    public HojaTecnicaMenuReporte hojaTecnicaMenu(Long menuId) {
+        Menu menu = menus.findById(menuId)
+            .orElseThrow(() -> new ResourceNotFoundException("El menú solicitado no existe."));
+        List<HojaTecnicaMenuReporte.Fila> filas = menu.getDetalles().stream()
+            .flatMap(detalle -> detalle.getInsumos().stream()
+                .map(detalleInsumo -> {
+                    BigDecimal costoUnitario = detalleInsumo.getInsumo().getCostoUnitario();
+                    if (costoUnitario == null) {
+                        costoUnitario = BigDecimal.ZERO;
+                    }
+                    costoUnitario = costoUnitario.setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal costo = detalleInsumo.getCantidadPorRacion().multiply(costoUnitario)
+                        .setScale(2, RoundingMode.HALF_UP);
+                    return new HojaTecnicaMenuReporte.Fila(
+                        detalle.getTiempoComida().getEtiqueta(),
+                        detalle.getHoraServicio(),
+                        detalle.getPlatillo(),
+                        detalleInsumo.getInsumo().getNombre(),
+                        detalleInsumo.getCantidadPorRacion(),
+                        detalleInsumo.getInsumo().getUnidad(),
+                        costoUnitario,
+                        costo);
+                }))
+            .toList();
+        BigDecimal costoTotal = filas.stream()
+            .map(HojaTecnicaMenuReporte.Fila::costo)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Map<String, List<HojaTecnicaMenuReporte.Fila>> filasPorComida = new LinkedHashMap<>();
+        filas.forEach(fila -> filasPorComida.computeIfAbsent(fila.comida(), comida -> new ArrayList<>()).add(fila));
+        List<HojaTecnicaMenuReporte.GrupoComida> comidas = filasPorComida.entrySet().stream()
+            .map(grupo -> {
+                BigDecimal subtotal = grupo.getValue().stream()
+                    .map(HojaTecnicaMenuReporte.Fila::costo)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(2, RoundingMode.HALF_UP);
+                return new HojaTecnicaMenuReporte.GrupoComida(grupo.getKey(), grupo.getValue(), subtotal);
+            })
+            .toList();
+        BigDecimal costoUnitarioRedondeado = costoTotal.setScale(2, RoundingMode.HALF_UP);
+        EncabezadoReporte encabezado = encabezado("RD-02", "Hoja técnica de gramajes por ración",
+            "rd-02-hoja-tecnica-" + menu.getId(), List.of("Menú: " + menu.getNombre()),
+            "Cantidad por ración y costo calculado a partir del costo unitario de cada insumo.");
+        return new HojaTecnicaMenuReporte(encabezado, menu.getNombre(), menu.getTipoDieta().getEtiqueta(),
+            comidas, filas, costoUnitarioRedondeado);
     }
 
     private String filtroPiso(Long pisoId) {
