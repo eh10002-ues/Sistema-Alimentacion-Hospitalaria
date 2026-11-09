@@ -128,6 +128,27 @@
                         <span>Prescripción de dieta</span>
                     </a>
                 </th:block>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')">
+                    <span class="navigation-label mt-4">MENÚS</span>
+                    <a class="nav-link" th:classappend="${active == 'menus'} ? 'active'" th:attr="aria-current=${active == 'menus' ? 'page' : null}"
+                       th:href="@{/menus}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 4h16v16H4z"></path>
+                            <path d="M8 8h8M8 12h8M8 16h5"></path>
+                        </svg>
+                        <span>Menús</span>
+                    </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'asignaciones-menu'} ? 'active'" th:attr="aria-current=${active == 'asignaciones-menu' ? 'page' : null}"
+                       th:href="@{/asignaciones}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2m1-10 2 2 4-4"></path>
+                        </svg>
+                        <span>Asignaciones de menú</span>
+                    </a>
+                </th:block>
                 <th:block sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA', 'COCINA')">
                     <span class="navigation-label mt-4">COCINA</span>
                     <a class="nav-link" sec:authorize="hasRole('COCINA')" th:classappend="${active == 'cocina'} ? 'active'" th:attr="aria-current=${active == 'cocina' ? 'page' : null}"

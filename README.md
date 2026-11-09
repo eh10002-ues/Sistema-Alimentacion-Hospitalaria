@@ -347,9 +347,11 @@ panel y cerrar sesión.
 `ReglasAcceso` centraliza las reglas de la cadena HTTP. Las consultas admiten
 GET y HEAD; las modificaciones requieren los roles indicados por la matriz y
 conservan CSRF. Las pantallas de creación y edición también requieren el rol
-que puede modificar el módulo. Aprobar y rechazar asignaciones se reserva a
-Administrador y Nutricionista, con reglas anteriores a la regla general del
-módulo. No se habilita eliminación de pacientes ni asignaciones porque esas
+que puede modificar el módulo. Las rutas de aprobación y rechazo de
+asignaciones admiten en HTTP a Administrador y Nutricionista, con reglas
+anteriores a la regla general del módulo; el servicio de D4 restringe la
+aprobación a Nutricionista y no implementa el rechazo. No se habilita
+eliminación de pacientes ni asignaciones porque esas
 operaciones no están definidas en el contrato. Las rutas sin regla explícita
 se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
 
@@ -359,7 +361,7 @@ se deniegan; al integrar una nueva ruta debe incorporarse su autorización.
 | Pacientes | Administrador, Médico, Nutricionista y Encargado de piso | Administrador y Médico |
 | Ubicaciones | Administrador, Médico, Nutricionista y Encargado de piso | Administrador y Encargado de piso |
 | Dietas y menús | Los cinco roles | Administrador y Nutricionista |
-| Asignaciones | Administrador, Médico y Nutricionista | Administrador, Médico y Nutricionista; aprobación/rechazo solo Administrador y Nutricionista |
+| Asignaciones | Administrador, Médico y Nutricionista | Administrador, Médico y Nutricionista; aprobación solo Nutricionista (D4; el rechazo no está implementado) |
 | Reportes de pacientes y ocupación | Administrador, Médico, Nutricionista y Encargado de piso | Sin modificación |
 | Reportes de asignaciones y menús | Los cinco roles | Sin modificación |
 | Consultas operativas de cocina (SAH-6: pacientes por régimen y menús por paciente) | Administrador, Nutricionista y Cocina | Sin modificación |
@@ -500,12 +502,46 @@ Criterios y limitaciones:
 - RE-04 es una sustitución propuesta del reporte original «Registro de posibles
   interacciones fármaco-nutriente», pendiente de validación documental del
   equipo. No considera la prescripción de SAH-2 como asignación de menú.
-- Mientras no exista la administración de menús y asignaciones, RE-02, RE-03 y
-  RE-04 solo muestran datos cargados por otros medios.
+- RE-02, RE-03 y RE-04 reflejan las asignaciones registradas y aprobadas desde
+  «Asignaciones de menú» (D4).
 - El PDF se genera en el navegador; el servidor no registra su descarga.
 
 ```bash
 ./mvnw -Dtest='Reportes*Tests' test
+```
+
+## D4 — Menús, asignación y aprobación
+
+Versión mínima del flujo de alimentación desde las vistas:
+
+| Ruta | Función | Roles |
+| --- | --- | --- |
+| `/menus`, `/menus/{id}/detalles` | Consultar menús y sus tiempos de comida | Los cinco roles |
+| `/menus/nuevo`, `/menus/{id}/editar/**` y POST bajo `/menus` | Crear, editar, activar y desactivar menús; gestionar tiempo de comida, hora, platillo e insumos con gramaje | Administrador y Nutricionista |
+| `/asignaciones`, `/asignaciones/nueva` | Consultar y registrar asignaciones de menú | Administrador, Médico y Nutricionista |
+| `POST /asignaciones/{id}/aprobar` | Aprobar una asignación pendiente | Nutricionista |
+
+- El tipo de dieta es el enum `TipoDieta` y el horario es la hora de servicio
+  de cada tiempo de comida; no hay catálogos adicionales.
+- Un menú nuevo queda en borrador y solo se activa con al menos un tiempo de
+  comida. Solo los menús activos pueden asignarse.
+- Una asignación requiere paciente ingresado, menú activo, inicio no anterior a
+  hoy, fin no anterior al inicio y ningún cruce con otra asignación activa del
+  paciente. Nace pendiente y solo cuenta en SAH-6, RE-02 y la proyección de
+  insumos después de aprobarse.
+- Aprobación: la regla HTTP permite Administrador y Nutricionista, y el modelo
+  (`V8`) exige un aprobador Médico o Nutricionista. Se aplica la intersección:
+  solo Nutricionista; el Administrador recibe HTTP 403 desde el servicio.
+- No se ofrece el rechazo: el modelo no tiene un estado para representarlo.
+  Tampoco se finalizan ni eliminan asignaciones en esta versión.
+- Las altas, cambios y aprobaciones se registran en la bitácora.
+- Cocina (`/cocina/ordenes`) muestra al abrir los menús aprobados vigentes hoy
+  y recibe por SSE (`asignacion-menu-aprobada`) cada nueva aprobación vigente;
+  al reconectarse vuelve a consultar la lista sin duplicar filas. Las
+  prescripciones de SAH-2 conservan su propio evento y su propia tabla.
+
+```bash
+./mvnw -Dtest='MenusWebTests,AsignacionesMenuWebTests' test
 ```
 
 ## Interfaz provisional con Bootstrap

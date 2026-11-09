@@ -8,9 +8,30 @@
         <div class="page-heading">
             <p class="page-eyebrow mb-2">COCINA</p>
             <h1 class="mb-2">Órdenes de dieta aprobadas</h1>
-            <p class="text-body-secondary mb-0">Las dietas autorizadas aparecen aquí al instante mientras la página permanece abierta.</p>
+            <p class="text-body-secondary mb-0">Menús aprobados vigentes hoy y prescripciones de dieta autorizadas. Las
+                nuevas aprobaciones aparecen al instante mientras la página permanece abierta.</p>
         </div>
         <p id="estado-conexion" class="alert alert-secondary" role="status">Conectando…</p>
+        <h2 class="h5 mb-3">Menús aprobados vigentes hoy</h2>
+        <div class="card overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 user-table">
+                    <caption class="visually-hidden">Asignaciones de menú aprobadas y vigentes hoy</caption>
+                    <thead><tr><th scope="col">Paciente</th><th scope="col">Ubicación</th><th scope="col">Menú</th><th scope="col">Régimen</th><th scope="col">Vigencia</th></tr></thead>
+                    <tbody id="menus-aprobados" aria-live="polite" th:attr="data-menus=@{/cocina/ordenes/menus}">
+                    <tr id="sin-menus" th:if="${menusAprobados.empty}"><td colspan="5" class="text-center text-body-secondary py-5">No hay menús aprobados vigentes hoy.</td></tr>
+                    <tr th:each="orden : ${menusAprobados}" th:attr="data-asignacion-id=${orden.asignacionId}">
+                        <td th:text="|${orden.paciente} (${orden.codigoPaciente})|"></td>
+                        <td th:text="${orden.ubicacion}"></td>
+                        <td th:text="${orden.menu}"></td>
+                        <td th:text="${orden.regimen}"></td>
+                        <td th:text="|${orden.fechaInicio} – ${orden.fechaFin == null ? 'sin fecha de fin' : orden.fechaFin}|"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <h2 class="h5 mb-3">Prescripciones de dieta autorizadas</h2>
         <div class="card overflow-hidden">
             <div class="table-responsive">
                 <table class="table align-middle mb-0 user-table">
