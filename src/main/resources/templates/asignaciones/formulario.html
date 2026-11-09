@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Asignar menú')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('asignaciones-menu')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">ALIMENTACIÓN / ASIGNACIONES</p>
+            <h1 class="mb-2">Asignar menú a un paciente</h1>
+            <p class="text-body-secondary mb-0">La asignación queda pendiente hasta que Nutrición la apruebe.</p>
+        </div>
+        <div class="card form-card">
+            <div class="card-body">
+                <form th:action="@{/asignaciones}" th:object="${formulario}" method="post">
+                    <div class="alert alert-danger" role="alert" th:if="${#fields.hasErrors('*')}">
+                        <p class="mb-1 fw-semibold">Revise los datos del formulario.</p>
+                        <ul class="mb-0">
+                            <li th:each="error : ${#fields.errors('*')}" th:text="${error}"></li>
+                        </ul>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="pacienteId" class="form-label">Paciente ingresado</label>
+                            <select id="pacienteId" class="form-select" th:field="*{pacienteId}" th:errorclass="is-invalid" required>
+                                <option value="">Seleccione un paciente</option>
+                                <option th:each="opcion : ${pacientes}" th:value="${opcion.id}" th:text="${opcion.etiqueta}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="menuId" class="form-label">Menú activo</label>
+                            <select id="menuId" class="form-select" th:field="*{menuId}" th:errorclass="is-invalid" required>
+                                <option value="">Seleccione un menú</option>
+                                <option th:each="opcion : ${menus}" th:value="${opcion.id}" th:text="${opcion.etiqueta}"></option>
+                            </select>
+                            <div class="form-text" th:if="${menus.empty}">No hay menús activos. Active un menú antes de asignarlo.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fechaInicio" class="form-label">Fecha de inicio</label>
+                            <input id="fechaInicio" type="date" class="form-control" th:field="*{fechaInicio}"
+                                   th:errorclass="is-invalid" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fechaFin" class="form-label">Fecha de fin</label>
+                            <input id="fechaFin" type="date" class="form-control" th:field="*{fechaFin}" th:errorclass="is-invalid">
+                            <div class="form-text">Opcional. Déjela vacía si la asignación no tiene fecha de fin.</div>
+                        </div>
+                    </div>
+                    <div class="border-top mt-4 pt-4 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" type="submit">Registrar asignación</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/asignaciones}">Volver a asignaciones</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -59,6 +59,11 @@ class DashboardPermisosTests {
 		"/reportes/asignaciones-pendientes", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA),
 		"/reportes/pacientes-sin-menu", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA));
 
+	// D4: enlaces de menús y asignaciones de menú, con los roles de consulta de ReglasAcceso.
+	private static final Map<String, Set<Rol>> ENLACES_D4 = Map.of(
+		"/menus", Set.of(Rol.values()),
+		"/asignaciones", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA));
+
 	@ParameterizedTest
 	@EnumSource(Rol.class)
 	void loginRealAbreElPanelDeCadaRolSinEnlacesInexistentes(Rol rol) throws Exception {
@@ -73,7 +78,18 @@ class DashboardPermisosTests {
 		assertThat(((PanelRol) panel.getModelAndView().getModel().get("panel")).rol()).isEqualTo(rol);
 		String html = panel.getResponse().getContentAsString();
 		assertThat(html).contains(rol.getEtiqueta(), "Funciones de su rol", "Cerrar sesión", "href=\"/reportes\"")
-			.doesNotContain(clave, "href=\"/menus", "href=\"/asignaciones");
+			.doesNotContain(clave);
+		String htmlSinEnlacesD4 = html;
+		for (var enlace : ENLACES_D4.entrySet()) {
+			String href = "href=\"" + enlace.getKey() + "\"";
+			if (enlace.getValue().contains(rol)) {
+				assertThat(html).contains(href);
+			} else {
+				assertThat(html).doesNotContain(href);
+			}
+			htmlSinEnlacesD4 = htmlSinEnlacesD4.replace(href, "");
+		}
+		assertThat(htmlSinEnlacesD4).doesNotContain("href=\"/menus", "href=\"/asignaciones");
 		// HU-02 permite la portada general; SAH-9 añade enlaces específicos según el rol.
 		String htmlSinReportesPermitidos = html.replace("href=\"/reportes\"", "");
 		for (var enlace : ENLACES_REPORTES_SAH9.entrySet()) {
