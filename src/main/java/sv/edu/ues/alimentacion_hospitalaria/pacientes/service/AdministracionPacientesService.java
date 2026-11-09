@@ -5,8 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sv.edu.ues.alimentacion_hospitalaria.bitacora.service.RegistroBitacoraService;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Cama;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.persistence.CamaRepository;
@@ -42,6 +45,7 @@ public class AdministracionPacientesService {
     private final PisoRepository pisoRepository;
     private final CamaRepository camaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final RegistroBitacoraService bitacora;
 
     public AdministracionPacientesService(PacienteRepository pacienteRepository,
                                           PacienteEnfermedadRepository enfermedadRepository,
@@ -49,7 +53,8 @@ public class AdministracionPacientesService {
                                           PacienteMedicamentoRepository medicamentoRepository,
                                           PisoRepository pisoRepository,
                                           CamaRepository camaRepository,
-                                          UsuarioRepository usuarioRepository) {
+                                          UsuarioRepository usuarioRepository,
+                                          RegistroBitacoraService bitacora) {
         this.pacienteRepository = pacienteRepository;
         this.enfermedadRepository = enfermedadRepository;
         this.alergiaRepository = alergiaRepository;
@@ -57,6 +62,7 @@ public class AdministracionPacientesService {
         this.pisoRepository = pisoRepository;
         this.camaRepository = camaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.bitacora = bitacora;
     }
 
     public Page<PacienteVista> listar(int pagina, String buscar, EstadoPaciente estado, Long pisoId) {
@@ -90,6 +96,7 @@ public class AdministracionPacientesService {
             .orElseThrow(() -> new ResourceNotFoundException("El paciente solicitado no existe."));
         paciente.agregarEnfermedad(new PacienteEnfermedad(formulario.getNombre().trim()));
         pacienteRepository.save(paciente);
+        actualizarLista(pacienteId, "enfermedades");
     }
 
     @Transactional
@@ -101,6 +108,7 @@ public class AdministracionPacientesService {
         }
         enfermedad.setNombre(formulario.getNombre().trim());
         enfermedadRepository.save(enfermedad);
+        actualizarLista(pacienteId, "enfermedades");
     }
 
     @Transactional
@@ -111,6 +119,7 @@ public class AdministracionPacientesService {
             throw new IllegalArgumentException("La enfermedad no pertenece al paciente seleccionado.");
         }
         enfermedadRepository.delete(enfermedad);
+        actualizarLista(pacienteId, "enfermedades");
     }
 
     public java.util.List<PacienteAlergia> alergias(Long pacienteId) {
@@ -129,6 +138,7 @@ public class AdministracionPacientesService {
             formulario.getNombre().trim(), formulario.getDosis().trim(),
             formulario.getFrecuenciaHoras(), formulario.getHoraPrimeraDosis()));
         pacienteRepository.save(paciente);
+        actualizarLista(pacienteId, "medicamentos");
     }
 
     @Transactional
@@ -143,6 +153,7 @@ public class AdministracionPacientesService {
         medicamento.setFrecuenciaHoras(formulario.getFrecuenciaHoras());
         medicamento.setHoraPrimeraDosis(formulario.getHoraPrimeraDosis());
         medicamentoRepository.save(medicamento);
+        actualizarLista(pacienteId, "medicamentos");
     }
 
     @Transactional
@@ -153,6 +164,7 @@ public class AdministracionPacientesService {
             throw new IllegalArgumentException("El medicamento no pertenece al paciente seleccionado.");
         }
         medicamentoRepository.delete(medicamento);
+        actualizarLista(pacienteId, "medicamentos");
     }
 
     @Transactional
@@ -163,6 +175,7 @@ public class AdministracionPacientesService {
             formulario.getNombre().trim(), formulario.getSeveridad());
         paciente.agregarAlergia(alergia);
         pacienteRepository.save(paciente);
+        actualizarLista(pacienteId, "alergias");
     }
 
     @Transactional
@@ -175,6 +188,7 @@ public class AdministracionPacientesService {
         alergia.setNombre(formulario.getNombre().trim());
         alergia.setSeveridad(formulario.getSeveridad());
         alergiaRepository.save(alergia);
+        actualizarLista(pacienteId, "alergias");
     }
 
     @Transactional
@@ -185,6 +199,7 @@ public class AdministracionPacientesService {
             throw new IllegalArgumentException("La alergia no pertenece al paciente seleccionado.");
         }
         alergiaRepository.delete(alergia);
+        actualizarLista(pacienteId, "alergias");
     }
 
     public java.util.List<Piso> pisosDisponibles() {
@@ -282,7 +297,9 @@ public class AdministracionPacientesService {
         paciente.setEstado(EstadoPaciente.INGRESADO);
         paciente.setCama(cama);
         paciente.setMedicoResponsable(responsable);
-        return pacienteRepository.save(paciente);
+        Paciente guardado = pacienteRepository.saveAndFlush(paciente);
+        bitacora.registrar("CREAR", "pacientes", guardado.getId(), usuarioActual().getId());
+        return guardado;
     }
 
     @Transactional
@@ -312,7 +329,9 @@ public class AdministracionPacientesService {
         paciente.setPesoKg(formulario.getPesoKg());
         paciente.setAlturaCm(formulario.getAlturaCm());
         paciente.setCama(cama);
-        return pacienteRepository.save(paciente);
+        Paciente guardado = pacienteRepository.saveAndFlush(paciente);
+        bitacora.registrar("ACTUALIZAR", "pacientes", guardado.getId(), usuarioActual().getId());
+        return guardado;
     }
 
     @Transactional
@@ -328,6 +347,7 @@ public class AdministracionPacientesService {
             : paciente.getCama().getPiso().getCodigo() + "-" + paciente.getCama().getNumero();
         paciente.setEstado(EstadoPaciente.ALTA);
         pacienteRepository.saveAndFlush(paciente);
+        bitacora.registrar("DAR_ALTA", "pacientes", paciente.getId(), usuarioActual().getId());
         return new sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista(
             paciente.getCodigo(), ubicacion);
     }
@@ -354,8 +374,22 @@ public class AdministracionPacientesService {
         }
         paciente.setEstado(EstadoPaciente.INGRESADO);
         pacienteRepository.save(paciente);
+        bitacora.registrar("REINGRESAR", "pacientes", paciente.getId(), usuarioActual().getId());
         String ubicacion = cama.getPiso().getCodigo() + "-" + cama.getNumero();
         return new sv.edu.ues.alimentacion_hospitalaria.pacientes.web.PacientesController.PacienteAltaVista(
             paciente.getCodigo(), ubicacion);
+    }
+
+    private void actualizarLista(Long pacienteId, String lista) {
+        bitacora.registrar("se actualizo lista de " + lista, "pacientes", pacienteId, usuarioActual().getId());
+    }
+
+    private Usuario usuarioActual() {
+        var autenticacion = SecurityContextHolder.getContext().getAuthentication();
+        if (autenticacion == null || !autenticacion.isAuthenticated()) {
+            throw new AccessDeniedException("Acceso denegado.");
+        }
+        return usuarioRepository.findByNombreUsuarioIgnoreCase(autenticacion.getName())
+            .orElseThrow(() -> new AccessDeniedException("Acceso denegado."));
     }
 }

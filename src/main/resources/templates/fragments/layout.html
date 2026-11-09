@@ -155,7 +155,7 @@
                 </th:block>
                 <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')">
                     <span class="navigation-label mt-4">REPORTES</span>
-                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-expediente-paciente'} ? 'active'" th:attr="aria-current=${active == 'reporte-expediente-paciente' ? 'page' : null}"
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO')" th:classappend="${active == 'reporte-expediente-paciente'} ? 'active'" th:attr="aria-current=${active == 'reporte-expediente-paciente' ? 'page' : null}"
                        th:href="@{/reportes/expediente-paciente}">
                         <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

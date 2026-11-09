@@ -61,6 +61,7 @@ public class ReportesService {
     static final String CLINICOS = "hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')";
     static final String CONSULTAS_COCINA = "hasAnyRole('ADMIN', 'NUTRICIONISTA', 'COCINA')";
     static final String ASIGNACIONES = "hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')";
+    static final String TODOS = "hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO', 'COCINA')";
 
     /** Misma etiqueta que muestra la ficha del paciente para la severidad SEVERA. */
     static final String ETIQUETA_SEVERA = "Grave";
@@ -77,14 +78,14 @@ public class ReportesService {
         this.menus = menus;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
+    @PreAuthorize(TODOS)
     public List<OpcionFiltro> pisos() {
         return reportes.buscarPisos().stream()
             .map(piso -> new OpcionFiltro(piso.getId(), etiqueta(piso)))
             .toList();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
+    @PreAuthorize(TODOS)
     public List<OpcionFiltro> menus() {
         return menus.findAll().stream()
             .sorted(Comparator.comparing(Menu::getNombre, String.CASE_INSENSITIVE_ORDER))
@@ -213,7 +214,7 @@ public class ReportesService {
     }
 
     /** RD-01: expediente clínico-nutricional de un paciente identificado por su código. */
-    @PreAuthorize(CLINICOS)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'ENCARGADO_PISO')")
     public ExpedientePacienteReporte expedientePaciente(String codigo, LocalDate fechaDesde, LocalDate fechaHasta,
                                                         String estadoAsignacion) {
         Paciente paciente = reportes.buscarPacientePorCodigo(codigo)
@@ -375,7 +376,7 @@ public class ReportesService {
     }
 
     /** RD-02: gramajes, insumos y costo por ración de un menú. */
-    @PreAuthorize("hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA', 'COCINA')")
+    @PreAuthorize(TODOS)
     public HojaTecnicaMenuReporte hojaTecnicaMenu(Long menuId) {
         Menu menu = menus.findById(menuId)
             .orElseThrow(() -> new ResourceNotFoundException("El menú solicitado no existe."));
