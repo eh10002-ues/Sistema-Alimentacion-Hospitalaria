@@ -91,8 +91,19 @@
                     documento.setFontSize(9);
                     y += 6;
                 }
+                let tablaPdf = tabla;
+                if (tabla.dataset.reporteFirma === "true") {
+                    tablaPdf = tabla.cloneNode(true);
+                    const encabezadoFirma = tablaPdf.querySelector("thead tr");
+                    if (encabezadoFirma) {
+                        encabezadoFirma.appendChild(document.createElement("th")).textContent = "firma";
+                    }
+                    tablaPdf.querySelectorAll("tbody tr").forEach((fila) => {
+                        fila.appendChild(document.createElement("td"));
+                    });
+                }
                 documento.autoTable({
-                    html: tabla,
+                    html: tablaPdf,
                     startY: y,
                     margin: { left: MARGEN, right: MARGEN },
                     styles: { font: "helvetica", fontSize: 8 },
