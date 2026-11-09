@@ -88,7 +88,7 @@
         </section>
 
         <section id="resultado-proyeccion" th:if="${proyeccion != null}" aria-labelledby="resultado-titulo"
-                 th:attr="data-periodo=${proyeccion.periodo.etiqueta},data-fecha-inicio=${proyeccion.fechaInicio},data-fecha-fin=${proyeccion.fechaFin},data-margen=${proyeccion.margenPorcentaje},data-costo-total=${proyeccion.costoTotal},data-pacientes=${proyeccion.pacientesIncluidos},data-raciones-dia=${proyeccion.racionesPorDia}">
+                 th:attr="data-periodo=${proyeccion.periodo.etiqueta},data-fecha-inicio=${proyeccion.fechaInicio},data-fecha-fin=${proyeccion.fechaFin},data-margen=${proyeccion.margenPorcentaje},data-costo-total=${proyeccion.costoTotal},data-presupuesto-total=${proyeccion.resumen.presupuestoTotal},data-pacientes=${proyeccion.pacientesIncluidos},data-raciones-dia=${proyeccion.racionesPorDia}">
             <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
                 <div class="projection-result-heading">
                     <h2 id="resultado-titulo" class="mb-1">
@@ -128,7 +128,7 @@
             </div>
 
             <div class="row g-3 mb-4" aria-label="Resumen de la proyección">
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <article class="card h-100 summary-card summary-card--cost">
                         <div class="card-body">
                             <span class="summary-icon" aria-hidden="true">
@@ -140,7 +140,7 @@
                                 </svg>
                             </span>
                             <div>
-                                <h3 class="summary-label">Costo total</h3>
+                                <h3 class="summary-label">Costo estimado de consumo</h3>
                                 <p class="summary-value mb-0" th:if="${proyeccion.costoTotal != null}"
                                    data-currency
                                    th:attr="data-raw=${proyeccion.costoTotal}"></p>
@@ -149,7 +149,27 @@
                         </div>
                     </article>
                 </div>
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
+                    <article class="card h-100 summary-card summary-card--cost">
+                        <div class="card-body">
+                            <span class="summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 7h16v13H4zM7 7V4h10v3M8 12h8m-8 4h5"></path>
+                                    <circle cx="18" cy="17" r="3"></circle>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="summary-label">Presupuesto estimado de compra</h3>
+                                <p class="summary-value mb-0" th:if="${proyeccion.resumen.presupuestoTotal != null}"
+                                   data-currency
+                                   th:attr="data-raw=${proyeccion.resumen.presupuestoTotal}"></p>
+                                <p class="summary-value mb-0"
+                                   th:if="${proyeccion.resumen.presupuestoTotal == null}">No disponible</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col-sm-6 col-xl">
                     <article class="card h-100 summary-card summary-card--supplies">
                         <div class="card-body">
                             <span class="summary-icon" aria-hidden="true">
@@ -165,7 +185,7 @@
                         </div>
                     </article>
                 </div>
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <article class="card h-100 summary-card summary-card--patients">
                         <div class="card-body">
                             <span class="summary-icon" aria-hidden="true">
@@ -181,7 +201,7 @@
                         </div>
                     </article>
                 </div>
-                <div class="col-sm-6 col-xl-3">
+                <div class="col-sm-6 col-xl">
                     <article class="card h-100 summary-card summary-card--portions">
                         <div class="card-body">
                             <span class="summary-icon" aria-hidden="true">
@@ -199,6 +219,84 @@
                     </article>
                 </div>
             </div>
+
+            <section class="card mb-4" aria-labelledby="resumen-compra-titulo"
+                     th:if="${!#lists.isEmpty(proyeccion.insumos)}">
+                <div class="card-body">
+                    <h3 id="resumen-compra-titulo" class="h5">Demanda consolidada y presentaciones de compra</h3>
+                    <p class="text-body-secondary">
+                        El presupuesto estima el precio de cada presentación multiplicando su contenido por el
+                        costo unitario base; la cantidad de presentaciones se redondea hacia arriba.
+                    </p>
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <h4 class="h6">Demanda total por unidad</h4>
+                            <div class="table-responsive">
+                                <table id="tabla-resumen-demanda" class="table table-sm align-middle">
+                                    <caption class="visually-hidden">Demanda total agrupada por unidad compatible</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">Grupo</th>
+                                        <th scope="col" class="text-end">Demanda</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="total : ${proyeccion.resumen.demanda}">
+                                        <th scope="row" th:text="${total.categoria}"></th>
+                                        <td class="text-end">
+                                            <span data-number
+                                                  th:attr="data-raw=${total.cantidad},data-unidad=${total.unidad}"></span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <h4 class="h6">Detalle de compra por presentación</h4>
+                            <div class="table-responsive">
+                                <table id="tabla-resumen-compras" class="table table-sm align-middle">
+                                    <caption class="visually-hidden">Cantidad y presupuesto de compra por presentación</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">Insumo</th>
+                                        <th scope="col">Presentación</th>
+                                        <th scope="col" class="text-end">Paquetes</th>
+                                        <th scope="col" class="text-end">Precio por paquete</th>
+                                        <th scope="col" class="text-end">Subtotal</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="compra : ${proyeccion.resumen.compras}">
+                                        <th scope="row" th:text="${compra.insumo}"></th>
+                                        <td>
+                                            <span th:text="${compra.presentacion != null ? compra.presentacion : 'Sin definir'}"></span>
+                                            <span th:if="${compra.contenido != null}" data-number
+                                                  th:attr="data-raw=${compra.contenido},data-unidad=${compra.unidad}"></span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span th:if="${compra.cantidad != null}" data-number
+                                                  th:attr="data-raw=${compra.cantidad}"></span>
+                                            <span th:if="${compra.cantidad == null}">No calculable</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span th:if="${compra.precioPresentacion != null}" data-package-currency
+                                                  th:attr="data-raw=${compra.precioPresentacion}"></span>
+                                            <span th:if="${compra.precioPresentacion == null}">—</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span th:if="${compra.subtotal != null}" data-currency
+                                                  th:attr="data-raw=${compra.subtotal}"></span>
+                                            <span th:if="${compra.subtotal == null}">—</span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <div class="alert alert-secondary" th:if="${#lists.isEmpty(proyeccion.insumos)}" role="status">
                 <h3 class="h6">Sin insumos proyectados</h3>

@@ -8,6 +8,12 @@
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
+    const formatoPrecioPresentacion = new Intl.NumberFormat("es-SV", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+    });
 
     const formatearCantidad = (valor, unidadOriginal = "") => {
         const cantidadBase = Number(valor);
@@ -30,6 +36,9 @@
 
     document.querySelectorAll("[data-currency]").forEach((elemento) => {
         elemento.textContent = formatoMoneda.format(Number(elemento.dataset.raw));
+    });
+    document.querySelectorAll("[data-package-currency]").forEach((elemento) => {
+        elemento.textContent = formatoPrecioPresentacion.format(Number(elemento.dataset.raw));
     });
 
     if (window.bootstrap?.Tooltip) {
@@ -61,16 +70,42 @@
                 costo: costo?.dataset.raw || ""
             };
         });
+        const demanda = Array.from(document.querySelectorAll("#tabla-resumen-demanda tbody tr"))
+            .map((fila) => {
+                const cantidad = fila.querySelector("[data-raw]");
+                return {
+                    categoria: fila.querySelector("th").innerText.trim(),
+                    cantidad: cantidad?.dataset.raw || "",
+                    unidad: cantidad?.dataset.unidad || ""
+                };
+            });
+        const compras = Array.from(document.querySelectorAll("#tabla-resumen-compras tbody tr"))
+            .map((fila) => {
+                const celdas = fila.querySelectorAll("th, td");
+                const cantidad = celdas[2].querySelector("[data-raw]");
+                const precio = celdas[3].querySelector("[data-raw]");
+                const subtotal = celdas[4].querySelector("[data-raw]");
+                return {
+                    insumo: celdas[0].innerText.trim(),
+                    presentacion: celdas[1].innerText.trim(),
+                    cantidad: cantidad?.dataset.raw || "",
+                    precio: precio?.dataset.raw || "",
+                    subtotal: subtotal?.dataset.raw || ""
+                };
+            });
         return {
             periodo: resultado.dataset.periodo,
             fechaInicio: resultado.dataset.fechaInicio,
             fechaFin: resultado.dataset.fechaFin,
             margen: resultado.dataset.margen,
             costoTotal: resultado.dataset.costoTotal === "null" ? "" : resultado.dataset.costoTotal,
+            presupuestoTotal: resultado.dataset.presupuestoTotal === "null" ? "" : resultado.dataset.presupuestoTotal,
             pacientes: resultado.dataset.pacientes,
             racionesPorDia: resultado.dataset.racionesDia,
             advertencias: Array.from(resultado.querySelectorAll(".alert-warning li"))
                 .map((elemento) => elemento.innerText.trim()),
+            demanda,
+            compras,
             insumos
         };
     };
@@ -119,12 +154,54 @@
                     23
                 );
                 documento.text(
-                    `Pacientes: ${proyeccion.pacientes} · Raciones por día (promedio): ${formatoCantidad.format(Number(proyeccion.racionesPorDia))} · Costo total: ${proyeccion.costoTotal !== "" ? formatoMoneda.format(Number(proyeccion.costoTotal)) : "No disponible"}`,
+                    `Pacientes: ${proyeccion.pacientes} · Raciones por día (promedio): ${formatoCantidad.format(Number(proyeccion.racionesPorDia))}`,
                     14,
                     29
                 );
+                documento.text(
+                    `Costo estimado de consumo: ${proyeccion.costoTotal !== "" ? formatoMoneda.format(Number(proyeccion.costoTotal)) : "No disponible"} · Presupuesto estimado de compra: ${proyeccion.presupuestoTotal !== "" ? formatoMoneda.format(Number(proyeccion.presupuestoTotal)) : "No disponible"}`,
+                    14,
+                    35
+                );
+                documento.text("Demanda consolidada", 14, 43);
                 documento.autoTable({
-                    startY: 35,
+                    startY: 45,
+                    head: [["Grupo", "Demanda"]],
+                    body: proyeccion.demanda.map((total) => [
+                        total.categoria,
+                        `${formatoCantidad.format(Number(total.cantidad))} ${total.unidad}`
+                    ]),
+                    styles: { font: "helvetica", fontSize: 8 },
+                    headStyles: { fillColor: [37, 99, 93] },
+                    tableWidth: 120
+                });
+                let inicioCompra = documento.lastAutoTable.finalY + 9;
+                if (inicioCompra > 190) {
+                    documento.addPage();
+                    inicioCompra = 15;
+                }
+                documento.text("Detalle de compra por presentación", 14, inicioCompra);
+                documento.autoTable({
+                    startY: inicioCompra + 2,
+                    head: [["Insumo", "Presentación", "Paquetes", "Precio por paquete", "Subtotal"]],
+                    body: proyeccion.compras.map((compra) => [
+                        compra.insumo,
+                        compra.presentacion,
+                        compra.cantidad !== "" ? formatoCantidad.format(Number(compra.cantidad)) : "No calculable",
+                        compra.precio !== "" ? formatoPrecioPresentacion.format(Number(compra.precio)) : "—",
+                        compra.subtotal !== "" ? formatoMoneda.format(Number(compra.subtotal)) : "—"
+                    ]),
+                    styles: { font: "helvetica", fontSize: 8 },
+                    headStyles: { fillColor: [37, 99, 93] }
+                });
+                let inicioDetalle = documento.lastAutoTable.finalY + 9;
+                if (inicioDetalle > 190) {
+                    documento.addPage();
+                    inicioDetalle = 15;
+                }
+                documento.text("Detalle de demanda y costo de consumo", 14, inicioDetalle);
+                documento.autoTable({
+                    startY: inicioDetalle + 2,
                     head: [["Insumo", "Neto", "Bruto", "Total con margen", "Presentación", "A comprar", "Costo"]],
                     body: proyeccion.insumos.map((insumo) => [
                         insumo.nombre,
@@ -171,8 +248,8 @@
                 }
                 const libro = new window.ExcelJS.Workbook();
                 libro.creator = "Sistema de Alimentación Hospitalaria";
-                const hoja = libro.addWorksheet("Proyección");
-                hoja.mergeCells("A1:H1");
+                const hoja = libro.addWorksheet("Resumen de compra");
+                hoja.mergeCells("A1:E1");
                 hoja.getCell("A1").value = "Proyección de insumos";
                 hoja.getCell("A1").font = { bold: true, size: 16, color: { argb: "FF173A35" } };
                 hoja.addRow(["Período", proyeccion.periodo]);
@@ -180,16 +257,62 @@
                 hoja.addRow(["Margen (%)", Number(proyeccion.margen) / 100]);
                 hoja.addRow(["Pacientes incluidos", Number(proyeccion.pacientes)]);
                 hoja.addRow(["Raciones por día (promedio)", Number(proyeccion.racionesPorDia)]);
-                hoja.addRow(["Costo total (USD)", proyeccion.costoTotal !== "" ? Number(proyeccion.costoTotal) : null]);
+                hoja.addRow(["Costo estimado de consumo (USD)", proyeccion.costoTotal !== "" ? Number(proyeccion.costoTotal) : null]);
+                hoja.addRow(["Presupuesto estimado de compra (USD)", proyeccion.presupuestoTotal !== "" ? Number(proyeccion.presupuestoTotal) : null]);
                 hoja.addRow([]);
-                const encabezado = hoja.addRow([
+                hoja.addRow(["Demanda consolidada"]);
+                const encabezadoDemanda = hoja.addRow(["Grupo", "Demanda", "Unidad"]);
+                encabezadoDemanda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+                encabezadoDemanda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF25635D" } };
+                for (const total of proyeccion.demanda) {
+                    hoja.addRow([total.categoria, Number(total.cantidad), total.unidad]);
+                }
+                hoja.addRow([]);
+                hoja.addRow(["Detalle de compra por presentación"]);
+                const encabezadoCompra = hoja.addRow([
+                    "Insumo", "Presentación", "Paquetes", "Precio por paquete (USD)", "Subtotal (USD)"
+                ]);
+                encabezadoCompra.font = { bold: true, color: { argb: "FFFFFFFF" } };
+                encabezadoCompra.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF25635D" } };
+                for (const compra of proyeccion.compras) {
+                    hoja.addRow([
+                        compra.insumo,
+                        compra.presentacion,
+                        compra.cantidad !== "" ? Number(compra.cantidad) : null,
+                        compra.precio !== "" ? Number(compra.precio) : null,
+                        compra.subtotal !== "" ? Number(compra.subtotal) : null
+                    ]);
+                }
+                hoja.columns = [
+                    { width: 32 }, { width: 24 }, { width: 16 }, { width: 25 }, { width: 18 }
+                ];
+                hoja.getCell("B4").numFmt = "0.00%";
+                hoja.getCell("B7").numFmt = "$#,##0.00";
+                hoja.getCell("B8").numFmt = "$#,##0.00";
+                for (let fila = 12; fila < 12 + proyeccion.demanda.length; fila += 1) {
+                    hoja.getCell(`B${fila}`).numFmt = "#,##0.##";
+                }
+                const inicioCompras = 15 + proyeccion.demanda.length;
+                for (let fila = inicioCompras; fila < inicioCompras + proyeccion.compras.length; fila += 1) {
+                    hoja.getCell(`C${fila}`).numFmt = "#,##0";
+                    hoja.getCell(`D${fila}`).numFmt = "$#,##0.0000";
+                    hoja.getCell(`E${fila}`).numFmt = "$#,##0.00";
+                    hoja.getCell(`C${fila}`).font = { bold: true, color: { argb: "FF174E42" } };
+                }
+                if (proyeccion.advertencias.length > 0) {
+                    hoja.addRow([]);
+                    hoja.addRow(["Advertencias"]);
+                    proyeccion.advertencias.forEach((advertencia) => hoja.addRow([advertencia]));
+                }
+                const detalle = libro.addWorksheet("Detalle por insumo");
+                const encabezado = detalle.addRow([
                     "Insumo", "Neto", "Unidad", "Bruto", "Total con margen",
                     "Presentación", "A comprar", "Costo (USD)"
                 ]);
                 encabezado.font = { bold: true, color: { argb: "FFFFFFFF" } };
                 encabezado.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF25635D" } };
                 for (const insumo of proyeccion.insumos) {
-                    hoja.addRow([
+                    detalle.addRow([
                         insumo.nombre,
                         Number(insumo.neto),
                         insumo.unidad,
@@ -200,24 +323,16 @@
                         insumo.costo !== "" ? Number(insumo.costo) : null
                     ]);
                 }
-                hoja.columns = [
+                detalle.columns = [
                     { width: 28 }, { width: 16 }, { width: 12 }, { width: 16 },
                     { width: 20 }, { width: 28 }, { width: 18 }, { width: 16 }
                 ];
-                for (const fila of hoja.getRows(9, proyeccion.insumos.length + 1) || []) {
+                for (const fila of detalle.getRows(1, proyeccion.insumos.length + 1) || []) {
                     for (const indice of [2, 4, 5]) {
                         fila.getCell(indice).numFmt = "#,##0.##";
                     }
                     fila.getCell(8).numFmt = "$#,##0.00";
                     fila.getCell(7).font = { bold: true, color: { argb: "FF174E42" } };
-                }
-                hoja.getCell("B4").numFmt = "0.00%";
-                hoja.getCell("B7").numFmt = "$#,##0.00";
-                hoja.getCell("B6").numFmt = "#,##0.##";
-                if (proyeccion.advertencias.length > 0) {
-                    hoja.addRow([]);
-                    hoja.addRow(["Advertencias"]);
-                    proyeccion.advertencias.forEach((advertencia) => hoja.addRow([advertencia]));
                 }
                 const contenido = await libro.xlsx.writeBuffer();
                 descargar(

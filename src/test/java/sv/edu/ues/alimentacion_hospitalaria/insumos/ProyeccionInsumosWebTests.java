@@ -60,7 +60,9 @@ class ProyeccionInsumosWebTests {
             .andReturn().getResponse().getContentAsString();
         assertThat(html)
             .contains("Arroz de prueba", "data-raw=\"560.00\"", "data-unidad=\"g\"")
-            .contains("Pacientes incluidos", "Raciones por día (promedio)");
+            .contains("Pacientes incluidos", "Raciones por día (promedio)",
+                "Costo estimado de consumo", "Presupuesto estimado de compra",
+                "Demanda consolidada y presentaciones de compra", "Precio por paquete");
 
         assertThat(bitacoraRepository.findByTablaAfectadaAndIdAfectadoOrderByFechaAccionDesc(
             "insumos", null))

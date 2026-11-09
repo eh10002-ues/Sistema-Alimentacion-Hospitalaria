@@ -102,12 +102,54 @@ class ProyeccionInsumosServiceTests {
         assertThat(insumo.costo()).isEqualByComparingTo(
             insumo.totalConMargen().multiply(new BigDecimal("0.001")));
         assertThat(proyeccion.costoTotal()).isEqualByComparingTo(insumo.costo());
+        assertThat(insumo.precioPresentacion()).isEqualByComparingTo("0.002");
+        assertThat(insumo.presupuestoCompra()).isEqualByComparingTo("0.01");
+        assertThat(proyeccion.resumen().presupuestoTotal()).isEqualByComparingTo("0.01");
+        assertThat(proyeccion.resumen().demanda()).singleElement().satisfies(total -> {
+            assertThat(total.categoria()).isEqualTo("Peso");
+            assertThat(total.unidad()).isEqualTo("kg");
+            assertThat(total.cantidad()).isEqualByComparingTo(
+                insumo.totalConMargen().multiply(new BigDecimal("0.001")));
+        });
+        assertThat(proyeccion.resumen().compras()).singleElement().satisfies(compra -> {
+            assertThat(compra.insumo()).isEqualTo("Arroz");
+            assertThat(compra.cantidad()).isEqualByComparingTo("4");
+            assertThat(compra.precioPresentacion()).isEqualByComparingTo("0.002");
+            assertThat(compra.subtotal()).isEqualByComparingTo("0.01");
+        });
         assertThat(proyeccion.advertencias()).isEmpty();
         verify(repository).buscarFilasVigentes(
             inicio, inicio.plusDays(6), EstadoPaciente.INGRESADO, EstadoMenu.ACTIVO);
         verify(repository).buscarDemandaVigente(
             inicio, inicio.plusDays(6), EstadoPaciente.INGRESADO, EstadoMenu.ACTIVO);
         verify(registroBitacoraService).registrar("PROYECTAR", "insumos", null, 1L);
+    }
+
+    @Test
+    void consolidaDemandaEnKilogramosYLitrosSinMezclarUnidadesIncompatibles() {
+        LocalDate inicio = LocalDate.of(2026, 11, 5);
+        when(repository.buscarFilasVigentes(
+            inicio, inicio.plusDays(6), EstadoPaciente.INGRESADO, EstadoMenu.ACTIVO))
+            .thenReturn(List.of(
+                filaUnidad(1L, "Arroz en gramos", "g", BigDecimal.ONE, inicio, inicio.plusDays(6)),
+                filaUnidad(2L, "Arroz en kilos", "kg", BigDecimal.ONE, inicio, inicio.plusDays(6)),
+                filaUnidad(3L, "Leche en mililitros", "ml", BigDecimal.ONE, inicio, inicio.plusDays(6)),
+                filaUnidad(4L, "Leche en litros", "L", BigDecimal.ONE, inicio, inicio.plusDays(6))));
+        when(repository.buscarDemandaVigente(
+            inicio, inicio.plusDays(6), EstadoPaciente.INGRESADO, EstadoMenu.ACTIVO))
+            .thenReturn(List.of(new FilaDemandaProyeccion(10L, 20L, inicio, inicio)));
+
+        var proyeccion = service.proyectar(PeriodoProyeccion.SEMANAL, BigDecimal.ZERO, inicio);
+
+        assertThat(proyeccion.resumen().demanda()).hasSize(2);
+        assertThat(proyeccion.resumen().demanda())
+            .filteredOn(total -> total.unidad().equals("kg"))
+            .singleElement()
+            .satisfies(total -> assertThat(total.cantidad()).isEqualByComparingTo("7.007"));
+        assertThat(proyeccion.resumen().demanda())
+            .filteredOn(total -> total.unidad().equals("L"))
+            .singleElement()
+            .satisfies(total -> assertThat(total.cantidad()).isEqualByComparingTo("7.007"));
     }
 
     @Test
@@ -133,6 +175,7 @@ class ProyeccionInsumosServiceTests {
         assertThat(insumo.bruto()).isEqualByComparingTo("1");
         assertThat(insumo.totalConMargen()).isEqualByComparingTo("1.1");
         assertThat(insumo.cantidadComprar()).isNull();
+        assertThat(proyeccion.resumen().presupuestoTotal()).isNull();
         assertThat(insumo.advertencias()).containsExactly(
             "Merma no registrada; se consideró 0%.",
             "Configure una cantidad de presentación mayor que cero para calcular unidades de compra.");
@@ -176,7 +219,9 @@ class ProyeccionInsumosServiceTests {
             .contains("Costo unitario no registrado; no se puede calcular el costo de este insumo.");
         assertThat(proyeccion.costoTotal()).isNull();
         assertThat(proyeccion.advertencias())
-            .contains("Falta registrar costo unitario en uno o más insumos; el presupuesto total no está disponible.");
+            .contains("Falta registrar costo unitario en uno o más insumos; el costo total de consumo no está disponible.",
+                "Faltan presentaciones o costos unitarios; el presupuesto total de compra no está disponible.");
+        assertThat(proyeccion.resumen().presupuestoTotal()).isNull();
     }
 
     private FilaProyeccionInsumo fila(BigDecimal cantidadPorRacion, BigDecimal merma,
@@ -185,5 +230,13 @@ class ProyeccionInsumosServiceTests {
         return new FilaProyeccionInsumo(
             1L, 10L, 20L, "Arroz", "g", cantidadPorRacion, merma, "saco",
             cantidadPresentacion, new BigDecimal("0.001"), fechaInicio, fechaFin);
+    }
+
+    private FilaProyeccionInsumo filaUnidad(Long id, String nombre, String unidad,
+                                            BigDecimal cantidadPorRacion, LocalDate fechaInicio,
+                                            LocalDate fechaFin) {
+        return new FilaProyeccionInsumo(
+            id, 10L, 20L, nombre, unidad, cantidadPorRacion, BigDecimal.ZERO,
+            "bolsa", BigDecimal.TEN, new BigDecimal("0.01"), fechaInicio, fechaFin);
     }
 }

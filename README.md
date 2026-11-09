@@ -458,13 +458,19 @@ precisión decimal. Si falta merma, se toma como cero y se muestra una
 advertencia. Si falta una cantidad de presentación válida, se advierte que no
 se puede calcular la cantidad de compra.
 
-La tabla muestra cantidades con formato local, convierte gramos a kilogramos y
-mililitros a litros desde 1000 unidades, y conserva los valores crudos en los
-atributos de datos de cada celda. El costo estimado se calcula usando el costo
-por unidad base del insumo y su total proyectado con margen. Si falta un costo,
-se indica en la fila y el presupuesto total se marca como no disponible. El
-resumen también muestra pacientes incluidos y el promedio de raciones diarias,
-calculado como raciones-día dividido entre los días del período.
+La tabla muestra cantidades con formato local y conserva los valores crudos
+para las exportaciones. El costo estimado de consumo se calcula con el costo
+por unidad base multiplicado por el total proyectado con margen. Por separado,
+el presupuesto de compra deriva el precio por presentación como
+`contenido_de_presentación × costo_unitario_base`, multiplica por las
+presentaciones completas a comprar y redondea cada subtotal a centavos. El
+resumen consolida la demanda compatible en kg y L, conserva separadas las demás
+unidades y muestra las compras por insumo/presentación. Si falta una cantidad de
+presentación válida o un costo unitario, el presupuesto total de compra se marca
+como no disponible en lugar de sumar un presupuesto parcial. El resumen también
+muestra pacientes incluidos y el promedio de raciones diarias, calculado como
+raciones-día dividido entre los días del período. El precio derivado es una
+estimación basada en el costo unitario registrado, no un precio de proveedor.
 
 La merma se almacena como fracción entre 0 y 1 (por ejemplo, `0.10` equivale a
 10 %). La migración V9 convierte los porcentajes ya almacenados. Los insumos
@@ -505,6 +511,19 @@ Criterios y limitaciones:
 - RE-02, RE-03 y RE-04 reflejan las asignaciones registradas y aprobadas desde
   «Asignaciones de menú» (D4).
 - El PDF se genera en el navegador; el servidor no registra su descarga.
+
+RS-03 es un reporte mensual separado, disponible en
+`/reportes/raciones-servidas`; RE-02 sigue siendo la comanda de una fecha.
+RS-03 cuenta cada plato de cada asignación activa y aprobada por cada día de
+vigencia del mes, para pacientes ingresados y menús activos, y agrupa por el
+piso actual del paciente. Es una estimación de platos servidos basada en la
+decisión funcional de tratar las asignaciones aprobadas como servidas. No hay
+registro de entrega real ni historial de cambios de piso, sala o servicio
+clínico, por lo que esos datos no se pueden reconstruir.
+
+RS-04 permanece pendiente: la prescripción dietética se crea directamente
+aprobada y el sistema no registra una hora previa de solicitud con la que
+calcular el tiempo de validación.
 
 ```bash
 ./mvnw -Dtest='Reportes*Tests' test
