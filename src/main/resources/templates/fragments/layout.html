@@ -173,6 +173,16 @@
                         </svg>
                         <span>Hoja de Ruta y Entrega</span>
                     </a>
+                    <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-historial-dietas'} ? 'active'" th:attr="aria-current=${active == 'reporte-historial-dietas' ? 'page' : null}"
+                       th:href="@{/reportes/historial-dietas}">
+                        <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 8v4l2.5 2.5"></path>
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 3v2"></path>
+                        </svg>
+                        <span>Historial de dietas asignadas</span>
+                    </a>
                     <a class="nav-link" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')" th:classappend="${active == 'reporte-alergias-severas'} ? 'active'" th:attr="aria-current=${active == 'reporte-alergias-severas' ? 'page' : null}"
                        th:href="@{/reportes/alergias-severas}">
                         <svg class="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"

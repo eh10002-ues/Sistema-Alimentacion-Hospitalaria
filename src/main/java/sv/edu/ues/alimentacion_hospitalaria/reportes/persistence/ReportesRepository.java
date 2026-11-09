@@ -15,6 +15,7 @@ import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.SeveridadAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.PrescripcionDieta;
+import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.EstadoPrescripcion;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.AsignacionPiso;
@@ -184,4 +185,24 @@ public interface ReportesRepository extends Repository<AsignacionMenu, Long> {
         order by piso.codigo, asignacion.turno
         """)
     List<AsignacionPiso> buscarEncargadosPisos(@Param("pisoId") Long pisoId);
+
+    @Query("""
+        select prescripcion from PrescripcionDieta prescripcion
+        join fetch prescripcion.paciente paciente
+        join fetch prescripcion.autorizadoPor autorizadoPor
+        where prescripcion.paciente.id = :pacienteId
+        order by prescripcion.fechaAutorizacion desc, prescripcion.id desc
+        """)
+    List<PrescripcionDieta> buscarHistorialPrescripciones(@Param("pacienteId") Long pacienteId);
+
+    @Query("""
+        select prescripcion from PrescripcionDieta prescripcion
+        join fetch prescripcion.paciente paciente
+        where prescripcion.paciente.id = :pacienteId
+          and prescripcion.estado = :estadoPrescripcion
+        order by prescripcion.fechaAutorizacion desc, prescripcion.id desc
+        """)
+    List<PrescripcionDieta> buscarPrescripcionesPaciente(
+        @Param("pacienteId") Long pacienteId,
+        @Param("estadoPrescripcion") EstadoPrescripcion estadoPrescripcion);
 }

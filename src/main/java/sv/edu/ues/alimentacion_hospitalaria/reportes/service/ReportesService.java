@@ -3,6 +3,7 @@ package sv.edu.ues.alimentacion_hospitalaria.reportes.service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -30,6 +31,7 @@ import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ComandasReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.EncabezadoReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.ExpedientePacienteReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.HojaRutaEntregaReporte;
+import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.HistorialDietasPacienteReporte;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.OpcionFiltro;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.PacientesSinMenuReporte;
@@ -298,6 +300,63 @@ public class ReportesService {
                 "Tipo de dieta: " + (tipoDieta == null ? "Todas" : tipoDieta.getEtiqueta())),
             "Pacientes ingresados con la prescripción dietética aprobada más reciente. Solo se incluyen pacientes con cama asignada.");
         return new HojaRutaEntregaReporte(encabezado, grupos, total);
+    }
+
+    /** RD-04: historial de asignaciones de dieta y seguimiento de un paciente. */
+    @PreAuthorize(CLINICOS)
+    public HistorialDietasPacienteReporte historialDietasPaciente(String codigo, LocalDate fechaDesde, LocalDate fechaHasta) {
+        if (fechaDesde != null && fechaHasta != null && fechaDesde.isAfter(fechaHasta)) {
+            throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la fecha final.");
+        }
+        Paciente paciente = reportes.buscarPacientePorCodigo(codigo)
+            .orElseThrow(() -> new ResourceNotFoundException("No existe un paciente con el código indicado."));
+        ZoneId zona = ZoneId.systemDefault();
+        List<PrescripcionDieta> prescripciones = reportes.buscarHistorialPrescripciones(paciente.getId()).stream()
+            .filter(prescripcion -> {
+                LocalDate inicio = LocalDate.ofInstant(prescripcion.getFechaAutorizacion(), zona);
+                return fechaHasta == null || !inicio.isAfter(fechaHasta);
+            })
+            .toList();
+        List<HistorialDietasPacienteReporte.Fila> filas = prescripciones.stream().map(prescripcion -> {
+            int indice = prescripciones.indexOf(prescripcion);
+            LocalDate inicio = LocalDate.ofInstant(prescripcion.getFechaAutorizacion(), zona);
+            LocalDate fin = indice == 0 ? null
+                : LocalDate.ofInstant(prescripciones.get(indice - 1).getFechaAutorizacion(), zona).minusDays(1);
+            boolean finalizada = indice > 0;
+            LocalDate finDuracion = fin;
+            if (finDuracion == null || finDuracion.isAfter(hoy())) {
+                finDuracion = hoy();
+            }
+            if (finDuracion.isBefore(inicio)) {
+                finDuracion = inicio;
+            }
+            long dias = ChronoUnit.DAYS.between(inicio, finDuracion) + 1;
+            String autorizador = prescripcion.getAutorizadoPor().getNombreCompleto();
+            return new HistorialDietasPacienteReporte.Fila(inicio, fin,
+                prescripcion.getTipoDieta().getEtiqueta(), finalizada ? "Finalizada" : "Activa",
+                dias, autorizador, autorizador, LocalDate.ofInstant(prescripcion.getFechaAutorizacion(), zona));
+        })
+            .filter(fila -> fechaDesde == null || fila.fin() == null || !fila.fin().isBefore(fechaDesde))
+            .toList();
+
+        PrescripcionDieta dietaActual = reportes.buscarPrescripcionesPaciente(
+            paciente.getId(), EstadoPrescripcion.APROBADO).stream().findFirst().orElse(null);
+        List<String> alergias = paciente.getAlergias().stream()
+            .sorted(Comparator.comparing(alergia -> alergia.getNombre(), String.CASE_INSENSITIVE_ORDER))
+            .map(alergia -> alergia.getNombre() + " (" + severidad(alergia.getSeveridad()) + ")")
+            .toList();
+        HistorialDietasPacienteReporte.Paciente ficha = new HistorialDietasPacienteReporte.Paciente(
+            paciente.getCodigo(), nombreCompleto(paciente), paciente.calcularEdad(), paciente.getPesoKg().toPlainString(),
+            piso(paciente.getCama()), cama(paciente.getCama()), alergias);
+        List<String> filtros = new ArrayList<>();
+        filtros.add("Código: " + paciente.getCodigo());
+        filtros.add("Desde: " + (fechaDesde == null ? "Sin límite" : fechaDesde.format(FECHA)));
+        filtros.add("Hasta: " + (fechaHasta == null ? "Sin límite" : fechaHasta.format(FECHA)));
+        EncabezadoReporte encabezado = encabezado("RD-04", "Historial de dietas asignadas y seguimiento por paciente",
+            "rd-04-historial-dietas-" + paciente.getCodigo(), filtros,
+            "Asignaciones del paciente que se relacionan con el rango seleccionado.");
+        return new HistorialDietasPacienteReporte(encabezado, paciente.getCodigo(), ficha, filas, filas.size(),
+            dietaActual == null ? "Sin prescripción activa vigente" : dietaActual.getTipoDieta().getEtiqueta());
     }
 
     private String filtroPiso(Long pisoId) {

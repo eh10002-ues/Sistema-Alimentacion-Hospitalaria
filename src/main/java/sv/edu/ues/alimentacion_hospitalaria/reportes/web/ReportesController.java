@@ -87,6 +87,20 @@ public class ReportesController {
         return "reportes/hoja-ruta-entrega";
     }
 
+    @GetMapping("/historial-dietas")
+    String historialDietas(@RequestParam(required = false) String codigoPaciente,
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+                           Model model) {
+        model.addAttribute("codigoPaciente", codigoPaciente);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+        if (codigoPaciente != null && !codigoPaciente.isBlank()) {
+            model.addAttribute("reporte", reportes.historialDietasPaciente(codigoPaciente.trim(), fechaDesde, fechaHasta));
+        }
+        return "reportes/historial-dietas";
+    }
+
     private void filtroPiso(Model model, Long pisoId) {
         model.addAttribute("pisos", reportes.pisos());
         model.addAttribute("pisoSeleccionado", pisoId);
