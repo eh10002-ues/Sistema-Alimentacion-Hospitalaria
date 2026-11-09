@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+<table th:fragment="pacientes" class="table table-striped align-middle mb-0">
+    <caption class="visually-hidden">Pacientes registrados y su ubicación hospitalaria</caption>
+    <thead><tr><th scope="col">Código</th><th scope="col">Paciente</th><th scope="col">Piso</th><th scope="col">Cama</th><th scope="col">Estado</th><th scope="col">Referencia de ubicación</th></tr></thead>
+    <tbody>
+    <tr th:if="${pagina.empty}"><td colspan="6" class="text-center text-body-secondary py-4">No hay resultados para los filtros seleccionados.</td></tr>
+    <tr th:each="fila : ${pagina.content}">
+        <td th:text="${fila.codigo}"></td><td th:text="${fila.nombre}"></td>
+        <td th:text="${fila.piso ?: 'Sin ubicación'}"></td><td th:text="${fila.cama ?: 'Sin cama'}"></td>
+        <td th:text="${fila.estado.name() == 'INGRESADO' ? 'Ingresado' : 'Alta'}"></td>
+        <td th:text="${fila.ubicacionHistorica ? 'Referencia histórica' : (fila.cama != null ? 'Actual' : 'Sin ubicación')}"></td>
+    </tr>
+    </tbody>
+</table>
+<table th:fragment="asignaciones" class="table table-striped align-middle mb-0">
+    <caption class="visually-hidden">Asignaciones de dieta aprobadas y vigentes</caption>
+    <thead><tr>
+        <th scope="col">Código</th><th scope="col">Paciente</th><th scope="col">Piso</th><th scope="col">Cama</th>
+        <th scope="col">Dieta asignada</th><th scope="col">Menú</th>
+        <th scope="col" th:if="${mostrarFechasAsignacion}">Inicio</th><th scope="col" th:if="${mostrarFechasAsignacion}">Fin</th>
+        <th scope="col" th:if="${mostrarEstadoAsignacion}">Estado</th><th scope="col" th:if="${mostrarResponsable}">Responsable</th>
+        <th scope="col" th:if="${mostrarFechaServicio}">Fecha</th><th scope="col" th:if="${mostrarTiempos}">Tiempos de comida</th>
+    </tr></thead>
+    <tbody>
+    <tr th:if="${pagina.empty}"><td th:colspan="${columnasAsignaciones}" class="text-center text-body-secondary py-4">No hay resultados para los filtros seleccionados.</td></tr>
+    <tr th:each="fila : ${pagina.content}">
+        <td th:text="${fila.paciente.codigo}"></td><td th:text="${fila.paciente.nombre}"></td>
+        <td th:text="${fila.paciente.piso ?: 'Sin ubicación'}"></td><td th:text="${fila.paciente.cama ?: 'Sin cama'}"></td>
+        <td th:text="${fila.dieta.etiqueta}"></td><td th:text="${fila.menu}"></td>
+        <td th:if="${mostrarFechasAsignacion}" th:text="${#temporals.format(fila.inicio, 'dd/MM/yyyy')}"></td>
+        <td th:if="${mostrarFechasAsignacion}" th:text="${fila.fin != null ? #temporals.format(fila.fin, 'dd/MM/yyyy') : 'Sin fecha de fin'}"></td>
+        <td th:if="${mostrarEstadoAsignacion}" th:text="${fila.estado}"></td>
+        <td th:if="${mostrarResponsable}" th:text="${fila.responsable}"></td>
+        <td th:if="${mostrarFechaServicio}" th:text="${#temporals.format(fila.fecha, 'dd/MM/yyyy')}"></td>
+        <td th:if="${mostrarTiempos}">
+            <ul class="list-unstyled mb-0"><li th:each="tiempo : ${fila.tiempos}" th:text="|${tiempo.tiempoComida.etiqueta} · ${#temporals.format(tiempo.horaServicio, 'HH:mm')}|"></li></ul>
+            <span class="text-body-secondary" th:if="${#lists.isEmpty(fila.tiempos)}">Sin tiempos registrados</span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<table th:fragment="menus" class="table table-striped align-middle mb-0">
+    <caption class="visually-hidden">Menús programados por fecha y tiempo de comida</caption>
+    <thead><tr><th scope="col">Fecha</th><th scope="col">Tiempo de comida</th><th scope="col">Hora</th><th scope="col">Menú</th><th scope="col">Tipo de dieta</th><th scope="col">Estado</th></tr></thead>
+    <tbody>
+    <tr th:if="${pagina.empty}"><td colspan="6" class="text-center text-body-secondary py-4">No hay resultados para los filtros seleccionados.</td></tr>
+    <tr th:each="fila : ${pagina.content}">
+        <td th:text="${#temporals.format(fila.fecha, 'dd/MM/yyyy')}"></td><td th:text="${fila.tiempoComida.etiqueta}"></td>
+        <td th:text="${#temporals.format(fila.horaServicio, 'HH:mm')}"></td><td th:text="${fila.nombre}"></td>
+        <td th:text="${fila.dieta.etiqueta}"></td><td th:text="${fila.estado.name() == 'ACTIVO' ? 'Activo' : fila.estado}"></td>
+    </tr>
+    </tbody>
+</table>
+<table th:fragment="ocupacion" class="table table-striped align-middle mb-0">
+    <caption class="visually-hidden">Camas y ocupación actual por piso</caption>
+    <thead><tr><th scope="col">Piso</th><th scope="col">Cama</th><th scope="col">Ocupación</th><th scope="col">Paciente asignado</th></tr></thead>
+    <tbody>
+    <tr th:if="${pagina.empty}"><td colspan="4" class="text-center text-body-secondary py-4">No hay resultados para los filtros seleccionados.</td></tr>
+    <tr th:each="fila : ${pagina.content}">
+        <td th:text="${fila.piso}"></td><td th:text="${fila.cama}"></td>
+        <td><span class="badge" th:classappend="${fila.estado.name() == 'INCONSISTENTE' ? 'text-bg-danger' : (fila.estado.name() == 'OCUPADA' ? 'text-bg-warning' : 'text-bg-success')}" th:text="${fila.estado.etiqueta}"></span>
+            <small class="d-block text-danger mt-1" th:if="${fila.estado.name() == 'INCONSISTENTE'}">Más de un paciente ingresado en esta cama.</small>
+        </td>
+        <td><ul class="list-unstyled mb-0"><li th:each="ocupante : ${fila.ocupantes}" th:text="|${ocupante.codigo} — ${ocupante.nombre}|"></li></ul>
+            <span class="text-body-secondary" th:if="${#lists.isEmpty(fila.ocupantes)}">Sin paciente asignado</span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head(${titulo})}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reportes')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div><p class="page-eyebrow mb-2">REPORTES</p><h1 class="mb-2" th:text="${titulo}"></h1></div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" th:href="${enlaces.impresion}" target="_blank" rel="noopener">Imprimir / PDF</a>
+                <a class="btn btn-secondary" th:href="@{/reportes}">Volver a reportes</a>
+            </div>
+        </div>
+        <th:block th:replace="~{reportes/filtros :: formulario}"></th:block>
+        <p class="text-body-secondary" th:if="${tipoReporte.name() == 'PACIENTES'}">En pacientes dados de alta, la ubicación conservada es una referencia histórica.</p>
+        <p class="text-body-secondary" th:if="${fechaConsulta != null}">La vigencia en la fecha consultada se evalúa con el estado actual de los registros.</p>
+        <section class="card" aria-label="Resultados del reporte">
+            <div class="card-header bg-white d-flex flex-wrap justify-content-between gap-2">
+                <span th:text="|Total de registros encontrados: ${pagina.totalElements}|"></span>
+                <span th:if="${fechaConsulta != null}" th:text="|Fecha de consulta: ${#temporals.format(fechaConsulta, 'dd/MM/yyyy')}|"></span>
+            </div>
+            <div class="table-responsive" th:switch="${tipoReporte.name()}">
+                <th:block th:case="'PACIENTES'"><table th:replace="~{reportes/tablas :: pacientes}"></table></th:block>
+                <th:block th:case="'ASIGNACIONES'"><table th:replace="~{reportes/tablas :: asignaciones}"></table></th:block>
+                <th:block th:case="'MENUS'"><table th:replace="~{reportes/tablas :: menus}"></table></th:block>
+                <th:block th:case="'OCUPACION'"><table th:replace="~{reportes/tablas :: ocupacion}"></table></th:block>
+            </div>
+            <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <span class="small text-body-secondary" th:text="|Página ${pagina.number + 1} de ${pagina.totalPages == 0 ? 1 : pagina.totalPages} · hasta 20 registros por página|"></span>
+                <nav aria-label="Páginas del reporte">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${enlaces.anterior == null} ? 'disabled'">
+                            <a class="page-link" th:if="${enlaces.anterior != null}" th:href="${enlaces.anterior}" rel="prev">Anterior</a>
+                            <span class="page-link" th:if="${enlaces.anterior == null}" aria-disabled="true">Anterior</span>
+                        </li>
+                        <li class="page-item" th:classappend="${enlaces.siguiente == null} ? 'disabled'">
+                            <a class="page-link" th:if="${enlaces.siguiente != null}" th:href="${enlaces.siguiente}" rel="next">Siguiente</a>
+                            <span class="page-link" th:if="${enlaces.siguiente == null}" aria-disabled="true">Siguiente</span>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </section>
+        <div class="alert alert-info mt-3" th:if="${pagina.empty and pagina.number > 0}">
+            La página solicitada no contiene registros.
+            <a th:href="${enlaces.primera}">Volver a la primera página con estos filtros</a>.
+        </div>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

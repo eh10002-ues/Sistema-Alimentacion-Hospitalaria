@@ -52,12 +52,17 @@ class DashboardPermisosTests {
 	@Autowired private ServicioContrasenas contrasenas;
 	@Autowired private RutasPrueba rutas;
 
-	// SAH-9: únicos enlaces a /reportes admitidos en el panel, con los roles de ReglasAcceso.
+	// SAH-9: enlaces específicos del panel y sus roles de ReglasAcceso.
 	private static final Map<String, Set<Rol>> ENLACES_REPORTES_SAH9 = Map.of(
 		"/reportes/alergias-severas", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA),
 		"/reportes/comandas", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_NUTRICIONISTA, Rol.ROLE_COCINA),
 		"/reportes/asignaciones-pendientes", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA),
 		"/reportes/pacientes-sin-menu", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA));
+
+	// D4: enlaces de menús y asignaciones de menú, con los roles de consulta de ReglasAcceso.
+	private static final Map<String, Set<Rol>> ENLACES_D4 = Map.of(
+		"/menus", Set.of(Rol.values()),
+		"/asignaciones", Set.of(Rol.ROLE_ADMIN, Rol.ROLE_MEDICO, Rol.ROLE_NUTRICIONISTA));
 
 	@ParameterizedTest
 	@EnumSource(Rol.class)
@@ -72,8 +77,21 @@ class DashboardPermisosTests {
 			.andExpect(view().name("index")).andReturn();
 		assertThat(((PanelRol) panel.getModelAndView().getModel().get("panel")).rol()).isEqualTo(rol);
 		String html = panel.getResponse().getContentAsString();
-		// Cada enlace de SAH-9 aparece solo para sus roles; se descarta antes de exigir que no existan otros /reportes.
-		String htmlSinReportesSah9 = html;
+		assertThat(html).contains(rol.getEtiqueta(), "Funciones de su rol", "Cerrar sesión", "href=\"/reportes\"")
+			.doesNotContain(clave);
+		String htmlSinEnlacesD4 = html;
+		for (var enlace : ENLACES_D4.entrySet()) {
+			String href = "href=\"" + enlace.getKey() + "\"";
+			if (enlace.getValue().contains(rol)) {
+				assertThat(html).contains(href);
+			} else {
+				assertThat(html).doesNotContain(href);
+			}
+			htmlSinEnlacesD4 = htmlSinEnlacesD4.replace(href, "");
+		}
+		assertThat(htmlSinEnlacesD4).doesNotContain("href=\"/menus", "href=\"/asignaciones");
+		// HU-02 permite la portada general; SAH-9 añade enlaces específicos según el rol.
+		String htmlSinReportesPermitidos = html.replace("href=\"/reportes\"", "");
 		for (var enlace : ENLACES_REPORTES_SAH9.entrySet()) {
 			String href = "href=\"" + enlace.getKey() + "\"";
 			if (enlace.getValue().contains(rol)) {
@@ -81,15 +99,16 @@ class DashboardPermisosTests {
 			} else {
 				assertThat(html).doesNotContain(href);
 			}
-			htmlSinReportesSah9 = htmlSinReportesSah9.replace(href, "");
+			htmlSinReportesPermitidos = htmlSinReportesPermitidos.replace(href, "");
 		}
-		assertThat(html).contains(rol.getEtiqueta(), "Funciones de su rol", "Cerrar sesión");
-		assertThat(htmlSinReportesSah9)
-			.doesNotContain(clave, "href=\"/menus", "href=\"/asignaciones", "href=\"/reportes");
+		assertThat(htmlSinReportesPermitidos).doesNotContain("href=\"/reportes/");
 		if (rol == Rol.ROLE_ADMIN) {
 			assertThat(html).contains("Administrar usuarios", "href=\"/admin/usuarios\"");
 		} else {
 			assertThat(html).doesNotContain("href=\"/admin/usuarios\"", "Crear y mantener cuentas de usuario");
+		}
+		if (rol == Rol.ROLE_COCINA) {
+			assertThat(html).doesNotContain("href=\"/pacientes\"");
 		}
 		mvc.perform(get("/").session(sesion)).andExpect(redirectedUrl("/dashboard"));
 	}
@@ -97,6 +116,10 @@ class DashboardPermisosTests {
 	@ParameterizedTest(name = "{0}: {1} {2} permitido={3}")
 	@MethodSource("matriz")
 	void servidorAplicaLaMatrizSinEjecutarOperacionesDenegadas(Rol rol, String metodo, String ruta, boolean permitido) throws Exception {
+		// El sufijo evita ejecutar los controladores funcionales incorporados al proyecto.
+		if (!ruta.equals("/admin/prueba") && !ruta.equals("/sin-regla")) {
+			ruta = ruta + (ruta.endsWith("/") ? "" : "/") + "prueba-permisos";
+		}
 		int antes = rutas.invocaciones.get();
 		var resultado = mvc.perform(request(HttpMethod.valueOf(metodo), ruta)
 			.with(user("prueba").authorities(new SimpleGrantedAuthority(rol.name()))).with(csrf()));

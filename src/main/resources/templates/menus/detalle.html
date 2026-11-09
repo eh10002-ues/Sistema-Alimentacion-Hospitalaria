@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head th:replace="~{fragments/layout :: head('Detalles del menú')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('menus')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <p class="page-eyebrow mb-2">ALIMENTACIÓN / MENÚS</p>
+                <h1 class="mb-2" th:text="${menu.nombre}"></h1>
+                <p class="text-body-secondary mb-0">
+                    <span th:text="|Dieta ${menu.tipoDieta.etiqueta}|"></span> ·
+                    <span th:text="${menu.tipo == T(sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoMenu).GENERAL ? 'General' : 'Personalizado'}"></span> ·
+                    <span th:replace="~{:: estado(${menu.estado})}"></span>
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-2" sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA')">
+                <a class="btn btn-outline-secondary" th:href="@{/menus/{id}/editar(id=${menu.id})}">Editar datos</a>
+                <a class="btn btn-outline-primary" th:href="@{/menus/{id}/editar/detalles/nuevo(id=${menu.id})}">Agregar tiempo de comida</a>
+                <form th:if="${menu.estado.name() != 'ACTIVO'}" th:action="@{/menus/{id}/activar(id=${menu.id})}" method="post">
+                    <button class="btn btn-success" type="submit">Activar</button>
+                </form>
+                <form th:if="${menu.estado.name() == 'ACTIVO'}" th:action="@{/menus/{id}/desactivar(id=${menu.id})}" method="post"
+                      onsubmit="return confirm('Al desactivar el menú, sus asignaciones dejan de considerarse en cocina y reportes. ¿Continuar?');">
+                    <button class="btn btn-outline-danger" type="submit">Desactivar</button>
+                </form>
+            </div>
+        </div>
+        <p class="alert alert-success" role="status" th:if="${mensaje}" th:text="${mensaje}"></p>
+        <p class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></p>
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <caption class="visually-hidden">Tiempos de comida del menú</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Tiempo de comida</th>
+                        <th scope="col">Hora de servicio</th>
+                        <th scope="col">Platillo</th>
+                        <th scope="col">Insumos por ración</th>
+                        <th scope="col" sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA')">Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${menu.detalles.empty}">
+                        <td colspan="5" class="text-center text-body-secondary py-5">El menú todavía no tiene tiempos de comida.</td>
+                    </tr>
+                    <tr th:each="detalle : ${menu.detalles}">
+                        <td class="fw-semibold" th:text="${detalle.tiempoComida.etiqueta}"></td>
+                        <td th:text="${#temporals.format(detalle.horaServicio, 'HH:mm')}"></td>
+                        <td th:text="${detalle.platillo}"></td>
+                        <td>
+                            <span th:if="${detalle.insumos.empty}" class="text-body-secondary">Sin insumos</span>
+                            <ul class="list-unstyled mb-0 small" th:unless="${detalle.insumos.empty}">
+                                <li th:each="insumo : ${detalle.insumos}"
+                                    th:text="|${insumo.nombre}: ${#numbers.formatDecimal(insumo.cantidadPorRacion, 1, 2)} ${insumo.unidad}|"></li>
+                            </ul>
+                        </td>
+                        <td sec:authorize="hasAnyRole('ADMIN', 'NUTRICIONISTA')">
+                            <div class="d-flex flex-wrap gap-2">
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   th:href="@{/menus/{id}/editar/detalles/{d}(id=${menu.id},d=${detalle.id})}">Editar e insumos</a>
+                                <form th:action="@{/menus/{id}/editar/detalles/{d}/eliminar(id=${menu.id},d=${detalle.id})}" method="post"
+                                      onsubmit="return confirm('¿Quitar este tiempo de comida y sus insumos?');">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Quitar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <a class="btn btn-outline-secondary mt-3" th:href="@{/menus}">Volver a menús</a>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:if="${false}">
+    <span th:fragment="estado(estado)" class="badge rounded-pill"
+          th:classappend="${estado.name() == 'ACTIVO' ? 'bg-success-subtle text-success-emphasis' : (estado.name() == 'BORRADOR' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-secondary-subtle text-secondary-emphasis')}"
+          th:text="${estado.name() == 'ACTIVO' ? 'Activo' : (estado.name() == 'BORRADOR' ? 'Borrador' : 'Inactivo')}"></span>
+</th:block>
+</body>
+</html>

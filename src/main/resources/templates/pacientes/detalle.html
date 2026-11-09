@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/layout :: head('Detalle del paciente')}"></head>
 <body class="app-layout">
 <th:block th:replace="~{fragments/layout :: header('pacientes')}"></th:block>
@@ -21,10 +21,12 @@
                     <dt class="col-sm-3">Código</dt><dd class="col-sm-9" th:text="${paciente.codigo}"></dd>
                     <dt class="col-sm-3">Nombre</dt><dd class="col-sm-9" th:text="${paciente.nombres}"></dd>
                     <dt class="col-sm-3">Apellido</dt><dd class="col-sm-9" th:text="${paciente.apellidos}"></dd>
-                    <dt class="col-sm-3">Fecha de nacimiento</dt><dd class="col-sm-9" th:text="${#temporals.format(paciente.fechaNacimiento, 'dd/MM/yyyy')}"></dd>
-                    <dt class="col-sm-3">Edad</dt><dd class="col-sm-9" th:text="${paciente.edadExacta}"></dd>
-                    <dt class="col-sm-3">Peso</dt><dd class="col-sm-9" th:text="|${paciente.pesoKg} kg|"></dd>
-                    <dt class="col-sm-3">Altura</dt><dd class="col-sm-9" th:text="|${paciente.alturaCm} cm|"></dd>
+                    <th:block sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">
+                        <dt class="col-sm-3">Fecha de nacimiento</dt><dd class="col-sm-9" th:text="${#temporals.format(paciente.fechaNacimiento, 'dd/MM/yyyy')}"></dd>
+                        <dt class="col-sm-3">Edad</dt><dd class="col-sm-9" th:text="${paciente.edadExacta}"></dd>
+                        <dt class="col-sm-3">Peso</dt><dd class="col-sm-9" th:text="|${paciente.pesoKg} kg|"></dd>
+                        <dt class="col-sm-3">Altura</dt><dd class="col-sm-9" th:text="|${paciente.alturaCm} cm|"></dd>
+                    </th:block>
                     <dt class="col-sm-3">Estado</dt>
                     <dd class="col-sm-9">
                         <span class="badge rounded-pill"
@@ -36,13 +38,13 @@
             </div>
         </section>
 
-        <div class="row g-4">
+        <div class="row g-4" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')">
             <section class="col-lg-4 card-section">
                 <div class="card h-100">
                     <div class="card-header bg-white d-flex justify-content-between">
                         <h2 class="h5 mb-0">Medicamentos</h2>
                         <a class="btn btn-sm btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')"
-                           th:href="@{/pacientes/{id}/medicamentos(id=${paciente.id})}">Gestionar Medicamentos</a>
+                           th:href="@{/pacientes/{id}/medicamentos(id=${paciente.id})}">Consultar medicamentos</a>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.medicamentos)}">No tiene medicamentos registrados.</li>
@@ -59,7 +61,7 @@
                     <div class="card-header bg-white d-flex justify-content-between">
                         <h2 class="h5 mb-0">Alergias</h2>
                         <a class="btn btn-sm btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')"
-                           th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">Gestionar Alergias</a>
+                           th:href="@{/pacientes/{id}/alergias(id=${paciente.id})}">Consultar alergias</a>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.alergias)}">No tiene alergias registradas.</li>
@@ -78,7 +80,7 @@
                     <div class="card-header bg-white d-flex justify-content-between">
                         <h2 class="h5 mb-0">Enfermedades</h2>
                         <a class="btn btn-sm btn-primary" sec:authorize="hasAnyRole('ADMIN', 'MEDICO', 'NUTRICIONISTA')"
-                           th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">Gestionar Enfermedades</a>
+                           th:href="@{/pacientes/{id}/enfermedades(id=${paciente.id})}">Consultar enfermedades</a>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item text-body-secondary" th:if="${#lists.isEmpty(paciente.enfermedades)}">No tiene enfermedades registradas.</li>
