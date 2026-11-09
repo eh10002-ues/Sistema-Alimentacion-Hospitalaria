@@ -55,9 +55,10 @@ class ReportesWebTests {
 
     private static final String ALERGIAS = "/reportes/alergias-severas";
     private static final String COMANDAS = "/reportes/comandas";
+    private static final String RACIONES = "/reportes/raciones-servidas";
     private static final String PENDIENTES = "/reportes/asignaciones-pendientes";
     private static final String SIN_MENU = "/reportes/pacientes-sin-menu";
-    private static final List<String> RUTAS = List.of(ALERGIAS, COMANDAS, PENDIENTES, SIN_MENU);
+    private static final List<String> RUTAS = List.of(ALERGIAS, COMANDAS, RACIONES, PENDIENTES, SIN_MENU);
     private static final List<String> ROLES = List.of("ADMIN", "MEDICO", "NUTRICIONISTA", "ENCARGADO_PISO", "COCINA");
 
     @Autowired private MockMvc mvc;
@@ -95,6 +96,7 @@ class ReportesWebTests {
     @CsvSource({
         ALERGIAS + ", ADMIN|MEDICO|NUTRICIONISTA",
         COMANDAS + ", ADMIN|NUTRICIONISTA|COCINA",
+        RACIONES + ", ADMIN|MEDICO|NUTRICIONISTA|ENCARGADO_PISO|COCINA",
         PENDIENTES + ", ADMIN|MEDICO|NUTRICIONISTA",
         SIN_MENU + ", ADMIN|MEDICO|NUTRICIONISTA"
     })
@@ -120,11 +122,11 @@ class ReportesWebTests {
 
     @ParameterizedTest
     @CsvSource({
-        "ADMIN, alergias-severas|comandas|asignaciones-pendientes|pacientes-sin-menu",
-        "MEDICO, alergias-severas|asignaciones-pendientes|pacientes-sin-menu",
-        "NUTRICIONISTA, alergias-severas|comandas|asignaciones-pendientes|pacientes-sin-menu",
-        "COCINA, comandas",
-        "ENCARGADO_PISO, ''"
+        "ADMIN, alergias-severas|comandas|raciones-servidas|asignaciones-pendientes|pacientes-sin-menu",
+        "MEDICO, alergias-severas|raciones-servidas|asignaciones-pendientes|pacientes-sin-menu",
+        "NUTRICIONISTA, alergias-severas|comandas|raciones-servidas|asignaciones-pendientes|pacientes-sin-menu",
+        "COCINA, comandas|raciones-servidas",
+        "ENCARGADO_PISO, raciones-servidas"
     })
     void elMenuLateralSoloMuestraLosReportesAutorizados(String rol, String visibles) throws Exception {
         String nombre = "reportes." + rol.toLowerCase();
@@ -144,6 +146,18 @@ class ReportesWebTests {
         if (esperados.isEmpty()) {
             assertThat(html).doesNotContain("REPORTES");
         }
+    }
+
+    @Test
+    void racionesServidasResumeMensualmenteLasComidasDeAsignacionesAprobadas() throws Exception {
+        String html = mvc.perform(get(RACIONES).with(user("nutricionista").roles("NUTRICIONISTA")))
+            .andExpect(status().isOk())
+            .andExpect(view().name("reportes/raciones-servidas"))
+            .andReturn().getResponse().getContentAsString();
+
+        assertThat(html)
+            .contains("Raciones servidas por piso", menu.getNombre(), "Piso web", "Raciones estimadas")
+            .doesNotContain("Mariscos", "Hipertensión arterial", "Enalapril");
     }
 
     @Test

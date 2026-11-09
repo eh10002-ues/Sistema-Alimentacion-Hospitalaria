@@ -14,6 +14,8 @@ public record ProyeccionInsumo(
     BigDecimal cantidadPresentacion,
     BigDecimal cantidadComprar,
     BigDecimal costo,
+    BigDecimal precioPresentacion,
+    BigDecimal presupuestoCompra,
     List<String> advertencias
 ) {
 }

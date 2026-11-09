@@ -22,6 +22,9 @@ import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.FilaProyeccionInsumo;
 import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.PeriodoProyeccion;
 import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.ProyeccionInsumo;
 import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.ProyeccionInsumos;
+import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.ResumenProyeccionInsumos;
+import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.ResumenProyeccionInsumos.TotalCompra;
+import sv.edu.ues.alimentacion_hospitalaria.insumos.dto.ResumenProyeccionInsumos.TotalDemanda;
 import sv.edu.ues.alimentacion_hospitalaria.insumos.persistence.ProyeccionInsumosRepository;
 import sv.edu.ues.alimentacion_hospitalaria.menus.domain.EstadoMenu;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.EstadoPaciente;
@@ -39,6 +42,10 @@ public class ProyeccionInsumosService {
         "Merma no registrada; se consideró 0%.";
     private static final String ADVERTENCIA_PRESENTACION =
         "Configure una cantidad de presentación mayor que cero para calcular unidades de compra.";
+    private static final String ADVERTENCIA_PRECIO_PRESENTACION =
+        "Registre un costo por unidad base para estimar el precio y presupuesto de compra.";
+    private static final String ADVERTENCIA_PRESUPUESTO_INCOMPLETO =
+        "Faltan presentaciones o costos unitarios; el presupuesto total de compra no está disponible.";
 
     private final ProyeccionInsumosRepository proyeccionRepository;
     private final RegistroBitacoraService registroBitacoraService;
@@ -107,11 +114,15 @@ public class ProyeccionInsumosService {
         insumos.forEach(insumo -> advertencias.addAll(insumo.advertencias()));
         boolean costoCompleto = insumos.stream().allMatch(insumo -> insumo.costo() != null);
         if (!costoCompleto) {
-            advertencias.add("Falta registrar costo unitario en uno o más insumos; el presupuesto total no está disponible.");
+            advertencias.add("Falta registrar costo unitario en uno o más insumos; el costo total de consumo no está disponible.");
         }
         BigDecimal costoTotal = costoCompleto
             ? insumos.stream().map(ProyeccionInsumo::costo).reduce(BigDecimal.ZERO, BigDecimal::add)
             : null;
+        ResumenProyeccionInsumos resumen = resumir(insumos);
+        if (!insumos.isEmpty() && resumen.presupuestoTotal() == null) {
+            advertencias.add(ADVERTENCIA_PRESUPUESTO_INCOMPLETO);
+        }
         registroBitacoraService.registrar("PROYECTAR", "insumos", null, usuarioActual().getId());
         return new ProyeccionInsumos(
             periodo,
@@ -120,6 +131,7 @@ public class ProyeccionInsumosService {
             margenFraccion.multiply(new BigDecimal("100")),
             insumos,
             costoTotal,
+            resumen,
             pacientes.size(),
             racionesPorDia,
             List.copyOf(new LinkedHashSet<>(advertencias)));
@@ -158,10 +170,19 @@ public class ProyeccionInsumosService {
             .divide(factorMerma, CONTEXTO);
         BigDecimal cantidadPresentacion = acumulado.fila.cantidadPresentacion();
         BigDecimal cantidadComprar = null;
+        BigDecimal precioPresentacion = null;
+        BigDecimal presupuestoCompra = null;
         if (cantidadPresentacion != null && cantidadPresentacion.signum() > 0) {
             BigDecimal numeradorCompra = acumulado.neto.multiply(factorMargen);
             BigDecimal denominadorCompra = factorMerma.multiply(cantidadPresentacion);
             cantidadComprar = numeradorCompra.divide(denominadorCompra, 0, RoundingMode.CEILING);
+            if (acumulado.fila.costoUnitario() != null) {
+                precioPresentacion = acumulado.fila.costoUnitario().multiply(cantidadPresentacion);
+                presupuestoCompra = precioPresentacion.multiply(cantidadComprar)
+                    .setScale(2, RoundingMode.HALF_UP);
+            } else {
+                acumulado.advertencias.add(ADVERTENCIA_PRECIO_PRESENTACION);
+            }
         } else {
             acumulado.advertencias.add(ADVERTENCIA_PRESENTACION);
         }
@@ -183,7 +204,52 @@ public class ProyeccionInsumosService {
             cantidadPresentacion,
             cantidadComprar,
             costo,
+            precioPresentacion,
+            presupuestoCompra,
             List.copyOf(acumulado.advertencias));
+    }
+
+    private ResumenProyeccionInsumos resumir(List<ProyeccionInsumo> insumos) {
+        Map<UnidadDemanda, BigDecimal> demanda = new LinkedHashMap<>();
+        List<TotalCompra> compras = new ArrayList<>();
+        boolean presupuestoCompleto = !insumos.isEmpty();
+        BigDecimal presupuestoTotal = BigDecimal.ZERO;
+        for (ProyeccionInsumo insumo : insumos) {
+            UnidadResumen unidad = unidadResumen(insumo.unidad());
+            UnidadDemanda clave = new UnidadDemanda(unidad.categoria(), unidad.unidad());
+            demanda.merge(clave, unidad.factor().multiply(insumo.totalConMargen()), BigDecimal::add);
+            compras.add(new TotalCompra(insumo.nombre(), insumo.presentacion(), insumo.cantidadPresentacion(),
+                insumo.unidad(), insumo.cantidadComprar(), insumo.precioPresentacion(), insumo.presupuestoCompra()));
+            if (insumo.presupuestoCompra() == null) {
+                presupuestoCompleto = false;
+            } else {
+                presupuestoTotal = presupuestoTotal.add(insumo.presupuestoCompra());
+            }
+        }
+        List<TotalDemanda> totalesDemanda = demanda.entrySet().stream()
+            .map(entrada -> new TotalDemanda(entrada.getKey().categoria(), entrada.getValue(),
+                entrada.getKey().unidad()))
+            .toList();
+        return new ResumenProyeccionInsumos(totalesDemanda, List.copyOf(compras),
+            presupuestoCompleto ? presupuestoTotal : null);
+    }
+
+    private static UnidadResumen unidadResumen(String unidadOriginal) {
+        String unidad = unidadOriginal.trim().toLowerCase(java.util.Locale.ROOT);
+        return switch (unidad) {
+            case "g", "gr", "gramo", "gramos" -> new UnidadResumen("Peso", "kg", new BigDecimal("0.001"));
+            case "kg", "kilo", "kilos", "kilogramo", "kilogramos" ->
+                new UnidadResumen("Peso", "kg", BigDecimal.ONE);
+            case "ml", "mililitro", "mililitros" -> new UnidadResumen("Volumen", "L", new BigDecimal("0.001"));
+            case "l", "lt", "litro", "litros" -> new UnidadResumen("Volumen", "L", BigDecimal.ONE);
+            default -> new UnidadResumen("Otros", unidad, BigDecimal.ONE);
+        };
+    }
+
+    private record UnidadResumen(String categoria, String unidad, BigDecimal factor) {
+    }
+
+    private record UnidadDemanda(String categoria, String unidad) {
     }
 
     private static final class Acumulado {

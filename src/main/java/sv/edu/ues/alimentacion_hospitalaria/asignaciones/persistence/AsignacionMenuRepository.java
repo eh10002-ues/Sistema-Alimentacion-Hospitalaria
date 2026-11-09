@@ -105,4 +105,25 @@ public interface AsignacionMenuRepository extends JpaRepository<AsignacionMenu, 
         order by asignacion.fechaInicio desc, asignacion.id desc
         """)
     List<AsignacionMenu> findHistorialAprobadoPorPaciente(@Param("pacienteId") Long pacienteId);
+
+    @Query("""
+        select distinct asignacion from AsignacionMenu asignacion
+        join fetch asignacion.menu menu
+        left join fetch menu.detalles detalle
+        join fetch asignacion.paciente paciente
+        left join fetch paciente.cama cama
+        left join fetch cama.piso piso
+        where asignacion.activa = true
+          and asignacion.aprobadoPor is not null
+          and paciente.estado = :estadoPaciente
+          and menu.estado = :estadoMenu
+          and asignacion.fechaInicio <= :hasta
+          and (asignacion.fechaFin is null or asignacion.fechaFin >= :desde)
+        order by piso.codigo, menu.nombre, asignacion.id
+        """)
+    List<AsignacionMenu> findAprobadasConTraslape(
+        @Param("desde") LocalDate desde,
+        @Param("hasta") LocalDate hasta,
+        @Param("estadoPaciente") EstadoPaciente estadoPaciente,
+        @Param("estadoMenu") EstadoMenu estadoMenu);
 }
