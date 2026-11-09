@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Expediente por paciente')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-expediente-paciente')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTES · RD-01</p>
+            <h1 class="mb-2">Expediente por paciente</h1>
+            <p class="text-body-secondary mb-0">Consulte primero el código del paciente para cargar su expediente clínico-nutricional.</p>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/reportes/expediente-paciente}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="codigoPaciente" class="form-label">Código de paciente</label>
+                    <input id="codigoPaciente" name="codigoPaciente" class="form-control" required maxlength="20"
+                           th:value="${codigoPaciente}" placeholder="Ej. PAC-0001">
+                </div>
+                <div class="col-md-3">
+                    <label for="fechaDesde" class="form-label">Menús asignados desde</label>
+                    <input id="fechaDesde" name="fechaDesde" type="date" class="form-control" th:value="${fechaDesde}">
+                </div>
+                <div class="col-md-3">
+                    <label for="fechaHasta" class="form-label">Menús asignados hasta</label>
+                    <input id="fechaHasta" name="fechaHasta" type="date" class="form-control" th:value="${fechaHasta}">
+                </div>
+                <div class="col-md-2">
+                    <label for="estadoAsignacion" class="form-label">Estado de asignación</label>
+                    <select id="estadoAsignacion" name="estadoAsignacion" class="form-select">
+                        <option value="" th:selected="${estadoAsignacion == null || estadoAsignacion == ''}">Todas</option>
+                        <option value="ACTIVA" th:selected="${estadoAsignacion == 'ACTIVA'}">Activas</option>
+                        <option value="INACTIVA" th:selected="${estadoAsignacion == 'INACTIVA'}">Inactivas</option>
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+        </form>
+
+        <section th:if="${reporte != null}" class="card card-body" aria-label="Resultado del expediente">
+            <th:block th:replace="~{reportes/fragments :: encabezado(${reporte.encabezado})}"></th:block>
+
+            <h2 class="h4 mb-3" th:text="${reporte.paciente.nombre}">Paciente</h2>
+            <p class="mb-2" data-reporte-resumen
+               th:text="|Paciente: ${reporte.paciente.nombre} · Código: ${reporte.paciente.codigo} · Edad: ${reporte.paciente.edad} años · Estado: ${reporte.paciente.estado} · Peso actual: ${reporte.paciente.pesoKg} kg · Altura: ${reporte.paciente.alturaCm} cm · Ubicación: ${reporte.paciente.piso}, cama ${reporte.paciente.cama}|"></p>
+            <dl class="row mb-4">
+                <dt class="col-sm-3">Código</dt><dd class="col-sm-3 fw-semibold" th:text="${reporte.paciente.codigo}"></dd>
+                <dt class="col-sm-3">Edad</dt><dd class="col-sm-3" th:text="|${reporte.paciente.edad} años|"></dd>
+                <dt class="col-sm-3">Estado</dt><dd class="col-sm-3" th:text="${reporte.paciente.estado}"></dd>
+                <dt class="col-sm-3">Peso actual</dt><dd class="col-sm-3" th:text="|${reporte.paciente.pesoKg} kg|"></dd>
+                <dt class="col-sm-3">Altura</dt><dd class="col-sm-3" th:text="|${reporte.paciente.alturaCm} cm|"></dd>
+                <dt class="col-sm-3">Piso</dt><dd class="col-sm-3" th:text="${reporte.paciente.piso}"></dd>
+                <dt class="col-sm-3">Cama</dt><dd class="col-sm-3" th:text="${reporte.paciente.cama}"></dd>
+            </dl>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0" data-reporte-tabla>
+                            <caption class="caption-top fw-semibold text-body">Patologías</caption>
+                            <thead><tr><th scope="col">Patología registrada</th></tr></thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(reporte.paciente.patologias)}">
+                                <td class="text-body-secondary">No registradas.</td>
+                            </tr>
+                            <tr th:each="patologia : ${reporte.paciente.patologias}">
+                                <td th:text="${patologia}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0" data-reporte-tabla>
+                            <caption class="caption-top fw-semibold text-body">Alergias</caption>
+                            <thead><tr><th scope="col">Alergia registrada</th><th scope="col">Severidad</th></tr></thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(reporte.paciente.alergias)}">
+                                <td colspan="2" class="text-body-secondary">No registradas.</td>
+                            </tr>
+                            <tr th:each="alergia : ${reporte.paciente.alergias}">
+                                <td th:text="${alergia.nombre}"></td>
+                                <td th:text="${alergia.severidad}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="h5">Medicamentos</h3>
+            <div class="table-responsive mb-4">
+                <table class="table align-middle mb-0" data-reporte-tabla>
+                    <caption class="caption-top fw-semibold text-body">Medicamentos</caption>
+                    <thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Primera dosis</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(reporte.paciente.medicamentos)}">
+                        <td colspan="4" class="text-body-secondary">No hay medicamentos registrados.</td>
+                    </tr>
+                    <tr th:each="medicamento : ${reporte.paciente.medicamentos}">
+                        <td th:text="${medicamento.nombre}"></td>
+                        <td th:text="${medicamento.dosis}"></td>
+                        <td th:text="|Cada ${medicamento.frecuenciaHoras} horas|"></td>
+                        <td th:text="${medicamento.horaPrimeraDosis}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="h5">Menús asignados</h3>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" data-reporte-tabla>
+                    <thead><tr><th>Menú</th><th>Régimen</th><th>Desde</th><th>Hasta</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(reporte.menusAsignados)}">
+                        <td colspan="5" class="text-center text-body-secondary py-4">No hay menús asignados con los filtros seleccionados.</td>
+                    </tr>
+                    <tr th:each="menu : ${reporte.menusAsignados}">
+                        <td th:text="${menu.nombre}"></td>
+                        <td th:text="${menu.tipoDieta}"></td>
+                        <td th:text="${#temporals.format(menu.fechaInicio, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${menu.fechaFin} ? ${#temporals.format(menu.fechaFin, 'dd/MM/yyyy')} : 'Indefinido'"></td>
+                        <td th:text="${menu.estado}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{reportes/fragments :: scripts}"></th:block>
+</body>
+</html>

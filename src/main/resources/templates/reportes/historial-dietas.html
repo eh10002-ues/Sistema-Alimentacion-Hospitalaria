@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/layout :: head('Historial de dietas asignadas')}"></head>
+<body class="app-layout">
+<th:block th:replace="~{fragments/layout :: header('reporte-historial-dietas')}"></th:block>
+<div class="app-content">
+    <main id="contenido-principal" class="app-main">
+        <div class="page-heading">
+            <p class="page-eyebrow mb-2">REPORTES · RD-04</p>
+            <h1 class="mb-2">Historial de dietas asignadas y seguimiento por paciente</h1>
+        </div>
+
+        <form class="card card-body mb-3" th:action="@{/reportes/historial-dietas}" method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md">
+                    <label for="codigoPaciente" class="form-label">Código de paciente</label>
+                    <input id="codigoPaciente" name="codigoPaciente" class="form-control" required maxlength="20"
+                           th:value="${codigoPaciente}" placeholder="Ej. PAC-0001">
+                </div>
+                <div class="col-md-3">
+                    <label for="fechaDesde" class="form-label">Fecha inicial</label>
+                    <input id="fechaDesde" name="fechaDesde" type="date" class="form-control" th:value="${fechaDesde}">
+                </div>
+                <div class="col-md-3">
+                    <label for="fechaHasta" class="form-label">Fecha final</label>
+                    <input id="fechaHasta" name="fechaHasta" type="date" class="form-control" th:value="${fechaHasta}">
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </div>
+            </div>
+        </form>
+
+        <section th:if="${reporte != null}" class="card card-body" aria-label="Resultado del reporte">
+            <th:block th:replace="~{reportes/fragments :: encabezado(${reporte.encabezado})}"></th:block>
+            <dl class="row mb-3">
+                <dt class="col-sm-2">Código</dt><dd class="col-sm-4 fw-semibold" th:text="${reporte.paciente.codigo}"></dd>
+                <dt class="col-sm-2">Nombre</dt><dd class="col-sm-4" th:text="${reporte.paciente.nombre}"></dd>
+                <dt class="col-sm-2">Edad</dt><dd class="col-sm-4" th:text="|${reporte.paciente.edad} años|"></dd>
+                <dt class="col-sm-2">Peso</dt><dd class="col-sm-4" th:text="|${reporte.paciente.pesoKg} kg|"></dd>
+                <dt class="col-sm-2">Ubicación</dt><dd class="col-sm-4" th:text="|${reporte.paciente.piso}, cama ${reporte.paciente.cama}|"></dd>
+                <dt class="col-sm-2">Alergias</dt>
+                <dd class="col-sm-4" th:text="${#lists.isEmpty(reporte.paciente.alergias) ? 'No registradas' : #strings.listJoin(reporte.paciente.alergias, ', ')}"></dd>
+            </dl>
+            <p class="mb-3 fw-semibold" data-reporte-resumen
+               th:text="|Total de asignaciones: ${reporte.totalAsignaciones} · Dieta actual: ${reporte.dietaActual}|"></p>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" data-reporte-tabla>
+                    <thead>
+                    <tr>
+                        <th>Inicio</th><th>Fin</th><th>Tipo de dieta</th><th>Estado</th><th>Días de duración</th>
+                        <th>Asignado por</th><th>Aprobado por</th><th>Fecha de aprobación</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(reporte.asignaciones)}">
+                        <td colspan="8" class="text-center text-body-secondary py-4">No hay asignaciones en el rango seleccionado.</td>
+                    </tr>
+                    <tr th:each="fila : ${reporte.asignaciones}">
+                        <td th:text="${#temporals.format(fila.inicio, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${fila.fin} ? ${#temporals.format(fila.fin, 'dd/MM/yyyy')} : 'Indefinido'"></td>
+                        <td th:text="${fila.tipoDieta}"></td>
+                        <td th:text="${fila.estado}"></td>
+                        <td th:text="${fila.diasDuracion}"></td>
+                        <td th:text="${fila.asignadoPor}"></td>
+                        <td th:text="${fila.aprobadoPor}"></td>
+                        <td th:text="${fila.fechaAprobacion} ? ${#temporals.format(fila.fechaAprobacion, 'dd/MM/yyyy')} : '—'"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<th:block th:replace="~{reportes/fragments :: scripts}"></th:block>
+</body>
+</html>

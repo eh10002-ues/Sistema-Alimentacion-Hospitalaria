@@ -60,6 +60,57 @@ public class ReportesController {
         return "reportes/pacientes-sin-menu";
     }
 
+    @GetMapping("/expediente-paciente")
+    String expedientePaciente(@RequestParam(required = false) String codigoPaciente,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+                              @RequestParam(required = false) String estadoAsignacion, Model model) {
+        model.addAttribute("codigoPaciente", codigoPaciente);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+        model.addAttribute("estadoAsignacion", estadoAsignacion);
+        if (codigoPaciente != null && !codigoPaciente.isBlank()) {
+            model.addAttribute("reporte", reportes.expedientePaciente(codigoPaciente.trim(), fechaDesde, fechaHasta,
+                estadoAsignacion));
+        }
+        return "reportes/expediente-paciente";
+    }
+
+    @GetMapping("/hoja-ruta-entrega")
+    String hojaRutaEntrega(@RequestParam(required = false) Long pisoId,
+                           @RequestParam(required = false) sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoDieta tipoDieta,
+                           Model model) {
+        model.addAttribute("reporte", reportes.hojaRutaEntrega(pisoId, tipoDieta));
+        filtroPiso(model, pisoId);
+        model.addAttribute("tiposDieta", sv.edu.ues.alimentacion_hospitalaria.menus.domain.TipoDieta.values());
+        model.addAttribute("tipoDietaSeleccionada", tipoDieta);
+        return "reportes/hoja-ruta-entrega";
+    }
+
+    @GetMapping("/historial-dietas")
+    String historialDietas(@RequestParam(required = false) String codigoPaciente,
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+                           Model model) {
+        model.addAttribute("codigoPaciente", codigoPaciente);
+        model.addAttribute("fechaDesde", fechaDesde);
+        model.addAttribute("fechaHasta", fechaHasta);
+        if (codigoPaciente != null && !codigoPaciente.isBlank()) {
+            model.addAttribute("reporte", reportes.historialDietasPaciente(codigoPaciente.trim(), fechaDesde, fechaHasta));
+        }
+        return "reportes/historial-dietas";
+    }
+
+    @GetMapping("/hoja-tecnica-menu")
+    String hojaTecnicaMenu(@RequestParam(required = false) Long menuId, Model model) {
+        model.addAttribute("menuSeleccionado", menuId);
+        model.addAttribute("menus", reportes.menus());
+        if (menuId != null) {
+            model.addAttribute("reporte", reportes.hojaTecnicaMenu(menuId));
+        }
+        return "reportes/hoja-tecnica-menu";
+    }
+
     private void filtroPiso(Model model, Long pisoId) {
         model.addAttribute("pisos", reportes.pisos());
         model.addAttribute("pisoSeleccionado", pisoId);

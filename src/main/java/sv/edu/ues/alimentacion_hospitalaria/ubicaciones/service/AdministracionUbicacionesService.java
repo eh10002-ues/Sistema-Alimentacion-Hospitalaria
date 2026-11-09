@@ -8,8 +8,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sv.edu.ues.alimentacion_hospitalaria.bitacora.service.RegistroBitacoraService;
 import sv.edu.ues.alimentacion_hospitalaria.shared.exception.ResourceNotFoundException;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.AsignacionPiso;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Cama;
@@ -38,13 +40,15 @@ public class AdministracionUbicacionesService {
     private final CamaRepository camas;
     private final AsignacionPisoRepository asignaciones;
     private final UsuarioRepository usuarios;
+    private final RegistroBitacoraService bitacora;
 
     public AdministracionUbicacionesService(PisoRepository pisos, CamaRepository camas,
-        AsignacionPisoRepository asignaciones, UsuarioRepository usuarios) {
+        AsignacionPisoRepository asignaciones, UsuarioRepository usuarios, RegistroBitacoraService bitacora) {
         this.pisos = pisos;
         this.camas = camas;
         this.asignaciones = asignaciones;
         this.usuarios = usuarios;
+        this.bitacora = bitacora;
     }
 
     public Page<PisoVista> listar(int pagina, String busqueda) {
@@ -86,7 +90,8 @@ public class AdministracionUbicacionesService {
         normalizar(formulario);
         comprobarCodigoDisponible(formulario.getCodigo(), null);
         comprobarNombreDisponible(formulario.getNombre(), null);
-        pisos.save(new Piso(formulario.getCodigo(), formulario.getNombre().trim()));
+        Piso creado = pisos.saveAndFlush(new Piso(formulario.getCodigo(), formulario.getNombre().trim()));
+        bitacora.registrar("CREAR", "pisos", creado.getId(), usuarioActual().getId());
     }
 
     @Transactional
@@ -97,6 +102,7 @@ public class AdministracionUbicacionesService {
         Piso piso = buscarPiso(id);
         piso.setCodigo(formulario.getCodigo());
         piso.setNombre(formulario.getNombre().trim());
+        bitacora.registrar("ACTUALIZAR", "pisos", piso.getId(), usuarioActual().getId());
     }
 
     @Transactional
@@ -121,9 +127,12 @@ public class AdministracionUbicacionesService {
                 throw new IllegalArgumentException("Ya existe una cama con el código " + numero + " en el piso seleccionado.");
             }
         }
+        String accion = "ACTUALIZAR";
+        Long idAfectado = null;
         for (CamaForm.CodigoCama cama : formulario.getCamas()) {
             if (cama.getId() == null) {
-                camas.save(new Cama(piso, cama.getNumero().trim()));
+                accion = "CREAR";
+                idAfectado = camas.saveAndFlush(new Cama(piso, cama.getNumero().trim())).getId();
             } else {
                 Cama existente = camas.findById(cama.getId())
                     .orElseThrow(() -> new IllegalArgumentException("La cama seleccionada ya no existe."));
@@ -131,8 +140,10 @@ public class AdministracionUbicacionesService {
                     throw new IllegalArgumentException("La cama no pertenece al piso seleccionado.");
                 }
                 existente.setNumero(cama.getNumero().trim());
+                idAfectado = existente.getId();
             }
         }
+        bitacora.registrar(accion, "camas", idAfectado, usuarioActual().getId());
     }
 
     public CamaForm consultarCamas(Long pisoId) {
@@ -214,10 +225,13 @@ public class AdministracionUbicacionesService {
                 throw new IllegalArgumentException("Los encargados ya registrados no pueden eliminarse.");
             }
         }
+        String accion = "ACTUALIZAR";
+        Long idAfectado = null;
         for (AsignacionPisoItemForm item : formulario.getAsignaciones()) {
             Usuario usuario = usuarios.findById(item.getUsuarioId()).orElseThrow();
             if (item.getId() == null) {
-                asignaciones.save(new AsignacionPiso(piso, usuario, item.getTurno()));
+                accion = "CREAR";
+                idAfectado = asignaciones.saveAndFlush(new AsignacionPiso(piso, usuario, item.getTurno())).getId();
             } else {
                 AsignacionPiso existente = existentes.get(item.getId());
                 if (!existente.getPiso().getId().equals(pisoId)) {
@@ -225,13 +239,24 @@ public class AdministracionUbicacionesService {
                 }
                 existente.setUsuario(usuario);
                 existente.setTurno(item.getTurno());
+                idAfectado = existente.getId();
             }
         }
+        bitacora.registrar(accion, "asignaciones_piso", idAfectado, usuarioActual().getId());
     }
 
     private void normalizar(PisoForm formulario) {
         formulario.setCodigo(formulario.getCodigo().trim().toUpperCase(Locale.ROOT));
         formulario.setNombre(formulario.getNombre().trim());
+    }
+
+    private Usuario usuarioActual() {
+        var autenticacion = SecurityContextHolder.getContext().getAuthentication();
+        if (autenticacion == null || !autenticacion.isAuthenticated()) {
+            throw new org.springframework.security.access.AccessDeniedException("Acceso denegado.");
+        }
+        return usuarios.findByNombreUsuarioIgnoreCase(autenticacion.getName())
+            .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Acceso denegado."));
     }
 
     private void comprobarCodigoDisponible(String codigo, Long id) {

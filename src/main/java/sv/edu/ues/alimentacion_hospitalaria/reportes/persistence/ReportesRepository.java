@@ -14,8 +14,11 @@ import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.EstadoPaciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.Paciente;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.PacienteAlergia;
 import sv.edu.ues.alimentacion_hospitalaria.pacientes.domain.SeveridadAlergia;
+import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.PrescripcionDieta;
+import sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.EstadoPrescripcion;
 import sv.edu.ues.alimentacion_hospitalaria.reportes.dto.FilaComanda;
 import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.Piso;
+import sv.edu.ues.alimentacion_hospitalaria.ubicaciones.domain.AsignacionPiso;
 
 /**
  * SAH-9: consultas de solo lectura de los reportes específicos.
@@ -133,4 +136,73 @@ public interface ReportesRepository extends Repository<AsignacionMenu, Long> {
         order by asignacion.fechaInicio desc, asignacion.id desc
         """)
     List<AsignacionMenu> buscarAsignacionesAprobadas(@Param("pacienteIds") Collection<Long> pacienteIds);
+
+    @Query("""
+        select paciente from Paciente paciente
+        left join fetch paciente.cama cama
+        left join fetch cama.piso piso
+        where lower(paciente.codigo) = lower(:codigo)
+        """)
+    Optional<Paciente> buscarPacientePorCodigo(@Param("codigo") String codigo);
+
+    @Query("""
+        select asignacion from AsignacionMenu asignacion
+        join fetch asignacion.menu menu
+        where asignacion.paciente.id = :pacienteId
+          and (:activa is null or asignacion.activa = :activa)
+          and (:fechaDesde is null or asignacion.fechaFin is null or asignacion.fechaFin >= :fechaDesde)
+          and (:fechaHasta is null or asignacion.fechaInicio <= :fechaHasta)
+        order by asignacion.fechaInicio desc, asignacion.id desc
+        """)
+    List<AsignacionMenu> buscarAsignacionesPaciente(
+        @Param("pacienteId") Long pacienteId,
+        @Param("activa") Boolean activa,
+        @Param("fechaDesde") LocalDate fechaDesde,
+        @Param("fechaHasta") LocalDate fechaHasta);
+
+    @Query("""
+        select prescripcion from PrescripcionDieta prescripcion
+        join fetch prescripcion.paciente paciente
+        left join fetch paciente.cama cama
+        left join fetch cama.piso piso
+        where paciente.estado = :estadoPaciente
+          and prescripcion.estado = :estadoPrescripcion
+          and (:pisoId is null or piso.id = :pisoId)
+        order by piso.codigo nulls last, cama.numero, paciente.apellidos, paciente.nombres,
+                 prescripcion.fechaAutorizacion desc, prescripcion.id desc
+        """)
+    List<PrescripcionDieta> buscarPrescripcionesActuales(
+        @Param("estadoPaciente") EstadoPaciente estadoPaciente,
+        @Param("estadoPrescripcion") sv.edu.ues.alimentacion_hospitalaria.prescripciones.domain.EstadoPrescripcion estadoPrescripcion,
+        @Param("pisoId") Long pisoId);
+
+    @Query("""
+        select asignacion from AsignacionPiso asignacion
+        join fetch asignacion.piso piso
+        join fetch asignacion.usuario usuario
+        where usuario.activo = true
+          and (:pisoId is null or piso.id = :pisoId)
+        order by piso.codigo, asignacion.turno
+        """)
+    List<AsignacionPiso> buscarEncargadosPisos(@Param("pisoId") Long pisoId);
+
+    @Query("""
+        select prescripcion from PrescripcionDieta prescripcion
+        join fetch prescripcion.paciente paciente
+        join fetch prescripcion.autorizadoPor autorizadoPor
+        where prescripcion.paciente.id = :pacienteId
+        order by prescripcion.fechaAutorizacion desc, prescripcion.id desc
+        """)
+    List<PrescripcionDieta> buscarHistorialPrescripciones(@Param("pacienteId") Long pacienteId);
+
+    @Query("""
+        select prescripcion from PrescripcionDieta prescripcion
+        join fetch prescripcion.paciente paciente
+        where prescripcion.paciente.id = :pacienteId
+          and prescripcion.estado = :estadoPrescripcion
+        order by prescripcion.fechaAutorizacion desc, prescripcion.id desc
+        """)
+    List<PrescripcionDieta> buscarPrescripcionesPaciente(
+        @Param("pacienteId") Long pacienteId,
+        @Param("estadoPrescripcion") EstadoPrescripcion estadoPrescripcion);
 }
